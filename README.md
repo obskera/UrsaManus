@@ -1,73 +1,96 @@
-# React + TypeScript + Vite
+🐻 UrsaManus
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+UrsaManus is a micro game engine built with React and TypeScript.
 
-Currently, two official plugins are available:
+## It is designed for building small, modular, interactive experiences directly in the browser (or desktop via electron) using a component-driven architecture.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+✨ Philosophy
 
-## React Compiler
+UrsaManus embraces:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+⚛️ React-driven rendering
 
-## Expanding the ESLint configuration
+🧠 Strong TypeScript typing
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+🧩 Modular engine systems
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+🔬 Test-driven architecture
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+🚀 Lightweight micro-engine principles
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+This is not a traditional canvas-only engine.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Instead, UrsaManus explores a hybrid model:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Declarative UI (React)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Structured game logic (TypeScript systems)
+
+## Engine-level architecture inside a modern frontend stack
+
+🎯 Goals
+
+Provide a structured engine core
+
+Separate rendering, logic, and services
+
+Encourage testable game systems
+
+Remain lightweight, modular, and developer-friendly
+
+## Support small browser-based games and interactive tools
+
+Architecture Overview:
+
+src/
+components/ → React rendering layer
+logic/ → Engine systems and core mechanics
+services/ → Shared utilities and abstractions
+styles/ → Styling and visual themes
+tests/ → Test setup and utilities
+
+---
+
+UrsaManus is built around the idea that:
+
+React handles UI rendering.
+TypeScript handles structure.
+You can make new modules with Typescript and plug them into the engine.
+The engine coordinates everything, but you only need to load the modules you want to use.
+
+---
+
+🧪 Testing
+
+UrsaManus uses:
+
+Vitest
+
+React Testing Library
+
+jsdom environment
+
+Both:
+
+Pure TypeScript logic
+
+React components
+
+## are fully testable.
+
+🚀 Getting Started
+
+Install dependencies:
+npm install
+
+Run development server:
+npm run dev
+
+Run tests:
+npm run test
+
+Open Vitest UI:
+npm run test:ui
+
+📜 License:
+All Rights Reserved, but pretty chill about if you wanna use it (just get a (free) icense, and attribute the core game engine).
