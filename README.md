@@ -1,4 +1,4 @@
-🐻 UrsaManus
+## 🐻 UrsaManus
 
 UrsaManus is a micro game engine built with React and TypeScript.
 
@@ -6,7 +6,7 @@ It is designed for building small, modular, interactive experiences directly in 
 
 ---
 
-##✨ Philosophy
+## ✨ Philosophy
 
 UrsaManus embraces:
 
@@ -57,7 +57,7 @@ tests/ → Test setup and utilities
 
 ---
 
-UrsaManus is built around the idea that:
+## UrsaManus is built around the idea that:
 
 React handles UI rendering.
 TypeScript handles structure.
@@ -102,5 +102,6 @@ npm run test:ui
 
 ---
 
-##📜 License:
+## 📜 License:
+
 All Rights Reserved, but pretty chill about if you wanna use it (just get a (free) icense, and attribute the core game engine).
