@@ -1,35 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import Render, { type RenderableItem } from "./components/Render/Render";
+import "./App.css";
+export default function App() {
+    const spriteSheet = "/spriteSheet.png";
 
-function App() {
-  const [count, setCount] = useState(0)
+    const animSprite: RenderableItem = {
+        spriteimageTest: spriteSheet,
+        spriteSize: 16,
+        spriteSheetTileWidth: 49,
+        spriteSheetTileHeight: 22,
+        characterSpriteTiles: [
+            [18, 7],
+            [19, 7],
+            [20, 7],
+            [21, 7],
+        ],
+        scaler: 4,
+        position: { x: 40, y: 40 },
+        fps: 10,
+    };
+    const animSprite2: RenderableItem = {
+        spriteimageTest: spriteSheet,
+        spriteSize: 16,
+        spriteSheetTileWidth: 49,
+        spriteSheetTileHeight: 22,
+        characterSpriteTiles: [
+            [18, 7],
+            [19, 7],
+            [20, 7],
+            [21, 7],
+        ],
+        scaler: 4,
+        position: { x: 0, y: 0 },
+        fps: 10,
+    };
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    //Render takes an array of animations to draw to the canvas, and should update when changed
+    return (
+        <div className="GameContainer">
+            <Render
+                items={[animSprite, animSprite2]}
+                width={400}
+                height={300}
+            />
+        </div>
+    );
 }
-
-export default App
