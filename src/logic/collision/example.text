@@ -1,0 +1,12 @@
+Example of usage, creating and attaching it to an entity.
+
+import { createRectangleCollider, CollisionLayer } from "@/logic/collision"
+
+player.collider = createRectangleCollider({
+size: { width: 14, height: 10 },
+offset: { x: 1, y: 6 },
+collisionResponse: "overlap",
+layer: CollisionLayer.player,
+collidesWith: CollisionLayer.enemy | CollisionLayer.world | CollisionLayer.pickup,
+debugDraw: true,
+})

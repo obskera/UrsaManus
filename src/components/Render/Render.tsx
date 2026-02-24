@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-
+import "./Render.css";
 export interface RenderableItem {
     spriteImageSheet: string;
     spriteSize: number;
@@ -9,6 +9,13 @@ export interface RenderableItem {
     scaler: number;
     position: { x: number; y: number };
     fps?: number;
+
+    collider?: {
+        type: "rectangle";
+        size: { width: number; height: number };
+        offset: { x: number; y: number };
+        debugDraw?: boolean;
+    };
 }
 
 export interface RenderProps {
@@ -81,13 +88,19 @@ const Render = ({ items, width = 300, height = 300 }: RenderProps) => {
 
         (async () => {
             try {
-                const sheetUrls = items.map((it) => it.spriteImageSheet);
-                console.log("Render loading sheets:", sheetUrls);
+                const uniqueSheetUrls = Array.from(
+                    new Set(items.map((it) => it.spriteImageSheet)),
+                );
 
-                const imgs = await Promise.all(
-                    sheetUrls.map((src) => loadImage(src)),
+                const loaded = await Promise.all(
+                    uniqueSheetUrls.map((src) => loadImage(src)),
                 );
                 if (cancelled) return;
+
+                const imagesByUrl = new Map<string, HTMLImageElement>();
+                for (let i = 0; i < uniqueSheetUrls.length; i++) {
+                    imagesByUrl.set(uniqueSheetUrls[i], loaded[i]);
+                }
 
                 const start = performance.now();
 
@@ -98,7 +111,8 @@ const Render = ({ items, width = 300, height = 300 }: RenderProps) => {
 
                     for (let i = 0; i < items.length; i++) {
                         const it = items[i];
-                        const img = imgs[i];
+                        const img = imagesByUrl.get(it.spriteImageSheet);
+                        if (!img) continue;
 
                         const tiles = it.characterSpriteTiles;
                         if (!tiles || tiles.length === 0) continue;
@@ -117,8 +131,8 @@ const Render = ({ items, width = 300, height = 300 }: RenderProps) => {
                             it.spriteSheetTileHeight,
                         );
 
-                        const dx = it.position?.x ?? 0;
-                        const dy = it.position?.y ?? 0;
+                        const dx = it.position.x;
+                        const dy = it.position.y;
 
                         context.drawImage(
                             img,
@@ -131,6 +145,22 @@ const Render = ({ items, width = 300, height = 300 }: RenderProps) => {
                             it.spriteSize * it.scaler,
                             it.spriteSize * it.scaler,
                         );
+
+                        if (it.collider?.debugDraw) {
+                            const scale = it.scaler;
+
+                            const cx = dx + it.collider.offset.x * scale;
+                            const cy = dy + it.collider.offset.y * scale;
+
+                            context.strokeStyle = "red";
+                            context.lineWidth = 1;
+                            context.strokeRect(
+                                cx,
+                                cy,
+                                it.collider.size.width * scale,
+                                it.collider.size.height * scale,
+                            );
+                        }
                     }
 
                     raf = requestAnimationFrame(tick);

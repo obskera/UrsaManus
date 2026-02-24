@@ -1,4 +1,5 @@
 import type { RenderableItem } from "@/components/Render/Render";
+import type { RectangleCollider } from "./collision";
 
 export type Position = {
     x: number;
@@ -30,7 +31,10 @@ export type Entity = RenderableItem & {
     animations: SpriteAnimation[];
     currentAnimation: string;
     updateState: (deltaMS: number) => void;
+
+    collider?: RectangleCollider;
 };
+//for reference:
 // export interface RenderableItem {
 //     spriteimageTest: string;
 //     spriteSize: number;
@@ -38,7 +42,7 @@ export type Entity = RenderableItem & {
 //     spriteSheetTileHeight: number;
 //     characterSpriteTiles: number[][];
 //     scaler: number;
-//     position?: { x: number; y: number };
+//     position: { x: number; y: number };
 //     fps?: number;
 // }
 
