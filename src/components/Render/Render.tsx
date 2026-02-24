@@ -1,16 +1,13 @@
-//Takes an array of RenderableItem and renders to the canvas, uses useEffect to
-//trigger re-render when the props change.
-
 import { useEffect, useRef } from "react";
 
 export interface RenderableItem {
-    spriteimageTest: string;
+    spriteImageSheet: string;
     spriteSize: number;
     spriteSheetTileWidth: number;
     spriteSheetTileHeight: number;
     characterSpriteTiles: number[][];
     scaler: number;
-    position?: { x: number; y: number };
+    position: { x: number; y: number };
     fps?: number;
 }
 
@@ -20,10 +17,7 @@ export interface RenderProps {
     height?: number;
 }
 
-type TilePosition = {
-    x: number;
-    y: number;
-};
+type TilePosition = { x: number; y: number };
 
 function getTilePixelPosition(
     tileX: number,
@@ -55,8 +49,14 @@ function loadImage(src: string) {
 
     const p = new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
+
         img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+
+        img.onerror = () => {
+            imageCache.delete(src);
+            reject(new Error(`Failed to load image: ${src}`));
+        };
+
         img.src = src;
     });
 
@@ -80,58 +80,66 @@ const Render = ({ items, width = 300, height = 300 }: RenderProps) => {
         let raf = 0;
 
         (async () => {
-            const imgs = await Promise.all(
-                items.map((it) => loadImage(it.spriteimageTest)),
-            );
-            if (cancelled) return;
+            try {
+                const sheetUrls = items.map((it) => it.spriteImageSheet);
+                console.log("Render loading sheets:", sheetUrls);
 
-            const start = performance.now();
-
-            const tick = (now: number) => {
+                const imgs = await Promise.all(
+                    sheetUrls.map((src) => loadImage(src)),
+                );
                 if (cancelled) return;
 
-                context.clearRect(0, 0, width, height);
+                const start = performance.now();
 
-                for (let i = 0; i < items.length; i++) {
-                    const it = items[i];
-                    const img = imgs[i];
+                const tick = (now: number) => {
+                    if (cancelled) return;
 
-                    const tiles = it.characterSpriteTiles;
-                    if (!tiles.length) continue;
+                    context.clearRect(0, 0, width, height);
 
-                    const fps = it.fps ?? 8;
-                    const frame =
-                        Math.floor(((now - start) / 1000) * fps) % tiles.length;
+                    for (let i = 0; i < items.length; i++) {
+                        const it = items[i];
+                        const img = imgs[i];
 
-                    const tile = tiles[frame];
-                    const tilePos = getTilePixelPosition(
-                        tile[0],
-                        tile[1],
-                        it.spriteSize,
-                        it.spriteSheetTileWidth,
-                        it.spriteSheetTileHeight,
-                    );
+                        const tiles = it.characterSpriteTiles;
+                        if (!tiles || tiles.length === 0) continue;
 
-                    const dx = it.position?.x ?? 0;
-                    const dy = it.position?.y ?? 0;
+                        const fps = it.fps ?? 8;
+                        const frame =
+                            Math.floor(((now - start) / 1000) * fps) %
+                            tiles.length;
 
-                    context.drawImage(
-                        img,
-                        tilePos.x,
-                        tilePos.y,
-                        it.spriteSize,
-                        it.spriteSize,
-                        dx,
-                        dy,
-                        it.spriteSize * it.scaler,
-                        it.spriteSize * it.scaler,
-                    );
-                }
+                        const tile = tiles[frame];
+                        const tilePos = getTilePixelPosition(
+                            tile[0],
+                            tile[1],
+                            it.spriteSize,
+                            it.spriteSheetTileWidth,
+                            it.spriteSheetTileHeight,
+                        );
+
+                        const dx = it.position?.x ?? 0;
+                        const dy = it.position?.y ?? 0;
+
+                        context.drawImage(
+                            img,
+                            tilePos.x,
+                            tilePos.y,
+                            it.spriteSize,
+                            it.spriteSize,
+                            dx,
+                            dy,
+                            it.spriteSize * it.scaler,
+                            it.spriteSize * it.scaler,
+                        );
+                    }
+
+                    raf = requestAnimationFrame(tick);
+                };
 
                 raf = requestAnimationFrame(tick);
-            };
-
-            raf = requestAnimationFrame(tick);
+            } catch (err) {
+                console.error(err);
+            }
         })();
 
         return () => {
