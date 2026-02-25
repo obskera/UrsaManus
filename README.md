@@ -1,119 +1,102 @@
-## 🐻 UrsaManus
+# UrsaManus
 
-UrsaManus is a micro game engine built with React and TypeScript.
+UrsaManus is a lightweight, modular game engine foundation built with React and TypeScript.
 
-It is designed for building small, modular, interactive experiences directly in the browser (or desktop via electron) using a component-driven architecture.
+It is designed for small projects that need a clean core today, with architecture that can scale into much larger systems over time.
 
----
+## Vision
 
-## ✨ Philosophy
+UrsaManus is intentionally small at its core:
 
-UrsaManus embraces:
+- Small enough to understand quickly
+- Structured enough to remain maintainable
+- Flexible enough to grow without hard resets
 
-⚛️ React-driven rendering
+The goal is to give React/TypeScript developers an engine-style foundation they can extend indefinitely with their own gameplay modules, systems, and tooling.
 
-🧠 Strong TypeScript typing
+## Core Principles
 
-🧩 Modular engine systems
+- **React-first UI composition** for control and interface layers
+- **TypeScript-first architecture** for reliable, explicit contracts
+- **Separation of concerns** across components, logic, and services
+- **System extensibility** through modular, pluggable building blocks
+- **Testability by default** for both logic and UI behavior
 
-🔬 Test-driven architecture
+## What UrsaManus Is (and Is Not)
 
-🚀 Lightweight micro-engine principles
+UrsaManus is a micro-engine architecture for browser-based interactive projects.
 
-This is not a traditional canvas-only engine.
+It is not trying to replace full-scale AAA engines. Instead, it provides a practical, extensible base for smaller games/tools that can grow in sophistication as needed.
 
-Instead, UrsaManus explores a hybrid model:
+## Architecture Snapshot
 
-Declarative UI (React)
+`src/`
 
-Structured game logic (TypeScript systems)
+- `components/` — rendering and input/UI composition
+- `logic/` — reusable game logic and collision utilities
+- `services/` — stateful services (for example `DataBus`)
+- `styles/` — styling layers
+- `tests/` — unit/integration coverage for behavior and layout
 
-Engine-level architecture inside a modern frontend stack
+## Why This Approach
 
----
+Many TypeScript + React developers already have strong app architecture habits. UrsaManus uses that same discipline for game-like systems:
 
-## 🎯 Goals
+- React handles composition and mounting
+- Service/logic layers handle simulation and state transitions
+- Render layers consume normalized data and draw frames
 
-Provide a structured engine core
+This allows a project to start simple, then expand into custom systems without throwing away the original foundation.
 
-Separate rendering, logic, and services
-
-Encourage testable game systems
-
-Remain lightweight, modular, and developer-friendly
-
-to support small browser-based games and interactive tools
-
----
-
-## Architecture Overview:
-
-src/
-components/ → React rendering layer
-logic/ → Engine systems and core mechanics
-services/ → Shared utilities and abstractions
-styles/ → Styling and visual themes
-tests/ → Test setup and utilities
-
----
-
-## UrsaManus is built around the idea that:
-
-React handles UI rendering.
-TypeScript handles structure.
-You can make new modules with Typescript and plug them into the engine.
-The engine coordinates everything, but you only need to load the modules you want to use.
-
----
-
-## 🧪 Testing
+## Testing Standards
 
 UrsaManus uses:
 
-Vitest
+- Vitest
+- React Testing Library
+- `jsdom`
 
-React Testing Library
+Test conventions:
 
-jsdom environment
+- Explicit Vitest imports in each test file (`describe`, `it`, `expect`, `vi`, etc.)
+- File naming:
+    - primary tests: `<subject>.test.ts(x)`
+    - extended/edge cases: `<subject>.extended.test.ts(x)`
 
-Both:
+## Documentation
 
-Pure TypeScript logic
-
-React components
-
-are fully testable.
-
-Test files should explicitly import Vitest APIs (for example: `describe`, `it`, `expect`, `vi`) from `vitest` instead of relying on globals.
-
-Test naming convention:
-
-- Use `<subject>.test.ts` or `<subject>.test.tsx` for primary tests.
-- Use `<subject>.extended.test.ts` or `<subject>.extended.test.tsx` for additional edge/cross-branch scenarios.
-
----
-
-## 🚀 Getting Started
-
-## 📚 Documentation
-
-- Codebase usage guide: [docs/USAGE.md](docs/USAGE.md)
+- Usage guide: [docs/USAGE.md](docs/USAGE.md)
 - Architecture and data flow: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Contributor quickstart: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+
+## Getting Started
 
 Install dependencies:
-npm install
 
-Run development server:
-npm run dev
+`npm install`
+
+Start development:
+
+`npm run dev`
 
 Run tests:
-npm run test
+
+`npm run test:run`
+
+Run coverage:
+
+`npm run test:coverage`
+
+Run lint:
+
+`npm run lint`
 
 Open Vitest UI:
-npm run test:ui
 
----
+`npm run test:ui`
 
-## 📜 License:
+## License
 
-All Rights Reserved, but pretty chill about if you wanna use it (just get a (free) icense, and attribute the core game engine).
+All Rights Reserved.
+
+Usage is allowed with attribution and a free license from the project owner.
