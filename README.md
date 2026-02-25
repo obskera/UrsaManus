@@ -48,6 +48,15 @@ Many TypeScript + React developers already have strong app architecture habits. 
 
 This allows a project to start simple, then expand into custom systems without throwing away the original foundation.
 
+## Current Direction
+
+Current direction is principle-led rather than milestone-led.
+
+- Keep the core engine small and easy to reason about
+- Expand via modular systems, not tightly coupled features
+- Prioritize practical building blocks for small projects first
+- Preserve strong TypeScript contracts and high test coverage as the project grows
+
 ## Testing Standards
 
 UrsaManus uses:
@@ -68,6 +77,7 @@ Test conventions:
 - Usage guide: [docs/USAGE.md](docs/USAGE.md)
 - Architecture and data flow: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Contributor quickstart: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+- Current next items: [docs/TODO.md](docs/TODO.md)
 
 ## Getting Started
 
