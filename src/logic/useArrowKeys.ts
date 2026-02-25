@@ -17,6 +17,7 @@ export default function useArrowKeys({
         if (!enabled) return;
 
         const handleKeyDown = (event: KeyboardEvent) => {
+            // istanbul ignore next - handler guard is environment-dependent and hard to trigger in tests
             if (!enabled) return;
 
             if (

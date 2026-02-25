@@ -84,6 +84,8 @@ React components
 
 are fully testable.
 
+Test files should explicitly import Vitest APIs (for example: `describe`, `it`, `expect`, `vi`) from `vitest` instead of relying on globals.
+
 ---
 
 ## 🚀 Getting Started

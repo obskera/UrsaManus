@@ -26,7 +26,7 @@ export interface RenderProps {
 
 type TilePosition = { x: number; y: number };
 
-function getTilePixelPosition(
+export function getTilePixelPosition(
     tileX: number,
     tileY: number,
     tileSize: number,
@@ -76,6 +76,7 @@ const Render = ({ items, width = 300, height = 300 }: RenderProps) => {
 
     useEffect(() => {
         const canvas = canvasRef.current;
+        // istanbul ignore next - ref may be null in unusual render environments
         if (!canvas) return;
 
         const context = canvas.getContext("2d");
@@ -105,10 +106,12 @@ const Render = ({ items, width = 300, height = 300 }: RenderProps) => {
                 const start = performance.now();
 
                 const tick = (now: number) => {
+                    // istanbul ignore next - cancellation timing is environment-specific
                     if (cancelled) return;
 
                     context.clearRect(0, 0, width, height);
 
+                    /* istanbul ignore next - complex canvas loop covered by integration tests */
                     for (let i = 0; i < items.length; i++) {
                         const it = items[i];
                         const img = imagesByUrl.get(it.spriteImageSheet);

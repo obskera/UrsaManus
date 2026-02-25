@@ -15,5 +15,9 @@ export default defineConfig({
         globals: true,
         css: true,
         include: ["src/**/*.{test,spec}.{ts,tsx}"],
+        coverage: {
+            provider: "v8",
+            exclude: ["**/*.css", "**/public/**"],
+        },
     },
 });
