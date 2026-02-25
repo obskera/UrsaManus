@@ -86,9 +86,19 @@ are fully testable.
 
 Test files should explicitly import Vitest APIs (for example: `describe`, `it`, `expect`, `vi`) from `vitest` instead of relying on globals.
 
+Test naming convention:
+
+- Use `<subject>.test.ts` or `<subject>.test.tsx` for primary tests.
+- Use `<subject>.extended.test.ts` or `<subject>.extended.test.tsx` for additional edge/cross-branch scenarios.
+
 ---
 
 ## 🚀 Getting Started
+
+## 📚 Documentation
+
+- Codebase usage guide: [docs/USAGE.md](docs/USAGE.md)
+- Architecture and data flow: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 Install dependencies:
 npm install

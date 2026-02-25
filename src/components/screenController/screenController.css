@@ -1,0 +1,129 @@
+.screen-controller {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.screen-controller.snes-layout {
+    width: min(100%, 40rem);
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    border: 2px solid currentColor;
+    border-radius: 0;
+    padding: 0.75rem;
+}
+
+.screen-control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.screen-control-group-title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.screen-control-group-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.dpad-group,
+.face-button-group {
+    flex: 0 0 auto;
+}
+
+.dpad-group .screen-control-group-content {
+    justify-content: flex-start;
+}
+
+.face-button-group .screen-control-group-content {
+    justify-content: flex-end;
+}
+
+.screen-control {
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.screen-control:focus {
+    outline: none;
+}
+
+.screen-control:active {
+    filter: brightness(0.85);
+    transform: translateY(1px);
+}
+
+.compass-direction-control {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    grid-template-rows: repeat(3, auto);
+    grid-template-areas:
+        ". north ."
+        "west . east"
+        ". south .";
+    gap: 0;
+}
+
+.direction-button,
+.compass-button {
+    border-radius: 9999px;
+    width: 4.5rem;
+    height: 4.5rem;
+    font-size: 1.2rem;
+}
+
+.direction-button.north,
+.compass-button.north {
+    grid-area: north;
+}
+
+.direction-button.south,
+.compass-button.south {
+    grid-area: south;
+}
+
+.direction-button.east,
+.compass-button.east {
+    grid-area: east;
+}
+
+.direction-button.west,
+.compass-button.west {
+    grid-area: west;
+}
+
+.on-screen-arrow-control {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    grid-template-rows: repeat(3, auto);
+    grid-template-areas:
+        ". north ."
+        "west . east"
+        ". south .";
+    gap: 0;
+}
+
+@media (max-width: 700px) {
+    .screen-controller.snes-layout {
+        width: 100%;
+        gap: 1rem;
+    }
+
+    .direction-button,
+    .compass-button {
+        width: 3rem;
+        height: 3rem;
+    }
+}
