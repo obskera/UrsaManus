@@ -19,6 +19,7 @@ Quick links for reusable, copy/paste-friendly UI building blocks:
 - [Reusable input helpers (keys + compass)](#reusable-input-helpers-keys--compass)
 - [LifeGauge UI primitive (default + skinnable)](#lifegauge-ui-primitive-default--skinnable)
 - [ActionButton UI primitive (pressed + cooldown)](#actionbutton-ui-primitive-pressed--cooldown)
+- [Toggle UI primitive (on/off state)](#toggle-ui-primitive-onoff-state)
 - [CooldownIndicator UI primitive](#cooldownindicator-ui-primitive)
 - [HUDSlot UI primitive](#hudslot-ui-primitive)
 - [HUDAnchor UI primitive](#hudanchor-ui-primitive)
@@ -587,6 +588,52 @@ import { ActionButton } from "@/components/actionButton";
 />;
 ```
 
+### Toggle UI primitive (on/off state)
+
+Use `Toggle` from `@/components/toggle` when you need a compact switch-style on/off control with:
+
+- controlled checked state,
+- disabled lockout,
+- default skin plus full render override support.
+
+#### Default usage (quickest)
+
+```tsx
+import { Toggle } from "@/components/toggle";
+
+<Toggle label="SFX" checked={sfxEnabled} onChange={setSfxEnabled} />;
+```
+
+#### Disabled state
+
+```tsx
+import { Toggle } from "@/components/toggle";
+
+<Toggle label="Online" checked disabled />;
+```
+
+#### Full custom skin (render override)
+
+```tsx
+import { Toggle } from "@/components/toggle";
+
+<Toggle
+    label="Stealth"
+    checked={isStealthEnabled}
+    onChange={setIsStealthEnabled}
+    render={(state) => (
+        <button
+            type="button"
+            className="um-button"
+            aria-pressed={state.checked}
+            disabled={!state.canToggle}
+        >
+            Stealth: {state.checked ? "Enabled" : "Disabled"}
+        </button>
+    )}
+/>;
+```
+
 ### CooldownIndicator UI primitive
 
 Use `CooldownIndicator` from `@/components/cooldownIndicator` as a reusable cooldown visual for any action/widget.
@@ -833,6 +880,7 @@ In the default app (`src/App.tsx`), both component demos are grouped under one e
 - included demos:
     - `LifeGaugeExample` (`src/components/examples/LifeGaugeExample.tsx`)
     - `ActionButtonExample` (`src/components/examples/ActionButtonExample.tsx`)
+    - `ToggleExample` (`src/components/examples/ToggleExample.tsx`)
     - `CooldownIndicatorExample` (`src/components/examples/CooldownIndicatorExample.tsx`)
     - `HUDSlotExample` (`src/components/examples/HUDSlotExample.tsx`)
     - `HUDAnchorExample` (`src/components/examples/HUDAnchorExample.tsx`)

@@ -19,6 +19,7 @@ import {
     LifeGaugeExample,
     PlatformerHUDPresetExample,
     QuickHUDLayoutExample,
+    ToggleExample,
     TopDownHUDPresetExample,
 } from "./components/examples";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
@@ -586,6 +587,7 @@ export default function App() {
                         <div className="DevExamplesArea DevExamplesStack">
                             <LifeGaugeExample title="LifeGauge preview" />
                             <ActionButtonExample title="ActionButton preview" />
+                            <ToggleExample title="Toggle preview" />
                             <CooldownIndicatorExample title="CooldownIndicator preview" />
                             <HUDSlotExample title="HUDSlot preview" />
                             <HUDAnchorExample title="HUDAnchor preview" />

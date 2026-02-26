@@ -4,6 +4,8 @@ export { default as LifeGaugeExample } from "./LifeGaugeExample";
 export type { LifeGaugeExampleProps } from "./LifeGaugeExample";
 export { default as ActionButtonExample } from "./ActionButtonExample";
 export type { ActionButtonExampleProps } from "./ActionButtonExample";
+export { default as ToggleExample } from "./ToggleExample";
+export type { ToggleExampleProps } from "./ToggleExample";
 export { default as CooldownIndicatorExample } from "./CooldownIndicatorExample";
 export type { CooldownIndicatorExampleProps } from "./CooldownIndicatorExample";
 export { default as HUDSlotExample } from "./HUDSlotExample";

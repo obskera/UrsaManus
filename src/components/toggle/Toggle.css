@@ -1,0 +1,70 @@
+.um-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--um-space-2);
+    border: 1px solid var(--um-border-soft);
+    border-radius: var(--um-radius-pill);
+    background: var(--um-surface);
+    color: var(--um-text-primary);
+    padding: 0.3rem var(--um-space-3);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color var(--um-duration-fast) var(--um-ease-standard),
+        border-color var(--um-duration-fast) var(--um-ease-standard);
+}
+
+.um-toggle:hover {
+    background: var(--um-surface-hover);
+}
+
+.um-toggle:focus-visible {
+    outline: 2px solid var(--um-focus-ring);
+    outline-offset: 2px;
+}
+
+.um-toggle__track {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 2.25rem;
+    height: 1.2rem;
+    border-radius: var(--um-radius-pill);
+    border: 1px solid var(--um-border-soft);
+    background: var(--um-surface-base);
+    padding: 0 0.1rem;
+    transition:
+        background-color var(--um-duration-fast) var(--um-ease-standard),
+        border-color var(--um-duration-fast) var(--um-ease-standard);
+}
+
+.um-toggle__thumb {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: var(--um-radius-pill);
+    background: var(--um-text-muted);
+    transition:
+        transform var(--um-duration-fast) var(--um-ease-standard),
+        background-color var(--um-duration-fast) var(--um-ease-standard);
+}
+
+.um-toggle--on .um-toggle__track {
+    border-color: var(--um-accent-border);
+    background: var(--um-accent-soft);
+}
+
+.um-toggle--on .um-toggle__thumb {
+    transform: translateX(1rem);
+    background: var(--um-accent);
+}
+
+.um-toggle--disabled {
+    cursor: not-allowed;
+    color: var(--um-text-muted);
+    opacity: 0.7;
+}
+
+.um-toggle__label {
+    font-size: 0.9rem;
+}
