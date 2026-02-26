@@ -13,6 +13,7 @@ flowchart LR
     N[Compass N/S/E/W Clicks] --> CDC[CompassDirectionControl]
     E[Game/Event Layer] --> SB[SignalBus]
     SB --> STO[ScreenTransitionOverlay]
+    SB --> PEO[ParticleEmitterOverlay]
 
     AK --> DB[DataBus]
     OSC --> DB
@@ -24,6 +25,7 @@ flowchart LR
     DB --> APP[App.tsx force re-render]
     APP --> RENDER[Render component]
     RENDER --> CANVAS[Canvas frame draw]
+    PEO --> CANVAS
     STO --> CANVAS
 ```
 
@@ -74,6 +76,12 @@ flowchart LR
 - `screenTransitionSignal`
     - Defines the transition payload contract.
     - Emits the `effects:screen-transition:play` signal.
+- `ParticleEmitterOverlay`
+    - Subscribes to particle emit signals through `useParticleEmitter`.
+    - Updates and draws particles in an overlay canvas.
+- `particleEmitterSignal`
+    - Defines particle burst payload contract.
+    - Emits the `effects:particles:emit` signal.
 
 ---
 
@@ -92,6 +100,14 @@ flowchart LR
 3. `onCovered` runs at full cover (safe point for scene/world swap).
 4. Reveal phase runs.
 5. `onComplete` runs after transition ends.
+
+### Particle lifecycle (signal path)
+
+1. Any module emits `effects:particles:emit` using `emitParticles`.
+2. `ParticleEmitterOverlay` receives spawn payload and creates particle instances.
+3. RAF updates apply velocity, drag, gravity, and life decay.
+4. Particle overlay draws active particles over the game canvas.
+5. Expired/out-of-bounds particles are removed from the simulation.
 
 ---
 

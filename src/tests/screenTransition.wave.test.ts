@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getTransitionWaveIndex } from "@/components/effects/useScreenTransition";
+import { getTransitionWaveIndex } from "@/components/effects/screenTransition";
 
 describe("getTransitionWaveIndex", () => {
     it("starts earliest at top-left for top-left transitions", () => {

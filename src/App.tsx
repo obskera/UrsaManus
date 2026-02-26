@@ -9,7 +9,9 @@ import {
     ScreenController,
 } from "./components/screenController";
 import {
+    ParticleEmitterOverlay,
     ScreenTransitionOverlay,
+    emitParticles,
     playScreenTransition,
     type TransitionCorner,
 } from "./components/effects";
@@ -53,10 +55,49 @@ export default function App() {
             "bottom-left",
             "bottom-right",
         ];
+        const particleColors = [
+            "#ffd166",
+            "#ef476f",
+            "#06d6a0",
+            "#118ab2",
+            "#f78c6b",
+            "#c77dff",
+        ];
         let index = 0;
 
         const onKeyDown = (event: KeyboardEvent) => {
-            if (event.key.toLowerCase() !== "t" || event.repeat) return;
+            const key = event.key.toLowerCase();
+            if (event.repeat) return;
+
+            if (key === "p") {
+                const x = Math.random() * width;
+                const y = Math.random() * height;
+                const color =
+                    particleColors[
+                        Math.floor(Math.random() * particleColors.length)
+                    ];
+
+                emitParticles({
+                    amount: 40,
+                    location: { x, y },
+                    direction: {
+                        angleDeg: 270,
+                        speed: 160,
+                        spreadDeg: 360,
+                        speedJitter: 80,
+                    },
+                    emissionShape: "point",
+                    lifeMs: 700,
+                    color,
+                    size: 2,
+                    sizeJitter: 1,
+                    gravity: 120,
+                    drag: 0.15,
+                });
+                return;
+            }
+
+            if (key !== "t") return;
 
             const from = corners[index % corners.length];
             index += 1;
@@ -89,6 +130,7 @@ export default function App() {
                     width={width}
                     height={height}
                 />
+                <ParticleEmitterOverlay width={width} height={height} />
                 <ScreenTransitionOverlay width={width} height={height} />
             </div>
             <ScreenController className="snes-layout">

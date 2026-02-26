@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1772006625048" clover="3.2.0">
-  <project timestamp="1772006625048" name="All files">
-    <metrics statements="111" coveredstatements="111" conditionals="76" coveredconditionals="76" methods="37" coveredmethods="37" elements="224" coveredelements="224" complexity="0" loc="111" ncloc="111" packages="5" files="10" classes="10"/>
+<coverage generated="1772088419711" clover="3.2.0">
+  <project timestamp="1772088419711" name="All files">
+    <metrics statements="302" coveredstatements="302" conditionals="162" coveredconditionals="151" methods="80" coveredmethods="80" elements="544" coveredelements="533" complexity="0" loc="302" ncloc="302" packages="9" files="22" classes="22"/>
     <package name="components.Button">
       <metrics statements="2" coveredstatements="2" conditionals="1" coveredconditionals="1" methods="1" coveredmethods="1"/>
       <file name="Button.tsx" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/Button/Button.tsx">
@@ -14,9 +14,9 @@
       <metrics statements="44" coveredstatements="44" conditionals="16" coveredconditionals="16" methods="12" coveredmethods="12"/>
       <file name="Render.tsx" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/Render/Render.tsx">
         <metrics statements="44" coveredstatements="44" conditionals="16" coveredconditionals="16" methods="12" coveredmethods="12"/>
-        <line num="36" count="126" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="95" type="cond" truecount="2" falsecount="0"/>
         <line num="42" count="2" type="stmt"/>
-        <line num="45" count="124" type="stmt"/>
+        <line num="45" count="93" type="stmt"/>
         <line num="51" count="3" type="stmt"/>
         <line num="54" count="7" type="stmt"/>
         <line num="55" count="7" type="cond" truecount="2" falsecount="0"/>
@@ -50,14 +50,231 @@
         <line num="103" count="4" type="stmt"/>
         <line num="106" count="4" type="stmt"/>
         <line num="108" count="4" type="stmt"/>
-        <line num="112" count="80" type="stmt"/>
-        <line num="169" count="80" type="stmt"/>
+        <line num="112" count="54" type="stmt"/>
+        <line num="169" count="54" type="stmt"/>
         <line num="172" count="4" type="stmt"/>
         <line num="174" count="1" type="stmt"/>
         <line num="178" count="7" type="stmt"/>
         <line num="179" count="7" type="stmt"/>
         <line num="180" count="7" type="cond" truecount="2" falsecount="0"/>
         <line num="184" count="9" type="stmt"/>
+      </file>
+    </package>
+    <package name="components.effects">
+      <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <file name="index.ts" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="components.effects.particleEmitter">
+      <metrics statements="92" coveredstatements="92" conditionals="40" coveredconditionals="35" methods="20" coveredmethods="20"/>
+      <file name="ParticleEmitterOverlay.tsx" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/particleEmitter/ParticleEmitterOverlay.tsx">
+        <metrics statements="22" coveredstatements="22" conditionals="6" coveredconditionals="4" methods="4" coveredmethods="4"/>
+        <line num="10" count="4" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="19" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="21" count="3" type="stmt"/>
+        <line num="22" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="2" type="stmt"/>
+        <line num="26" count="2" type="stmt"/>
+        <line num="28" count="2" type="stmt"/>
+        <line num="29" count="42" type="stmt"/>
+        <line num="31" count="42" type="stmt"/>
+        <line num="32" count="168" type="stmt"/>
+        <line num="33" count="168" type="stmt"/>
+        <line num="34" count="168" type="stmt"/>
+        <line num="42" count="42" type="stmt"/>
+        <line num="43" count="42" type="stmt"/>
+        <line num="46" count="2" type="stmt"/>
+        <line num="48" count="2" type="stmt"/>
+        <line num="49" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="53" count="3" type="stmt"/>
+      </file>
+      <file name="index.ts" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/particleEmitter/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="particleEmitterMath.ts" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/particleEmitter/particleEmitterMath.ts">
+        <metrics statements="37" coveredstatements="37" conditionals="25" coveredconditionals="23" methods="5" coveredmethods="5"/>
+        <line num="10" count="26" type="stmt"/>
+        <line num="17" count="47" type="stmt"/>
+        <line num="19" count="47" type="cond" truecount="2" falsecount="0"/>
+        <line num="20" count="21" type="stmt"/>
+        <line num="23" count="26" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="20" type="cond" truecount="1" falsecount="1"/>
+        <line num="25" count="20" type="stmt"/>
+        <line num="26" count="20" type="stmt"/>
+        <line num="27" count="20" type="stmt"/>
+        <line num="33" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="34" count="47" type="stmt"/>
+        <line num="45" count="47" type="cond" truecount="2" falsecount="0"/>
+        <line num="46" count="47" type="cond" truecount="2" falsecount="0"/>
+        <line num="48" count="47" type="stmt"/>
+        <line num="65" count="6" type="stmt"/>
+        <line num="67" count="6" type="stmt"/>
+        <line num="69" count="6" type="stmt"/>
+        <line num="70" count="47" type="stmt"/>
+        <line num="71" count="47" type="stmt"/>
+        <line num="72" count="47" type="stmt"/>
+        <line num="73" count="47" type="stmt"/>
+        <line num="76" count="6" type="stmt"/>
+        <line num="87" count="109" type="stmt"/>
+        <line num="88" count="109" type="stmt"/>
+        <line num="89" count="109" type="stmt"/>
+        <line num="91" count="109" type="stmt"/>
+        <line num="93" count="109" type="stmt"/>
+        <line num="94" count="620" type="stmt"/>
+        <line num="95" count="620" type="cond" truecount="2" falsecount="0"/>
+        <line num="98" count="610" type="stmt"/>
+        <line num="99" count="610" type="stmt"/>
+        <line num="100" count="610" type="stmt"/>
+        <line num="101" count="610" type="stmt"/>
+        <line num="103" count="610" type="cond" truecount="2" falsecount="0"/>
+        <line num="109" count="1" type="stmt"/>
+        <line num="112" count="609" type="stmt"/>
+        <line num="123" count="109" type="stmt"/>
+      </file>
+      <file name="particleEmitterSignal.ts" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/particleEmitter/particleEmitterSignal.ts">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="4" type="stmt"/>
+        <line num="7" count="4" type="stmt"/>
+      </file>
+      <file name="particleFactory.ts" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/particleEmitter/particleFactory.ts">
+        <metrics statements="10" coveredstatements="10" conditionals="5" coveredconditionals="5" methods="4" coveredmethods="4"/>
+        <line num="4" count="48" type="stmt"/>
+        <line num="8" count="48" type="stmt"/>
+        <line num="12" count="96" type="stmt"/>
+        <line num="13" count="96" type="stmt"/>
+        <line num="21" count="48" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="48" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="48" type="stmt"/>
+        <line num="29" count="48" type="stmt"/>
+        <line num="33" count="48" type="stmt"/>
+        <line num="35" count="48" type="stmt"/>
+      </file>
+      <file name="useParticleEmitter.ts" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/particleEmitter/useParticleEmitter.ts">
+        <metrics statements="21" coveredstatements="21" conditionals="4" coveredconditionals="3" methods="6" coveredmethods="6"/>
+        <line num="8" count="6" type="stmt"/>
+        <line num="9" count="6" type="stmt"/>
+        <line num="11" count="6" type="stmt"/>
+        <line num="12" count="6" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="19" count="3" type="stmt"/>
+        <line num="20" count="3" type="stmt"/>
+        <line num="24" count="6" type="stmt"/>
+        <line num="27" count="6" type="stmt"/>
+        <line num="28" count="6" type="stmt"/>
+        <line num="29" count="6" type="stmt"/>
+        <line num="31" count="6" type="stmt"/>
+        <line num="32" count="162" type="stmt"/>
+        <line num="33" count="162" type="stmt"/>
+        <line num="35" count="162" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="108" type="stmt"/>
+        <line num="46" count="162" type="stmt"/>
+        <line num="49" count="6" type="stmt"/>
+        <line num="51" count="6" type="stmt"/>
+        <line num="52" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="56" count="6" type="stmt"/>
+      </file>
+    </package>
+    <package name="components.effects.screenTransition">
+      <metrics statements="83" coveredstatements="83" conditionals="36" coveredconditionals="30" methods="17" coveredmethods="17"/>
+      <file name="ScreenTransitionOverlay.tsx" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/screenTransition/ScreenTransitionOverlay.tsx">
+        <metrics statements="7" coveredstatements="7" conditionals="2" coveredconditionals="2" methods="3" coveredmethods="3"/>
+        <line num="13" count="4" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="19" count="3" type="stmt"/>
+        <line num="20" count="2" type="stmt"/>
+        <line num="27" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="32" count="64" type="stmt"/>
+      </file>
+      <file name="index.ts" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/screenTransition/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="screenTransitionSignal.ts" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/screenTransition/screenTransitionSignal.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="19" count="4" type="stmt"/>
+        <line num="22" count="4" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+      </file>
+      <file name="useScreenTransition.ts" path="/Users/robertothomasjr/Desktop/UrsaManus/src/components/effects/screenTransition/useScreenTransition.ts">
+        <metrics statements="73" coveredstatements="73" conditionals="34" coveredconditionals="28" methods="12" coveredmethods="12"/>
+        <line num="33" count="4" type="stmt"/>
+        <line num="34" count="4" type="stmt"/>
+        <line num="35" count="4" type="stmt"/>
+        <line num="44" count="5000" type="cond" truecount="4" falsecount="0"/>
+        <line num="46" count="4994" type="stmt"/>
+        <line num="48" count="2" type="stmt"/>
+        <line num="50" count="2" type="stmt"/>
+        <line num="52" count="2" type="stmt"/>
+        <line num="57" count="5070" type="stmt"/>
+        <line num="61" count="78" type="stmt"/>
+        <line num="62" count="78" type="cond" truecount="2" falsecount="0"/>
+        <line num="66" count="4992" type="stmt"/>
+        <line num="67" count="4992" type="stmt"/>
+        <line num="73" count="2" type="stmt"/>
+        <line num="88" count="83" type="stmt"/>
+        <line num="90" count="83" type="stmt"/>
+        <line num="91" count="83" type="stmt"/>
+        <line num="93" count="83" type="stmt"/>
+        <line num="94" count="4" type="stmt"/>
+        <line num="97" count="2" type="stmt"/>
+        <line num="98" count="2" type="stmt"/>
+        <line num="99" count="2" type="stmt"/>
+        <line num="103" count="4" type="stmt"/>
+        <line num="106" count="83" type="stmt"/>
+        <line num="107" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="109" count="3" type="stmt"/>
+        <line num="110" count="3" type="stmt"/>
+        <line num="111" count="3" type="stmt"/>
+        <line num="113" count="3" type="stmt"/>
+        <line num="114" count="77" type="stmt"/>
+        <line num="116" count="77" type="cond" truecount="4" falsecount="0"/>
+        <line num="117" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="118" count="1" type="stmt"/>
+        <line num="119" count="1" type="stmt"/>
+        <line num="122" count="1" type="stmt"/>
+        <line num="123" count="1" type="stmt"/>
+        <line num="124" count="1" type="stmt"/>
+        <line num="125" count="1" type="stmt"/>
+        <line num="126" count="1" type="stmt"/>
+        <line num="129" count="76" type="cond" truecount="4" falsecount="0"/>
+        <line num="130" count="1" type="stmt"/>
+        <line num="131" count="1" type="stmt"/>
+        <line num="132" count="1" type="stmt"/>
+        <line num="133" count="1" type="stmt"/>
+        <line num="136" count="75" type="stmt"/>
+        <line num="137" count="75" type="stmt"/>
+        <line num="140" count="3" type="stmt"/>
+        <line num="142" count="3" type="stmt"/>
+        <line num="143" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="147" count="83" type="stmt"/>
+        <line num="148" count="83" type="cond" truecount="2" falsecount="0"/>
+        <line num="150" count="78" type="stmt"/>
+        <line num="151" count="78" type="stmt"/>
+        <line num="152" count="78" type="stmt"/>
+        <line num="153" count="78" type="stmt"/>
+        <line num="154" count="78" type="stmt"/>
+        <line num="156" count="78" type="cond" truecount="1" falsecount="1"/>
+        <line num="159" count="83" type="stmt"/>
+        <line num="161" count="83" type="stmt"/>
+        <line num="165" count="83" type="stmt"/>
+        <line num="168" count="83" type="stmt"/>
+        <line num="170" count="83" type="stmt"/>
+        <line num="172" count="83" type="stmt"/>
+        <line num="173" count="624" type="stmt"/>
+        <line num="174" count="4992" type="stmt"/>
+        <line num="181" count="4992" type="stmt"/>
+        <line num="182" count="4992" type="stmt"/>
+        <line num="186" count="4992" type="cond" truecount="2" falsecount="0"/>
+        <line num="188" count="4992" type="stmt"/>
+        <line num="197" count="78" type="stmt"/>
+        <line num="200" count="83" type="cond" truecount="2" falsecount="0"/>
+        <line num="201" count="5" type="stmt"/>
+        <line num="209" count="78" type="stmt"/>
       </file>
     </package>
     <package name="components.screenController">
@@ -156,6 +373,28 @@
         <line num="12" count="3" type="stmt"/>
         <line num="15" count="3" type="cond" truecount="4" falsecount="0"/>
         <line num="17" count="3" type="stmt"/>
+      </file>
+    </package>
+    <package name="services">
+      <metrics statements="16" coveredstatements="16" conditionals="10" coveredconditionals="10" methods="6" coveredmethods="6"/>
+      <file name="SignalBus.ts" path="/Users/robertothomasjr/Desktop/UrsaManus/src/services/SignalBus.ts">
+        <metrics statements="16" coveredstatements="16" conditionals="10" coveredconditionals="10" methods="6" coveredmethods="6"/>
+        <line num="37" count="8" type="stmt"/>
+        <line num="40" count="16" type="cond" truecount="2" falsecount="0"/>
+        <line num="41" count="16" type="stmt"/>
+        <line num="43" count="16" type="stmt"/>
+        <line num="47" count="12" type="stmt"/>
+        <line num="48" count="12" type="cond" truecount="2" falsecount="0"/>
+        <line num="50" count="4" type="stmt"/>
+        <line num="52" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="56" count="14" type="stmt"/>
+        <line num="57" count="14" type="cond" truecount="2" falsecount="0"/>
+        <line num="59" count="8" type="stmt"/>
+        <line num="63" count="26" type="cond" truecount="2" falsecount="0"/>
+        <line num="64" count="1" type="stmt"/>
+        <line num="65" count="1" type="stmt"/>
+        <line num="68" count="25" type="stmt"/>
+        <line num="72" count="8" type="stmt"/>
       </file>
     </package>
   </project>

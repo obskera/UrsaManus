@@ -1,5 +1,8 @@
 import { useMemo } from "react";
-import { useScreenTransition } from "./useScreenTransition";
+import {
+    type TransitionCell,
+    useScreenTransition,
+} from "./useScreenTransition.ts";
 import "./screenTransition.css";
 
 type ScreenTransitionOverlayProps = {
@@ -25,7 +28,7 @@ const ScreenTransitionOverlay = ({
 
     return (
         <div className="screen-transition-overlay" style={style} aria-hidden>
-            {transition.cells.map((cell) => (
+            {transition.cells.map((cell: TransitionCell) => (
                 <div
                     key={cell.key}
                     className="screen-transition-cell"
