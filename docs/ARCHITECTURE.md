@@ -82,6 +82,21 @@ flowchart LR
 - Manages world bounds entities and collision masking.
 - Exposes opt-in gravity/physics stepping per entity.
 
+### Save services (`src/services/save/`)
+
+- `schema.ts`
+    - Defines versioned `SaveGameV1` payload contract.
+    - Validates incoming save payloads and version compatibility.
+- `state.ts`
+    - Serializes `DataBus` `GameState` into JSON-safe save objects.
+    - Rehydrates validated save payloads back into live `DataBus` state.
+- `bus.ts`
+    - Handles quick save/load persistence in localStorage (`ursa:quickSave:v1`).
+    - Provides throttled autosave scheduler used by app runtime updates.
+- `file.ts`
+    - Exports save snapshots as downloadable `.json` files.
+    - Imports user-provided `.json` files with structured error reporting.
+
 ### Physics (`src/logic/physics/`)
 
 - `createPhysicsBody`
@@ -134,6 +149,15 @@ flowchart LR
 3. Axis movement is applied with collision checks (`isBlockedBySolid`).
 4. Blocked axes are reverted and axis velocity is zeroed.
 5. App re-renders only when physics reports position changes.
+
+### Save/load lifecycle
+
+1. App state changes (input, camera pan, physics movement).
+2. Quick-save scheduler batches frequent updates.
+3. Scheduler executes `quickSave()` to persist `SaveGameV1` in localStorage.
+4. On startup, `quickLoad()` attempts to restore the latest quick save.
+5. Optional manual export/import flows use `exportSaveFile()` / `importSaveFile(file)`.
+6. Import path validates payload schema/version before rehydration into `DataBus`.
 
 ### Transition lifecycle (signal path)
 

@@ -1,5 +1,11 @@
 // src/App.tsx (dynamic: sync DataBus to Render props)
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+    type ChangeEvent,
+} from "react";
 import {
     SideScrollerControls,
     TopDownControls,
@@ -8,9 +14,17 @@ import { SideScrollerCanvas, TopDownCanvas } from "./components/gameModes";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
 import { GAME_VIEW_CONFIG } from "@/config/gameViewConfig";
 import { dataBus } from "./services/DataBus";
+import {
+    createQuickSaveScheduler,
+    exportSaveFile,
+    importSaveFile,
+    quickLoad,
+    quickSave,
+} from "@/services/save";
 import "./App.css";
 
 type GameMode = "side-scroller" | "top-down";
+type DevSaveStatusTone = "neutral" | "success" | "error";
 
 const GAME_MODE_QUERY_KEY = "mode";
 
@@ -28,6 +42,10 @@ export default function App() {
     const isDevMode = import.meta.env.DEV;
     const [showDebugOutlines, setShowDebugOutlines] = useState(isDevMode);
     const [showDevControls, setShowDevControls] = useState(false);
+    const [devSaveStatus, setDevSaveStatus] = useState<{
+        tone: DevSaveStatusTone;
+        message: string;
+    } | null>(null);
     const [gameMode, setGameMode] = useState<GameMode>(() => {
         const modeFromQuery = normalizeGameMode(
             new URLSearchParams(window.location.search).get(
@@ -38,6 +56,86 @@ export default function App() {
         return modeFromQuery ?? "side-scroller";
     });
     const gameScreenRef = useRef<HTMLDivElement | null>(null);
+    const saveImportInputRef = useRef<HTMLInputElement | null>(null);
+    const devSaveStatusTimerRef = useRef<number | null>(null);
+    const quickSaveSchedulerRef = useRef(
+        createQuickSaveScheduler({ waitMs: 700 }),
+    );
+
+    const publishDevSaveStatus = useCallback(
+        (message: string, tone: DevSaveStatusTone = "neutral") => {
+            setDevSaveStatus({ message, tone });
+
+            if (devSaveStatusTimerRef.current !== null) {
+                window.clearTimeout(devSaveStatusTimerRef.current);
+            }
+
+            devSaveStatusTimerRef.current = window.setTimeout(() => {
+                setDevSaveStatus(null);
+                devSaveStatusTimerRef.current = null;
+            }, 2600);
+        },
+        [],
+    );
+
+    const runQuickSaveAction = useCallback(() => {
+        const ok = quickSave();
+
+        if (ok) {
+            setHasProgress(true);
+            publishDevSaveStatus("Quick save complete", "success");
+            return;
+        }
+
+        publishDevSaveStatus("Quick save failed", "error");
+    }, [publishDevSaveStatus]);
+
+    const runQuickLoadAction = useCallback(() => {
+        const ok = quickLoad();
+
+        if (ok) {
+            setHasProgress(true);
+            publishDevSaveStatus("Quick load complete", "success");
+            force((n) => n + 1);
+            return;
+        }
+
+        publishDevSaveStatus("No quick save found", "neutral");
+    }, [publishDevSaveStatus]);
+
+    const runExportSaveAction = useCallback(() => {
+        const result = exportSaveFile();
+
+        if (result.ok) {
+            publishDevSaveStatus(`Exported ${result.fileName}`, "success");
+            return;
+        }
+
+        publishDevSaveStatus(result.message, "error");
+    }, [publishDevSaveStatus]);
+
+    const triggerImportPicker = useCallback(() => {
+        saveImportInputRef.current?.click();
+    }, []);
+
+    const onImportFileChange = useCallback(
+        async (event: ChangeEvent<HTMLInputElement>) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            const result = await importSaveFile(file);
+            if (result.ok) {
+                setHasProgress(true);
+                publishDevSaveStatus(`Imported ${result.fileName}`, "success");
+                force((n) => n + 1);
+            } else {
+                publishDevSaveStatus(result.message, "error");
+            }
+
+            event.target.value = "";
+        },
+        [publishDevSaveStatus],
+    );
 
     const width = GAME_VIEW_CONFIG.canvas.width;
     const height = GAME_VIEW_CONFIG.canvas.height;
@@ -63,6 +161,83 @@ export default function App() {
     }, [hasProgress]);
 
     useEffect(() => {
+        const quickSaveScheduler = quickSaveSchedulerRef.current;
+        const didRestore = quickLoad();
+        if (didRestore) {
+            queueMicrotask(() => {
+                setHasProgress(true);
+                force((n) => n + 1);
+            });
+        }
+
+        return () => {
+            if (devSaveStatusTimerRef.current !== null) {
+                window.clearTimeout(devSaveStatusTimerRef.current);
+                devSaveStatusTimerRef.current = null;
+            }
+            quickSaveScheduler.dispose();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isDevMode) {
+            return;
+        }
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (!event.altKey || !event.shiftKey) {
+                return;
+            }
+
+            const target = event.target as HTMLElement | null;
+            if (
+                target &&
+                (target.tagName === "INPUT" ||
+                    target.tagName === "TEXTAREA" ||
+                    target.tagName === "SELECT" ||
+                    target.isContentEditable)
+            ) {
+                return;
+            }
+
+            const key = event.key.toLowerCase();
+            if (key === "s") {
+                event.preventDefault();
+                runQuickSaveAction();
+                return;
+            }
+
+            if (key === "l") {
+                event.preventDefault();
+                runQuickLoadAction();
+                return;
+            }
+
+            if (key === "e") {
+                event.preventDefault();
+                runExportSaveAction();
+                return;
+            }
+
+            if (key === "i") {
+                event.preventDefault();
+                triggerImportPicker();
+            }
+        };
+
+        window.addEventListener("keydown", onKeyDown);
+        return () => {
+            window.removeEventListener("keydown", onKeyDown);
+        };
+    }, [
+        isDevMode,
+        runExportSaveAction,
+        runQuickLoadAction,
+        runQuickSaveAction,
+        triggerImportPicker,
+    ]);
+
+    useEffect(() => {
         return setupDevEffectHotkeys({
             enabled: import.meta.env.DEV,
             width,
@@ -71,6 +246,7 @@ export default function App() {
             cameraPanStepPx,
             cameraPanFastMultiplier,
             onCameraPan: () => {
+                quickSaveSchedulerRef.current.notifyChange();
                 force((n) => n + 1);
             },
         });
@@ -95,6 +271,7 @@ export default function App() {
             const didUpdate = dataBus.stepPhysics(deltaMs);
             if (didUpdate) {
                 setHasProgress(true);
+                quickSaveSchedulerRef.current.notifyChange();
                 force((n) => n + 1);
             }
 
@@ -112,6 +289,7 @@ export default function App() {
 
     const handleMove = useCallback(() => {
         setHasProgress(true);
+        quickSaveSchedulerRef.current.notifyChange();
         force((n) => n + 1);
     }, []);
 
@@ -254,7 +432,87 @@ export default function App() {
                         aria-label="Default dev controls"
                     >
                         <p className="DevControlsTitle">Default dev controls</p>
+                        <div
+                            className="DevSaveActionRow"
+                            role="group"
+                            aria-label="Save and load actions"
+                        >
+                            <button
+                                type="button"
+                                className="DebugToggle"
+                                onClick={(event) => {
+                                    runQuickSaveAction();
+                                    event.currentTarget.blur();
+                                }}
+                            >
+                                Quick Save
+                            </button>
+                            <button
+                                type="button"
+                                className="DebugToggle"
+                                onClick={(event) => {
+                                    runQuickLoadAction();
+                                    event.currentTarget.blur();
+                                }}
+                            >
+                                Quick Load
+                            </button>
+                            <button
+                                type="button"
+                                className="DebugToggle"
+                                onClick={(event) => {
+                                    runExportSaveAction();
+                                    event.currentTarget.blur();
+                                }}
+                            >
+                                Export Save
+                            </button>
+                            <button
+                                type="button"
+                                className="DebugToggle"
+                                onClick={(event) => {
+                                    triggerImportPicker();
+                                    event.currentTarget.blur();
+                                }}
+                            >
+                                Import Save
+                            </button>
+                            <input
+                                ref={saveImportInputRef}
+                                type="file"
+                                accept="application/json,.json"
+                                className="DevHiddenFileInput"
+                                onChange={(event) => {
+                                    void onImportFileChange(event);
+                                }}
+                            />
+                        </div>
+                        {devSaveStatus ? (
+                            <p
+                                className={`DevSaveStatus DevSaveStatus--${devSaveStatus.tone}`}
+                                role="status"
+                                aria-live="polite"
+                            >
+                                {devSaveStatus.message}
+                            </p>
+                        ) : null}
                         <ul className="DevControlsList">
+                            <li>
+                                <span className="DevKey">Alt + Shift + S</span>
+                                Quick save
+                            </li>
+                            <li>
+                                <span className="DevKey">Alt + Shift + L</span>
+                                Quick load
+                            </li>
+                            <li>
+                                <span className="DevKey">Alt + Shift + E</span>
+                                Export save file
+                            </li>
+                            <li>
+                                <span className="DevKey">Alt + Shift + I</span>
+                                Import save file
+                            </li>
                             <li>
                                 <span className="DevKey">T</span>
                                 Cycle screen transition previews

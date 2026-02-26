@@ -1444,7 +1444,59 @@ Current examples:
 
 ---
 
-## 11) Notes
+## 11) Save File Import/Export
+
+### Quick save (localStorage)
+
+Quick save APIs are available in `src/services/save/bus.ts`:
+
+- `quickSave()` stores current state in localStorage key `ursa:quickSave:v1`.
+- `quickLoad()` restores that snapshot when present/valid.
+- `clearQuickSave()` removes the stored snapshot.
+
+Default app behavior in development:
+
+- App startup attempts `quickLoad()` automatically.
+- Runtime state changes trigger throttled autosave via `createQuickSaveScheduler`.
+
+Dev shortcuts (when dev mode is enabled):
+
+- `Alt + Shift + S` — Quick Save
+- `Alt + Shift + L` — Quick Load
+- `Alt + Shift + E` — Export Save File
+- `Alt + Shift + I` — Import Save File
+
+Save file APIs live in `src/services/save/file.ts` and use the versioned `SaveGameV1` schema from `src/services/save/schema.ts`.
+
+### Export
+
+- Call `exportSaveFile()` to download a `.json` snapshot of current `DataBus` state.
+- Filename format: `ursa-save-<timestamp>.json` (see `buildSaveFileName`).
+- Return shape:
+    - success: `{ ok: true, fileName }`
+    - error: `{ ok: false, code, message }`
+
+### Import
+
+- Call `importSaveFile(file)` with a user-selected `.json` file.
+- Import validates JSON, validates save schema/version, and then rehydrates state.
+- Return shape:
+    - success: `{ ok: true, fileName }`
+    - error: `{ ok: false, code, message }`
+
+Supported import error codes:
+
+- `file-read-failed`
+- `empty-file`
+- `invalid-json`
+- `invalid-save-format`
+- `rehydrate-failed`
+
+The import/export format is intentionally tied to `version` in schema so future migrations can be added without breaking existing save files.
+
+---
+
+## 12) Notes
 
 - Canvas image loading in `Render` uses internal URL caching.
 - `ArrowKeyControl` handles both Arrow keys and WASD.
