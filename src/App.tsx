@@ -6,6 +6,7 @@ import {
 } from "./components/screenController";
 import { SideScrollerCanvas, TopDownCanvas } from "./components/gameModes";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
+import { GAME_VIEW_CONFIG } from "@/config/gameViewConfig";
 import { dataBus } from "./services/DataBus";
 import "./App.css";
 
@@ -38,8 +39,14 @@ export default function App() {
     });
     const gameScreenRef = useRef<HTMLDivElement | null>(null);
 
-    const width = 400;
-    const height = 300;
+    const width = GAME_VIEW_CONFIG.canvas.width;
+    const height = GAME_VIEW_CONFIG.canvas.height;
+    const cameraPanStepPx = GAME_VIEW_CONFIG.camera.panStepPx;
+    const cameraPanFastMultiplier = GAME_VIEW_CONFIG.camera.fastPanMultiplier;
+    const state = dataBus.getState();
+    const camera = state.camera;
+    const cameraModeLabel =
+        camera.mode === "follow-player" ? "Follow" : "Manual";
 
     useEffect(() => {
         if (!hasProgress) return;
@@ -61,8 +68,13 @@ export default function App() {
             width,
             height,
             getContainer: () => gameScreenRef.current,
+            cameraPanStepPx,
+            cameraPanFastMultiplier,
+            onCameraPan: () => {
+                force((n) => n + 1);
+            },
         });
-    }, [height, width]);
+    }, [cameraPanFastMultiplier, cameraPanStepPx, height, width]);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -118,6 +130,12 @@ export default function App() {
             <SideScrollerCanvas
                 width={width}
                 height={height}
+                worldWidth={GAME_VIEW_CONFIG.world.width}
+                worldHeight={GAME_VIEW_CONFIG.world.height}
+                cameraMode={GAME_VIEW_CONFIG.camera.mode}
+                cameraClampToWorld={GAME_VIEW_CONFIG.camera.clampToWorld}
+                manualCameraStartX={GAME_VIEW_CONFIG.camera.manualStart.x}
+                manualCameraStartY={GAME_VIEW_CONFIG.camera.manualStart.y}
                 containerRef={gameScreenRef}
                 showDebugOutlines={showDebugOutlines}
             />
@@ -125,6 +143,12 @@ export default function App() {
             <TopDownCanvas
                 width={width}
                 height={height}
+                worldWidth={GAME_VIEW_CONFIG.world.width}
+                worldHeight={GAME_VIEW_CONFIG.world.height}
+                cameraMode={GAME_VIEW_CONFIG.camera.mode}
+                cameraClampToWorld={GAME_VIEW_CONFIG.camera.clampToWorld}
+                manualCameraStartX={GAME_VIEW_CONFIG.camera.manualStart.x}
+                manualCameraStartY={GAME_VIEW_CONFIG.camera.manualStart.y}
                 containerRef={gameScreenRef}
                 showDebugOutlines={showDebugOutlines}
             />
@@ -248,6 +272,16 @@ export default function App() {
                                 Stop torch flame emitter
                             </li>
                             <li>
+                                <span className="DevKey">I / J / K / L</span>
+                                Pan camera in manual mode
+                            </li>
+                            <li>
+                                <span className="DevKey">
+                                    Shift + I / J / K / L
+                                </span>
+                                Pan camera faster in manual mode
+                            </li>
+                            <li>
                                 <span className="DevKey">Arrows / WASD</span>
                                 Move player
                             </li>
@@ -269,6 +303,23 @@ export default function App() {
                         <span className="CanvasMetaPill">
                             Resolution: {width}×{height}
                         </span>
+                        {isDevMode ? (
+                            <>
+                                <span className="CanvasMetaPill">
+                                    World: {state.worldSize.width}×
+                                    {state.worldSize.height}
+                                </span>
+                                <span className="CanvasMetaPill">
+                                    Viewport: {camera.viewport.width}×
+                                    {camera.viewport.height}
+                                </span>
+                                <span className="CanvasMetaPill">
+                                    Camera: {cameraModeLabel} (
+                                    {Math.round(camera.x)},
+                                    {Math.round(camera.y)})
+                                </span>
+                            </>
+                        ) : null}
                     </div>
                     {canvas}
                 </div>

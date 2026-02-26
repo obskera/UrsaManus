@@ -1,10 +1,41 @@
 import { createElement } from "react";
+import CompassActionControl from "./CompassActionControl";
+import { createPlayerInputActions } from "./inputActions";
 import ScreenControl from "./ScreenControl";
+import type { ScreenControllerChildProps } from "./screenController";
 
-const CompassDirectionControl = () => {
+export type CompassDirectionControlMode = "log" | "player-actions";
+
+export type CompassDirectionControlProps = ScreenControllerChildProps & {
+    mode?: CompassDirectionControlMode;
+    onMove?: () => void;
+    onInteract?: () => void;
+    className?: string;
+};
+
+const CompassDirectionControl = ({
+    mode = "log",
+    onMove,
+    onInteract,
+    className,
+}: CompassDirectionControlProps) => {
+    if (mode === "player-actions") {
+        return createElement(CompassActionControl, {
+            className,
+            actions: createPlayerInputActions({
+                onChanged: onMove,
+                onInteract,
+            }),
+        });
+    }
+
+    const resolvedClassName = className
+        ? `compass-direction-control ${className}`
+        : "compass-direction-control";
+
     return createElement(
         "div",
-        { className: "compass-direction-control" },
+        { className: resolvedClassName },
         createElement(ScreenControl, {
             label: "N",
             className: "compass-button north",

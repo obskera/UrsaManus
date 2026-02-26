@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
     startTorchFlameEmitter: vi.fn(),
     stopTorchFlameEmitter: vi.fn(),
     playScreenTransition: vi.fn(),
+    moveCameraBy: vi.fn(),
 }));
 
 vi.mock("@/components/effects/particleEmitter", () => ({
@@ -23,6 +24,12 @@ vi.mock("@/components/effects/particleEmitter", () => ({
 
 vi.mock("@/components/effects/screenTransition", () => ({
     playScreenTransition: mocks.playScreenTransition,
+}));
+
+vi.mock("@/services/DataBus", () => ({
+    dataBus: {
+        moveCameraBy: mocks.moveCameraBy,
+    },
 }));
 
 import { setupDevEffectHotkeys } from "@/components/effects/dev/devEffectHotkeys";
@@ -157,5 +164,95 @@ describe("setupDevEffectHotkeys", () => {
         cleanup();
 
         expect(mocks.stopTorchFlameEmitter).toHaveBeenCalledWith("dev-torch");
+    });
+
+    it("pans camera with IJKL keys", () => {
+        const cleanup = setupDevEffectHotkeys({
+            enabled: true,
+            width: 400,
+            height: 300,
+            getContainer: () => null,
+        });
+
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "i" }));
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "k" }));
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "j" }));
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "l" }));
+
+        expect(mocks.moveCameraBy).toHaveBeenCalledWith(0, -24);
+        expect(mocks.moveCameraBy).toHaveBeenCalledWith(0, 24);
+        expect(mocks.moveCameraBy).toHaveBeenCalledWith(-24, 0);
+        expect(mocks.moveCameraBy).toHaveBeenCalledWith(24, 0);
+
+        cleanup();
+    });
+
+    it("pans camera faster with Shift+IJKL keys", () => {
+        const cleanup = setupDevEffectHotkeys({
+            enabled: true,
+            width: 400,
+            height: 300,
+            getContainer: () => null,
+        });
+
+        window.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "i", shiftKey: true }),
+        );
+        window.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "k", shiftKey: true }),
+        );
+        window.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "j", shiftKey: true }),
+        );
+        window.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "l", shiftKey: true }),
+        );
+
+        expect(mocks.moveCameraBy).toHaveBeenCalledWith(0, -72);
+        expect(mocks.moveCameraBy).toHaveBeenCalledWith(0, 72);
+        expect(mocks.moveCameraBy).toHaveBeenCalledWith(-72, 0);
+        expect(mocks.moveCameraBy).toHaveBeenCalledWith(72, 0);
+
+        cleanup();
+    });
+
+    it("uses configurable camera pan speed settings", () => {
+        const cleanup = setupDevEffectHotkeys({
+            enabled: true,
+            width: 400,
+            height: 300,
+            getContainer: () => null,
+            cameraPanStepPx: 10,
+            cameraPanFastMultiplier: 5,
+        });
+
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "l" }));
+        window.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "l", shiftKey: true }),
+        );
+
+        expect(mocks.moveCameraBy).toHaveBeenCalledWith(10, 0);
+        expect(mocks.moveCameraBy).toHaveBeenCalledWith(50, 0);
+
+        cleanup();
+    });
+
+    it("invokes onCameraPan callback after panning", () => {
+        const onCameraPan = vi.fn();
+
+        const cleanup = setupDevEffectHotkeys({
+            enabled: true,
+            width: 400,
+            height: 300,
+            getContainer: () => null,
+            onCameraPan,
+        });
+
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "i" }));
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "j" }));
+
+        expect(onCameraPan).toHaveBeenCalledTimes(2);
+
+        cleanup();
     });
 });

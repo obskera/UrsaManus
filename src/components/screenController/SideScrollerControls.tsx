@@ -22,7 +22,10 @@ const SideScrollerControls = ({ onMove }: SideScrollerControlsProps) => {
         createElement(
             ScreenControlGroup,
             { className: "face-button-group" },
-            createElement(CompassDirectionControl),
+            createElement(CompassDirectionControl, {
+                mode: "player-actions",
+                onMove,
+            }),
         ),
     );
 };

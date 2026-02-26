@@ -6,6 +6,11 @@ import TopDownCanvas from "@/components/gameModes/TopDownCanvas";
 const dataBusMocks = vi.hoisted(() => {
     return {
         setWorldSize: vi.fn(),
+        setCameraViewport: vi.fn(),
+        setCameraClampToWorld: vi.fn(),
+        setCameraMode: vi.fn(),
+        setCameraPosition: vi.fn(),
+        setCameraFollowPlayer: vi.fn(),
         setWorldBoundsEnabled: vi.fn(),
         setPlayerCanPassWorldBounds: vi.fn(),
         setPlayerMovementConfig: vi.fn(),
@@ -13,7 +18,10 @@ const dataBusMocks = vi.hoisted(() => {
         enablePlayerGravity: vi.fn(),
         disablePlayerPhysics: vi.fn(),
         setPlayerMoveInput: vi.fn(),
-        getState: vi.fn(() => ({ entitiesById: {} })),
+        getState: vi.fn(() => ({
+            entitiesById: {},
+            camera: { x: 0, y: 0 },
+        })),
     };
 });
 
@@ -47,6 +55,8 @@ describe("game mode canvas presets", () => {
         render(<SideScrollerCanvas width={320} height={240} />);
 
         expect(dataBusMocks.setWorldSize).toHaveBeenCalledWith(320, 240);
+        expect(dataBusMocks.setCameraViewport).toHaveBeenCalledWith(320, 240);
+        expect(dataBusMocks.setCameraFollowPlayer).toHaveBeenCalledWith(true);
         expect(dataBusMocks.enablePlayerGravity).toHaveBeenCalled();
         expect(dataBusMocks.setPlayerMovementConfig).toHaveBeenCalled();
     });
@@ -55,6 +65,8 @@ describe("game mode canvas presets", () => {
         render(<TopDownCanvas width={320} height={240} />);
 
         expect(dataBusMocks.setWorldSize).toHaveBeenCalledWith(320, 240);
+        expect(dataBusMocks.setCameraViewport).toHaveBeenCalledWith(320, 240);
+        expect(dataBusMocks.setCameraFollowPlayer).toHaveBeenCalledWith(true);
         expect(dataBusMocks.disablePlayerPhysics).toHaveBeenCalled();
         expect(dataBusMocks.setPlayerMoveInput).toHaveBeenCalledWith(0);
     });

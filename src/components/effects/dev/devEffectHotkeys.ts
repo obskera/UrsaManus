@@ -12,12 +12,16 @@ import {
     type ScreenTransitionVariant,
     type TransitionCorner,
 } from "../screenTransition";
+import { dataBus } from "@/services/DataBus";
 
 export type SetupDevEffectHotkeysOptions = {
     enabled: boolean;
     width: number;
     height: number;
     getContainer: () => HTMLElement | null;
+    cameraPanStepPx?: number;
+    cameraPanFastMultiplier?: number;
+    onCameraPan?: () => void;
 };
 
 export function setupDevEffectHotkeys({
@@ -25,6 +29,9 @@ export function setupDevEffectHotkeys({
     width,
     height,
     getContainer,
+    cameraPanStepPx = 24,
+    cameraPanFastMultiplier = 3,
+    onCameraPan,
 }: SetupDevEffectHotkeysOptions): () => void {
     if (!enabled) {
         return () => {};
@@ -78,6 +85,33 @@ export function setupDevEffectHotkeys({
     const onKeyDown = (event: KeyboardEvent) => {
         const key = event.key.toLowerCase();
         if (event.repeat) return;
+        const panStep = event.shiftKey
+            ? cameraPanStepPx * cameraPanFastMultiplier
+            : cameraPanStepPx;
+
+        if (key === "i") {
+            dataBus.moveCameraBy(0, -panStep);
+            onCameraPan?.();
+            return;
+        }
+
+        if (key === "k") {
+            dataBus.moveCameraBy(0, panStep);
+            onCameraPan?.();
+            return;
+        }
+
+        if (key === "j") {
+            dataBus.moveCameraBy(-panStep, 0);
+            onCameraPan?.();
+            return;
+        }
+
+        if (key === "l") {
+            dataBus.moveCameraBy(panStep, 0);
+            onCameraPan?.();
+            return;
+        }
 
         if (key === "f") {
             if (event.shiftKey) {

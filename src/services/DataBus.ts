@@ -13,11 +13,23 @@ import {
     type PhysicsBody,
 } from "@/logic/physics";
 
+export type CameraMode = "follow-player" | "manual";
+
+export type CameraState = {
+    x: number;
+    y: number;
+    viewport: { width: number; height: number };
+    mode: CameraMode;
+    clampToWorld: boolean;
+    followTargetId: string | null;
+};
+
 export type GameState = {
     entitiesById: Record<string, Entity>;
     playerId: string;
 
     worldSize: { width: number; height: number };
+    camera: CameraState;
     worldBoundsEnabled: boolean;
     worldBoundsIds: string[];
 };
@@ -118,10 +130,76 @@ class DataBus {
             playerId: player.id,
 
             worldSize: { width: 400, height: 300 },
+            camera: {
+                x: 0,
+                y: 0,
+                viewport: { width: 400, height: 300 },
+                mode: "follow-player",
+                clampToWorld: true,
+                followTargetId: player.id,
+            },
             worldBoundsEnabled: false,
             worldBoundsIds: [],
         };
     })();
+
+    private clampCameraPosition(x: number, y: number) {
+        if (!this.state.camera.clampToWorld) {
+            return { x, y };
+        }
+
+        const maxX = Math.max(
+            0,
+            this.state.worldSize.width - this.state.camera.viewport.width,
+        );
+        const maxY = Math.max(
+            0,
+            this.state.worldSize.height - this.state.camera.viewport.height,
+        );
+
+        return {
+            x: Math.max(0, Math.min(x, maxX)),
+            y: Math.max(0, Math.min(y, maxY)),
+        };
+    }
+
+    private getCameraFollowPosition(entity: Entity) {
+        const entityCenterX =
+            entity.position.x + (entity.spriteSize * entity.scaler) / 2;
+        const entityCenterY =
+            entity.position.y + (entity.spriteSize * entity.scaler) / 2;
+
+        return {
+            x: entityCenterX - this.state.camera.viewport.width / 2,
+            y: entityCenterY - this.state.camera.viewport.height / 2,
+        };
+    }
+
+    private syncCameraToState() {
+        if (this.state.camera.mode === "follow-player") {
+            const targetId =
+                this.state.camera.followTargetId ?? this.state.playerId;
+            const target = this.state.entitiesById[targetId];
+
+            if (target) {
+                const nextPosition = this.getCameraFollowPosition(target);
+                const clamped = this.clampCameraPosition(
+                    nextPosition.x,
+                    nextPosition.y,
+                );
+                this.state.camera.x = clamped.x;
+                this.state.camera.y = clamped.y;
+                return;
+            }
+        }
+
+        const clamped = this.clampCameraPosition(
+            this.state.camera.x,
+            this.state.camera.y,
+        );
+        this.state.camera.x = clamped.x;
+        this.state.camera.y = clamped.y;
+    }
 
     public getPlayer(): Entity {
         return this.state.entitiesById[this.state.playerId];
@@ -174,6 +252,7 @@ class DataBus {
 
         if (moved) {
             this.runCollisions();
+            this.syncCameraToState();
         }
 
         return moved;
@@ -201,6 +280,7 @@ class DataBus {
 
     setState(updater: (prev: GameState) => GameState) {
         this.state = updater(this.state);
+        this.syncCameraToState();
     }
 
     public setWorldSize(width: number, height: number) {
@@ -208,6 +288,61 @@ class DataBus {
         if (this.state.worldBoundsEnabled) {
             this.rebuildWorldBounds();
         }
+        this.syncCameraToState();
+    }
+
+    public setCameraViewport(width: number, height: number) {
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+
+        this.state.camera.viewport = { width, height };
+        this.syncCameraToState();
+    }
+
+    public setCameraClampToWorld(enabled: boolean) {
+        this.state.camera.clampToWorld = enabled;
+        this.syncCameraToState();
+    }
+
+    public setCameraMode(mode: CameraMode) {
+        this.state.camera.mode = mode;
+        if (mode === "follow-player" && !this.state.camera.followTargetId) {
+            this.state.camera.followTargetId = this.state.playerId;
+        }
+        this.syncCameraToState();
+    }
+
+    public setCameraFollowTarget(entityId: string | null) {
+        this.state.camera.followTargetId = entityId;
+        if (entityId) {
+            this.state.camera.mode = "follow-player";
+        }
+        this.syncCameraToState();
+    }
+
+    public setCameraFollowPlayer(enabled: boolean = true) {
+        if (enabled) {
+            this.state.camera.mode = "follow-player";
+            this.state.camera.followTargetId = this.state.playerId;
+        } else if (this.state.camera.mode === "follow-player") {
+            this.state.camera.mode = "manual";
+        }
+
+        this.syncCameraToState();
+    }
+
+    public setCameraPosition(x: number, y: number) {
+        const clamped = this.clampCameraPosition(x, y);
+        this.state.camera.x = clamped.x;
+        this.state.camera.y = clamped.y;
+    }
+
+    public moveCameraBy(dx: number, dy: number) {
+        this.setCameraPosition(
+            this.state.camera.x + dx,
+            this.state.camera.y + dy,
+        );
     }
 
     public setWorldBoundsEnabled(enabled: boolean) {
@@ -516,6 +651,7 @@ class DataBus {
 
         if (hasPositionChanges) {
             this.runCollisions();
+            this.syncCameraToState();
         }
 
         return hasPositionChanges;

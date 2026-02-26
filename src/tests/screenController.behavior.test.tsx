@@ -54,6 +54,25 @@ describe("screenController behavior", () => {
         logSpy.mockRestore();
     });
 
+    it("maps compass directions to player actions in player-actions mode", () => {
+        const onMove = vi.fn();
+
+        render(
+            <CompassDirectionControl mode="player-actions" onMove={onMove} />,
+        );
+
+        fireEvent.click(screen.getByRole("button", { name: "N" }));
+        fireEvent.click(screen.getByRole("button", { name: "S" }));
+        fireEvent.click(screen.getByRole("button", { name: "E" }));
+        fireEvent.click(screen.getByRole("button", { name: "W" }));
+
+        expect(dataBusMocks.movePlayerUp).toHaveBeenCalledTimes(1);
+        expect(dataBusMocks.movePlayerDown).toHaveBeenCalledTimes(1);
+        expect(dataBusMocks.movePlayerRight).toHaveBeenCalledTimes(1);
+        expect(dataBusMocks.movePlayerLeft).toHaveBeenCalledTimes(1);
+        expect(onMove).toHaveBeenCalledTimes(4);
+    });
+
     it("uses hold intent for on-screen left/right and click for up/down", () => {
         const onMove = vi.fn();
 

@@ -135,7 +135,46 @@ Contributors adding/changing dev key behavior should:
 
 ---
 
-## 7) Game Mode Presets
+## 7) Input Mapping Pattern (Compass + Keys)
+
+When adding gameplay input, define action semantics first (`north/south/east/west/interact`) and map devices (keys/buttons) to those actions.
+
+Recommended pattern:
+
+```ts
+const actions = {
+    north: () => {
+        // move/jump logic
+    },
+    south: () => {
+        // move logic
+    },
+    east: () => {
+        // move logic
+    },
+    west: () => {
+        // move logic
+    },
+    interact: () => {
+        // action logic
+    },
+};
+```
+
+Compass buttons should call these same actions via `ScreenControl` handlers (`onActivate`), instead of embedding one-off logic directly in button components.
+
+Keys should also call the same action map from a single keybinding hook/effect.
+
+Contributor rules for input mapping:
+
+- prefer action names over key names in logic (`north` not `w`),
+- keep key/button wiring thin and declarative,
+- avoid duplicating movement logic in multiple control components,
+- update `docs/USAGE.md` copy/paste snippets when input contracts change.
+
+---
+
+## 8) Game Mode Presets
 
 Prebuilt presets live in:
 
@@ -155,7 +194,7 @@ When changing one side of a preset pair, also verify:
 
 ---
 
-## 8) Pull Request Checklist
+## 9) Pull Request Checklist
 
 Before opening a PR:
 
@@ -169,7 +208,7 @@ Before opening a PR:
 
 ---
 
-## 9) Design Intent Reminder
+## 10) Design Intent Reminder
 
 UrsaManus is intentionally a **small core engine** that can be **extended indefinitely**.
 

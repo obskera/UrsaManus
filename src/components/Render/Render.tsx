@@ -22,6 +22,8 @@ export interface RenderProps {
     items: RenderableItem[];
     width?: number;
     height?: number;
+    cameraX?: number;
+    cameraY?: number;
     showDebugOutlines?: boolean;
 }
 
@@ -78,6 +80,8 @@ const Render = ({
     items,
     width = 300,
     height = 300,
+    cameraX = 0,
+    cameraY = 0,
     showDebugOutlines = true,
 }: RenderProps) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -142,8 +146,20 @@ const Render = ({
                             it.spriteSheetTileHeight,
                         );
 
-                        const dx = it.position.x;
-                        const dy = it.position.y;
+                        const drawWidth = it.spriteSize * it.scaler;
+                        const drawHeight = it.spriteSize * it.scaler;
+                        const worldX = it.position.x;
+                        const worldY = it.position.y;
+                        const isOutsideViewport =
+                            worldX + drawWidth < cameraX ||
+                            worldX > cameraX + width ||
+                            worldY + drawHeight < cameraY ||
+                            worldY > cameraY + height;
+
+                        if (isOutsideViewport) continue;
+
+                        const dx = worldX - cameraX;
+                        const dy = worldY - cameraY;
 
                         context.drawImage(
                             img,
@@ -153,8 +169,8 @@ const Render = ({
                             it.spriteSize,
                             dx,
                             dy,
-                            it.spriteSize * it.scaler,
-                            it.spriteSize * it.scaler,
+                            drawWidth,
+                            drawHeight,
                         );
 
                         if (showDebugOutlines && it.collider?.debugDraw) {
@@ -187,7 +203,7 @@ const Render = ({
             cancelled = true;
             if (raf) cancelAnimationFrame(raf);
         };
-    }, [items, width, height, showDebugOutlines]);
+    }, [items, width, height, cameraX, cameraY, showDebugOutlines]);
 
     return (
         <div

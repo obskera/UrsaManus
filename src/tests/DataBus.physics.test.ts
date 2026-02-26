@@ -30,6 +30,10 @@ function cloneGameState(state: GameState): GameState {
         ...state,
         entitiesById,
         worldSize: { ...state.worldSize },
+        camera: {
+            ...state.camera,
+            viewport: { ...state.camera.viewport },
+        },
         worldBoundsIds: [...state.worldBoundsIds],
     };
 }
@@ -309,6 +313,65 @@ describe("DataBus physics integration", () => {
 
         expect(changed).toBe(false);
         expect(player.physicsBody).toBeUndefined();
+    });
+
+    it("clamps manual camera position to world edges", () => {
+        dataBus.setWorldSize(500, 500);
+        dataBus.setCameraViewport(300, 300);
+        dataBus.setCameraClampToWorld(true);
+
+        dataBus.setCameraPosition(999, 999);
+
+        const { camera } = dataBus.getState();
+        expect(camera.x).toBe(200);
+        expect(camera.y).toBe(200);
+    });
+
+    it("follows player position when camera is in follow mode", () => {
+        dataBus.setWorldSize(500, 500);
+        dataBus.setCameraViewport(300, 300);
+        dataBus.setCameraClampToWorld(true);
+        dataBus.setCameraFollowPlayer(true);
+
+        const player = dataBus.getPlayer();
+        player.position.x = 250;
+        player.position.y = 250;
+
+        dataBus.movePlayerBy(1, 0);
+
+        const { camera } = dataBus.getState();
+        expect(camera.x).toBeGreaterThan(0);
+        expect(camera.y).toBeGreaterThan(0);
+    });
+
+    it("keeps manual camera static while player moves", () => {
+        dataBus.setWorldSize(500, 500);
+        dataBus.setCameraViewport(300, 300);
+        dataBus.setCameraClampToWorld(true);
+        dataBus.setCameraMode("manual");
+        dataBus.setCameraPosition(120, 140);
+
+        const player = dataBus.getPlayer();
+        player.position.x = 200;
+        player.position.y = 200;
+
+        dataBus.movePlayerBy(10, 0);
+
+        const { camera } = dataBus.getState();
+        expect(camera.x).toBe(120);
+        expect(camera.y).toBe(140);
+    });
+
+    it("preserves follow mode when camera is manually panned", () => {
+        dataBus.setWorldSize(500, 500);
+        dataBus.setCameraViewport(300, 300);
+        dataBus.setCameraClampToWorld(true);
+        dataBus.setCameraFollowPlayer(true);
+
+        dataBus.moveCameraBy(24, 0);
+
+        const { camera } = dataBus.getState();
+        expect(camera.mode).toBe("follow-player");
     });
 
     it("ignores enable/disable velocity operations for missing entities", () => {

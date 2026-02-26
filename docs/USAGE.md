@@ -50,6 +50,353 @@ If you started from this repository as a template, complete this once before fea
     - `npm run test:coverage:strict`
 - [ ] Confirm CI passes in GitHub Actions after first push
 
+### Default style primitives (`src/styles/defaults.css`)
+
+Engine default classes are globally loaded in `src/main.tsx` to help extensions stay visually consistent.
+
+Think of these as lightweight engine utility classes (similar to Bootstrap utility/components, but scoped to UrsaManus defaults).
+
+Use these class groups:
+
+- Containers/layout: `um-container`, `um-panel`, `um-stack`, `um-row`
+- Text/meta: `um-title`, `um-text`, `um-help`, `um-label`
+- Buttons: `um-button`, `um-button--primary`, `um-button--ghost`, `um-button--capsule`
+- Capsules/pills: `um-capsule`
+- Inputs: `um-input`, `um-select`, `um-textarea`
+- Checkbox/radio: `um-choice-group`, `um-choice`, `um-checkbox`, `um-radio`
+- Lists: `um-list`, `um-list-item`, `um-list--plain`, `um-list--inline`
+
+### Class reference (quick lookup)
+
+| Class                | Purpose                                     | Typical element(s)                       |
+| -------------------- | ------------------------------------------- | ---------------------------------------- |
+| `um-container`       | Primary boxed section wrapper               | `section`, `div`                         |
+| `um-panel`           | Nested boxed region inside container        | `div`                                    |
+| `um-stack`           | Vertical layout with consistent spacing     | `div`, `section`, `form`                 |
+| `um-row`             | Inline row layout with wrapping and spacing | `div`                                    |
+| `um-title`           | Section title text style                    | `h2`, `h3`, `p`                          |
+| `um-text`            | Standard muted body text                    | `p`, `span`                              |
+| `um-help`            | Small helper/supporting text                | `p`, `small`                             |
+| `um-label`           | Label style with aligned content            | `label`                                  |
+| `um-button`          | Base button style                           | `button`                                 |
+| `um-button--primary` | Primary action button variant               | `button`                                 |
+| `um-button--ghost`   | Low-emphasis transparent button variant     | `button`                                 |
+| `um-button--capsule` | Pill-shaped button variant                  | `button`                                 |
+| `um-capsule`         | Small metadata/status capsule               | `span`, `div`                            |
+| `um-input`           | Text-like input field style                 | `input[type=text]`, `input[type=number]` |
+| `um-select`          | Select field style                          | `select`                                 |
+| `um-textarea`        | Multiline text field style                  | `textarea`                               |
+| `um-choice-group`    | Inline grouping for radio/checkbox sets     | `div`, `fieldset`                        |
+| `um-choice`          | Label wrapper for one checkbox/radio choice | `label`                                  |
+| `um-checkbox`        | Checkbox accent styling hook                | `input[type=checkbox]`                   |
+| `um-radio`           | Radio accent styling hook                   | `input[type=radio]`                      |
+| `um-list`            | Default styled list container               | `ul`, `ol`                               |
+| `um-list-item`       | List line-height/readability style          | `li`                                     |
+| `um-list--plain`     | Remove bullets and left indent              | `ul`, `ol`                               |
+| `um-list--inline`    | Inline/wrapping list layout                 | `ul`, `ol`                               |
+
+Recommended approach:
+
+- Start with `um-container` + `um-stack` for section structure.
+- Add semantic HTML first, then attach `um-*` classes.
+- Layer feature-specific classes after `um-*` classes when customization is needed.
+
+### Usage model (Bootstrap-like)
+
+- Compose classes on plain HTML elements (`div`, `button`, `input`, `ul`, etc.).
+- Start with structure classes (`um-container`, `um-stack`, `um-row`).
+- Add component classes (`um-button`, `um-input`, `um-capsule`).
+- Add variants only when needed (`um-button--primary`, `um-button--capsule`).
+
+### Common combinations
+
+- Card/panel: `um-container um-stack`
+- Toolbar row: `um-row` + `um-button` variants
+- Labeled form field: `um-stack` + `um-label` + `um-input`
+- Choice sets: `um-choice-group` + `um-choice`
+- Status tags: `um-capsule`
+- Inline metadata list: `um-list um-list--inline`
+
+Copy/paste starter:
+
+```tsx
+<section className="um-container um-stack">
+    <h3 className="um-title">Panel title</h3>
+    <p className="um-text">Consistent default styling for extensions.</p>
+
+    <div className="um-row">
+        <button className="um-button">Default</button>
+        <button className="um-button um-button--primary">Primary</button>
+        <button className="um-button um-button--capsule">Capsule</button>
+        <span className="um-capsule">Status</span>
+    </div>
+
+    <label className="um-label" htmlFor="name-input">
+        Name
+    </label>
+    <input id="name-input" className="um-input" placeholder="Type..." />
+
+    <div className="um-choice-group" role="group" aria-label="Options">
+        <label className="um-choice">
+            <input type="checkbox" className="um-checkbox" /> Enable SFX
+        </label>
+        <label className="um-choice">
+            <input type="radio" name="difficulty" className="um-radio" />
+            Normal
+        </label>
+    </div>
+
+    <ul className="um-list">
+        <li className="um-list-item">First item</li>
+        <li className="um-list-item">Second item</li>
+    </ul>
+</section>
+```
+
+### Recipe: compact action toolbar
+
+```tsx
+<div className="um-row">
+    <button className="um-button um-button--primary">Save</button>
+    <button className="um-button">Reset</button>
+    <button className="um-button um-button--ghost">Advanced</button>
+    <span className="um-capsule">Draft</span>
+</div>
+```
+
+### Recipe: list + empty state container
+
+```tsx
+<section className="um-container um-stack">
+    <h3 className="um-title">Inventory</h3>
+
+    <ul className="um-list">
+        <li className="um-list-item">Potion</li>
+        <li className="um-list-item">Torch</li>
+        <li className="um-list-item">Map</li>
+    </ul>
+
+    <p className="um-help">No more items available.</p>
+</section>
+```
+
+### Recipe: radio + checkbox filter bar
+
+```tsx
+<div className="um-container um-stack">
+    <p className="um-title">Filters</p>
+
+    <div className="um-choice-group" role="group" aria-label="Difficulty">
+        <label className="um-choice">
+            <input type="radio" name="difficulty" className="um-radio" />
+            Easy
+        </label>
+        <label className="um-choice">
+            <input
+                type="radio"
+                name="difficulty"
+                className="um-radio"
+                defaultChecked
+            />
+            Normal
+        </label>
+        <label className="um-choice">
+            <input type="radio" name="difficulty" className="um-radio" />
+            Hard
+        </label>
+    </div>
+
+    <label className="um-choice">
+        <input type="checkbox" className="um-checkbox" defaultChecked />
+        Show completed quests
+    </label>
+</div>
+```
+
+### Notes
+
+- `um-button` styles are intentionally generic; apply game/mode-specific classes on top when needed.
+- `um-checkbox` / `um-radio` rely on native inputs with engine accent color for accessibility and browser consistency.
+- Utilities are globally available once `src/styles/defaults.css` is imported in `src/main.tsx`.
+
+### Migration examples (plain HTML → `um-*`)
+
+#### 1) Buttons + status capsule
+
+Before:
+
+```tsx
+<div>
+    <button>Save</button>
+    <button>Cancel</button>
+    <span>Draft</span>
+</div>
+```
+
+After:
+
+```tsx
+<div className="um-row">
+    <button className="um-button um-button--primary">Save</button>
+    <button className="um-button">Cancel</button>
+    <span className="um-capsule">Draft</span>
+</div>
+```
+
+#### 2) Form block
+
+Before:
+
+```tsx
+<div>
+    <label htmlFor="name">Name</label>
+    <input id="name" />
+</div>
+```
+
+After:
+
+```tsx
+<div className="um-container um-stack">
+    <label className="um-label" htmlFor="name">
+        Name
+    </label>
+    <input id="name" className="um-input" />
+</div>
+```
+
+#### 3) Checkbox/radio options
+
+Before:
+
+```tsx
+<div>
+    <label>
+        <input type="checkbox" /> Enable audio
+    </label>
+    <label>
+        <input type="radio" name="mode" /> Arcade
+    </label>
+</div>
+```
+
+After:
+
+```tsx
+<div className="um-choice-group" role="group" aria-label="Settings">
+    <label className="um-choice">
+        <input type="checkbox" className="um-checkbox" /> Enable audio
+    </label>
+    <label className="um-choice">
+        <input type="radio" className="um-radio" name="mode" /> Arcade
+    </label>
+</div>
+```
+
+#### 4) Lists
+
+Before:
+
+```tsx
+<ul>
+    <li>Potion</li>
+    <li>Map</li>
+</ul>
+```
+
+After:
+
+```tsx
+<ul className="um-list">
+    <li className="um-list-item">Potion</li>
+    <li className="um-list-item">Map</li>
+</ul>
+```
+
+#### 5) Container + helper text
+
+Before:
+
+```tsx
+<div>
+    <h3>Settings</h3>
+    <p>Adjust options below.</p>
+</div>
+```
+
+After:
+
+```tsx
+<section className="um-container um-stack">
+    <h3 className="um-title">Settings</h3>
+    <p className="um-help">Adjust options below.</p>
+</section>
+```
+
+### Reusable input helpers (keys + compass)
+
+UrsaManus now includes helper utilities in `@/components/screenController` so you can assign gameplay behavior once and reuse it across keyboard + compass controls:
+
+- `createPlayerInputActions(options)`
+- `useActionKeyBindings(actions, options)`
+- `CompassActionControl`
+
+Copy/paste starter:
+
+```tsx
+import {
+    CompassActionControl,
+    createPlayerInputActions,
+    useActionKeyBindings,
+} from "@/components/screenController";
+
+function InputModule({ onChanged }: { onChanged?: () => void }) {
+    const actions = createPlayerInputActions({
+        onChanged,
+        onInteract: () => {
+            // custom interact behavior
+        },
+    });
+
+    useActionKeyBindings(actions, {
+        enabled: true,
+        preventDefault: true,
+    });
+
+    return <CompassActionControl actions={actions} />;
+}
+```
+
+Tip: treat `actions` as your semantic gameplay contract (`north/south/east/west/interact`) and keep device bindings (`WASD`, arrows, on-screen buttons) thin.
+
+### Full reference component (end-to-end)
+
+If you want a complete starter that combines:
+
+- `um-*` default style classes,
+- shared player input action map,
+- keyboard bindings,
+- compass on-screen controls,
+
+use:
+
+- `DefaultInputStyleExample` from `src/components/examples/DefaultInputStyleExample.tsx`
+
+Import:
+
+```tsx
+import { DefaultInputStyleExample } from "@/components/examples";
+
+<DefaultInputStyleExample
+    onChanged={() => {
+        // force render or sync UI state
+    }}
+    onInteract={() => {
+        // custom interaction behavior
+    }}
+/>;
+```
+
 ---
 
 ## 3) Rendering Sprites (`Render`)
@@ -61,6 +408,8 @@ If you started from this repository as a template, complete this once before fea
 - `items: RenderableItem[]` (required)
 - `width?: number` (default `300`)
 - `height?: number` (default `300`)
+- `cameraX?: number` (default `0`) — viewport left edge in world space
+- `cameraY?: number` (default `0`) — viewport top edge in world space
 - `showDebugOutlines?: boolean` (default `true`) — toggles collider debug draw + debug frame style
 
 ### `RenderableItem` essentials
@@ -91,20 +440,60 @@ Use these for faster setup without manually wiring mode-specific `DataBus` confi
 - `SideScrollerCanvas` — enables gravity + side-scroller movement tuning
 - `TopDownCanvas` — disables player gravity/physics for top-down movement
 
+Both presets now support separating world size from canvas size:
+
+- `width` / `height` = canvas viewport size
+- `worldWidth` / `worldHeight` = full world bounds size
+- `cameraMode` = `"follow-player"` or `"manual"`
+- `cameraClampToWorld` = clamps viewport to world edges
+- `manualCameraStartX` / `manualCameraStartY` = starting viewport origin for manual mode
+
 ```tsx
 import { SideScrollerCanvas, TopDownCanvas } from "@/components/gameModes";
 
 <SideScrollerCanvas
     width={400}
     height={300}
+    worldWidth={500}
+    worldHeight={500}
+    cameraMode="follow-player"
     showDebugOutlines={import.meta.env.DEV}
 />;
 <TopDownCanvas
     width={400}
     height={300}
+    worldWidth={500}
+    worldHeight={500}
+    cameraMode="manual"
+    manualCameraStartX={50}
+    manualCameraStartY={50}
     showDebugOutlines={import.meta.env.DEV}
 />;
 ```
+
+### Global app-level world/camera config
+
+Default app wiring uses `src/config/gameViewConfig.ts` so both modes share one camera/world definition.
+
+```ts
+export const GAME_VIEW_CONFIG = {
+    canvas: { width: 400, height: 300 },
+    world: { width: 500, height: 500 },
+    camera: {
+        mode: "follow-player",
+        clampToWorld: true,
+        manualStart: { x: 0, y: 0 },
+        panStepPx: 24,
+        fastPanMultiplier: 3,
+    },
+};
+```
+
+For manual camera movement at runtime, use `DataBus` camera methods:
+
+- `dataBus.setCameraMode("manual")`
+- `dataBus.setCameraPosition(x, y)`
+- `dataBus.moveCameraBy(dx, dy)`
 
 Pair them with matching control presets from `@/components/screenController`:
 
@@ -222,6 +611,8 @@ In development mode, the default landing page includes capsule toggles for debug
 | `P`                   | Spawn/cycle particle presets                |
 | `F`                   | Start torch flame at mouse/center fallback  |
 | `Shift+F`             | Stop torch flame emitter                    |
+| `I/J/K/L`             | Pan camera (manual camera mode)             |
+| `Shift+I/J/K/L`       | Pan camera faster (manual camera mode)      |
 | `Show/Hide debug...`  | Toggle debug outlines in landing page       |
 | `Show/Hide dev...`    | Toggle landing-page dev controls help panel |
 
@@ -499,7 +890,10 @@ All screen controls are under `src/components/screenController/` and re-exported
 - `ScreenControlGroup` — grouped/labeled section wrapper
 - `ArrowKeyControl` — keyboard listener control (Arrow keys + WASD)
 - `OnScreenArrowControl` — clickable arrow buttons (movement)
-- `CompassDirectionControl` — `N/S/E/W` buttons (currently console logging)
+- `CompassDirectionControl` — `N/S/E/W` buttons (`log` mode or `player-actions` mode)
+- `CompassActionControl` — compass control that directly consumes a provided action map
+- `createPlayerInputActions` — reusable gameplay action map factory
+- `useActionKeyBindings` — reusable keyboard-to-action binding hook
 
 ### Recommended composition
 
@@ -510,7 +904,7 @@ All screen controls are under `src/components/screenController/` and re-exported
         <OnScreenArrowControl onMove={() => force((n) => n + 1)} />
     </ScreenControlGroup>
     <ScreenControlGroup className="face-button-group">
-        <CompassDirectionControl />
+        <CompassDirectionControl mode="player-actions" />
     </ScreenControlGroup>
 </ScreenController>
 ```
@@ -519,6 +913,122 @@ Default keyboard controls:
 
 - Movement: Arrow keys / `WASD`
 - Jump: `Space`
+
+### Input mapping template (copy/paste)
+
+Use the built-in helpers when you want one place to map gameplay actions to both keys and on-screen buttons.
+
+```tsx
+import {
+    CompassDirectionControl,
+    createPlayerInputActions,
+    useActionKeyBindings,
+} from "@/components/screenController";
+
+function ControlsModule({ onChanged }: { onChanged?: () => void }) {
+    const actions = createPlayerInputActions({
+        onChanged,
+        onInteract: () => {
+            // your interaction logic
+        },
+    });
+
+    useActionKeyBindings(actions, {
+        enabled: true,
+        preventDefault: true,
+    });
+
+    return <CompassDirectionControl mode="player-actions" onMove={onChanged} />;
+}
+```
+
+### Compass buttons template (primary)
+
+`CompassDirectionControl` supports both modes:
+
+- `mode="log"` (default) for quick demo logging
+- `mode="player-actions"` for gameplay movement/jump behavior via `DataBus`
+
+```tsx
+import { ScreenControl } from "@/components/screenController";
+
+type CompassActions = {
+    north: () => void;
+    south: () => void;
+    east: () => void;
+    west: () => void;
+};
+
+export function GameCompass({ actions }: { actions: CompassActions }) {
+    return (
+        <div className="compass-direction-control">
+            <ScreenControl
+                label="N"
+                className="compass-button north"
+                onActivate={actions.north}
+            />
+            <ScreenControl
+                label="W"
+                className="compass-button west"
+                onActivate={actions.west}
+            />
+            <ScreenControl
+                label="E"
+                className="compass-button east"
+                onActivate={actions.east}
+            />
+            <ScreenControl
+                label="S"
+                className="compass-button south"
+                onActivate={actions.south}
+            />
+        </div>
+    );
+}
+```
+
+### Key assignment template
+
+Use this when you need custom keys beyond default `ArrowKeyControl` behavior.
+
+```tsx
+import { useEffect } from "react";
+
+type InputActions = {
+    north: () => void;
+    south: () => void;
+    east: () => void;
+    west: () => void;
+    interact: () => void;
+};
+
+export function useKeyBindings(actions: InputActions, enabled: boolean = true) {
+    useEffect(() => {
+        if (!enabled) return;
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            const key = event.key.toLowerCase();
+
+            if (key === "w" || key === "arrowup") actions.north();
+            if (key === "s" || key === "arrowdown") actions.south();
+            if (key === "d" || key === "arrowright") actions.east();
+            if (key === "a" || key === "arrowleft") actions.west();
+            if (key === "e") actions.interact();
+        };
+
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [actions, enabled]);
+}
+```
+
+### Quick cheat sheet: assign once, reuse everywhere
+
+- Define action map once (`north/south/east/west/interact`).
+- Feed the same actions into compass `ScreenControl` buttons.
+- Feed the same actions into keyboard bindings.
+- Keep `onChanged` callback centralized to force render only where needed.
+- Prefer action names (`north`, `interact`) instead of input names (`w`, `buttonA`) so you can remap later.
 
 ---
 
@@ -530,7 +1040,7 @@ The transition system is signal-driven.
 - `playScreenTransition(payload)` emits a transition signal with full control.
 - `playBlackFade(options)` is a preset helper for black transitions.
 - Variant helpers: `playVenetianBlindsTransition`, `playMosaicDissolveTransition`, `playIrisTransition`, `playDirectionalPushTransition`.
-- `setupDevEffectHotkeys(options)` wires development preview keys (`T`, `P`, `F`, `Shift+F`).
+- `setupDevEffectHotkeys(options)` wires development preview keys (`T`, `P`, `F`, `Shift+F`, `I/J/K/L`, `Shift+I/J/K/L`).
 
 ### Required app wiring
 
@@ -672,6 +1182,8 @@ Default keybinds:
 - `P` — cycle particle presets at random in-bounds positions
 - `F` — start/reposition a continuous torch emitter at mouse position (or center fallback)
 - `Shift+F` — stop the torch emitter
+- `I/J/K/L` — pan camera in manual mode
+- `Shift+I/J/K/L` — pan camera faster in manual mode
 
 Contributor workflow notes for these controls are documented in [CONTRIBUTING.md](CONTRIBUTING.md#6-dev-preview-controls-effects).
 
