@@ -11,6 +11,8 @@ flowchart LR
     K[Keyboard: Arrow/WASD] --> AK[ArrowKeyControl]
     C[On-Screen D-Pad Clicks] --> OSC[OnScreenArrowControl]
     N[Compass N/S/E/W Clicks] --> CDC[CompassDirectionControl]
+    E[Game/Event Layer] --> SB[SignalBus]
+    SB --> STO[ScreenTransitionOverlay]
 
     AK --> DB[DataBus]
     OSC --> DB
@@ -22,6 +24,7 @@ flowchart LR
     DB --> APP[App.tsx force re-render]
     APP --> RENDER[Render component]
     RENDER --> CANVAS[Canvas frame draw]
+    STO --> CANVAS
 ```
 
 ---
@@ -63,6 +66,15 @@ flowchart LR
 - Draws entities to canvas each RAF tick.
 - Optionally draws collider debug rectangles.
 
+### Effects (`src/components/effects/`)
+
+- `ScreenTransitionOverlay`
+    - Subscribes to transition play signals through `useScreenTransition`.
+    - Draws pixelated transition cells over the canvas container.
+- `screenTransitionSignal`
+    - Defines the transition payload contract.
+    - Emits the `effects:screen-transition:play` signal.
+
 ---
 
 ## 3) Frame Lifecycle
@@ -72,6 +84,14 @@ flowchart LR
 3. `DataBus` updates player position and resolves blocking collisions.
 4. App triggers a re-render (`force` state increment).
 5. `Render` receives updated entity data and paints next frame.
+
+### Transition lifecycle (signal path)
+
+1. Any module emits `effects:screen-transition:play` using `playScreenTransition` or `playBlackFade`.
+2. `ScreenTransitionOverlay` receives the payload and starts cover animation.
+3. `onCovered` runs at full cover (safe point for scene/world swap).
+4. Reveal phase runs.
+5. `onComplete` runs after transition ends.
 
 ---
 

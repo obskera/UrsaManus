@@ -57,6 +57,40 @@ Current direction is principle-led rather than milestone-led.
 - Prioritize practical building blocks for small projects first
 - Preserve strong TypeScript contracts and high test coverage as the project grows
 
+## Effects Quick Start
+
+UrsaManus includes a signal-driven pixel transition effect.
+
+1. Mount the overlay above your canvas render:
+
+```tsx
+<div className="GameScreen">
+    <Render items={entities} width={400} height={300} />
+    <ScreenTransitionOverlay width={400} height={300} />
+</div>
+```
+
+2. Trigger transitions from anywhere:
+
+```ts
+import { playBlackFade } from "@/components/effects";
+
+playBlackFade({
+    from: "top-left",
+    durationMs: 500,
+    stepMs: 16,
+    boxSize: 16,
+    onCovered: () => {
+        // swap scene/map/state while fully covered
+    },
+});
+```
+
+For full API and architecture details, see:
+
+- [docs/USAGE.md](docs/USAGE.md)
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
 ## Testing Standards
 
 UrsaManus uses:

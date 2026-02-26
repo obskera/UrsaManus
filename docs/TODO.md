@@ -8,6 +8,7 @@ This file tracks the immediate next systems planned for UrsaManus.
 - Screen transitions
 - Screen effects
 - Controller and canvas styling defaults (initial baseline)
+- Save/load system (MVP): autosave progress and restore on refresh
 
 ## Notes
 

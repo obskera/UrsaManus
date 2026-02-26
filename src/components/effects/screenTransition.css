@@ -1,0 +1,14 @@
+.screen-transition-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    overflow: hidden;
+    image-rendering: pixelated;
+    z-index: 2;
+}
+
+.screen-transition-cell {
+    position: absolute;
+    will-change: opacity, transform;
+}

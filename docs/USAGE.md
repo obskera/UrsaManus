@@ -124,7 +124,91 @@ All screen controls are under `src/components/screenController/` and re-exported
 
 ---
 
-## 6) Keyboard Hook (`useArrowKeys`)
+## 6) Screen Transition Effects (`components/effects`)
+
+The transition system is signal-driven.
+
+- `ScreenTransitionOverlay` renders the pixel transition above the game canvas.
+- `playScreenTransition(payload)` emits a transition signal with full control.
+- `playBlackFade(options)` is a preset helper for black transitions.
+
+### Required app wiring
+
+Mount `ScreenTransitionOverlay` in the same positioned container as `Render`.
+
+```tsx
+<div className="GameScreen">
+    <Render
+        items={Object.values(dataBus.getState().entitiesById)}
+        width={400}
+        height={300}
+    />
+    <ScreenTransitionOverlay width={400} height={300} />
+</div>
+```
+
+### Trigger a transition
+
+```ts
+import { playScreenTransition } from "@/components/effects";
+
+playScreenTransition({
+    color: "#000",
+    from: "top-left",
+    durationMs: 500,
+    stepMs: 16,
+    boxSize: 16,
+});
+```
+
+### Trigger with black preset
+
+```ts
+import { playBlackFade } from "@/components/effects";
+
+playBlackFade({
+    from: "bottom-right",
+    durationMs: 500,
+    stepMs: 16,
+    boxSize: 16,
+});
+```
+
+### Transition payload reference
+
+- `color: string` — fill color for transition boxes
+- `from: "top-left" | "top-right" | "bottom-left" | "bottom-right"`
+- `durationMs?: number` — per phase duration (cover and reveal)
+- `stepMs?: number` — delay between diagonal wave cells
+- `boxSize?: number` — pixel block size
+- `onCovered?: () => void` — called when screen is fully covered
+- `onComplete?: () => void` — called after reveal finishes
+
+### Recommended scene-swap flow
+
+Use `onCovered` to swap world/screen state while the transition is opaque:
+
+```ts
+playBlackFade({
+    from: "top-right",
+    onCovered: () => {
+        // swap map/screen/entities here
+    },
+    onComplete: () => {
+        // optional post-transition work
+    },
+});
+```
+
+### Notes
+
+- Transition signal: `effects:screen-transition:play`
+- Overlay is visual-only (`pointer-events: none`), so gameplay input still routes normally.
+- Current `T`-key preview trigger in `App.tsx` is development-only.
+
+---
+
+## 7) Keyboard Hook (`useArrowKeys`)
 
 `src/logic/useArrowKeys.ts` is a reusable hook for directional keyboard input.
 
@@ -146,7 +230,7 @@ useArrowKeys({
 
 ---
 
-## 7) Testing Conventions
+## 8) Testing Conventions
 
 - Use explicit Vitest imports in every test file (`describe`, `it`, `expect`, `vi`, etc.)
 - Naming convention:
@@ -162,7 +246,7 @@ Current examples:
 
 ---
 
-## 8) Common Extension Tasks
+## 9) Common Extension Tasks
 
 ### Add a new control
 
@@ -180,7 +264,7 @@ Current examples:
 
 ---
 
-## 9) Notes
+## 10) Notes
 
 - Canvas image loading in `Render` uses internal URL caching.
 - `ArrowKeyControl` handles both Arrow keys and WASD.
