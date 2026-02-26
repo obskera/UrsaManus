@@ -20,6 +20,8 @@ import {
     PlatformerHUDPresetExample,
     QuickHUDLayoutExample,
     ToggleExample,
+    VirtualActionButtonExample,
+    VirtualDPadExample,
     TopDownHUDPresetExample,
 } from "./components/examples";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
@@ -588,6 +590,8 @@ export default function App() {
                             <LifeGaugeExample title="LifeGauge preview" />
                             <ActionButtonExample title="ActionButton preview" />
                             <ToggleExample title="Toggle preview" />
+                            <VirtualActionButtonExample title="VirtualActionButton preview" />
+                            <VirtualDPadExample title="VirtualDPad preview" />
                             <CooldownIndicatorExample title="CooldownIndicator preview" />
                             <HUDSlotExample title="HUDSlot preview" />
                             <HUDAnchorExample title="HUDAnchor preview" />

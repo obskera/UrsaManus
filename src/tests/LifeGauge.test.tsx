@@ -48,4 +48,34 @@ describe("LifeGauge", () => {
         );
         expect(screen.queryByRole("meter")).not.toBeInTheDocument();
     });
+
+    it("handles invalid bounds and max<=min while honoring format/className/showValueText", () => {
+        const { rerender } = render(
+            <LifeGauge
+                value={0.7}
+                min={Number.POSITIVE_INFINITY}
+                max={Number.NaN}
+                className="custom-life"
+                showValueText={false}
+                formatValueText={({ percentage }) => `${percentage}%`}
+            />,
+        );
+
+        const fallbackMeter = screen.getByRole("meter", { name: "Life" });
+        expect(fallbackMeter).toHaveAttribute("aria-valuemin", "0");
+        expect(fallbackMeter).toHaveAttribute("aria-valuemax", "1");
+        expect(fallbackMeter).toHaveAttribute("aria-valuenow", "0.7");
+        expect(fallbackMeter).toHaveAttribute("aria-valuetext", "70%");
+        expect(fallbackMeter).toHaveClass("custom-life");
+        expect(
+            fallbackMeter.querySelector(".um-life-gauge__value"),
+        ).not.toBeInTheDocument();
+
+        rerender(<LifeGauge value={5} min={5} max={5} label="Edge" />);
+
+        const edgeMeter = screen.getByRole("meter", { name: "Edge" });
+        expect(edgeMeter).toHaveAttribute("aria-valuemin", "5");
+        expect(edgeMeter).toHaveAttribute("aria-valuemax", "6");
+        expect(edgeMeter).toHaveAttribute("aria-valuenow", "5");
+    });
 });

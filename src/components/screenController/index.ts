@@ -10,7 +10,16 @@ export { default as TopDownControls } from "./TopDownControls";
 export { default as TopDownKeyControl } from "./topDownKeyControl";
 export { default as TopDownOnScreenControl } from "./topDownOnScreenControl";
 export { createPlayerInputActions } from "./inputActions";
+export {
+    createInputComponentAdapters,
+    invokeDirectionalAction,
+    toInputDirection,
+} from "./inputMappingAdapters";
 export { useActionKeyBindings } from "./useActionKeyBindings";
+export {
+    getFocusableElements,
+    handleArrowFocusNavigation,
+} from "./focusNavigation";
 export type { ArrowKeyControlProps } from "./arrowKeyControl";
 export type {
     CompassDirectionControlMode,
@@ -21,6 +30,12 @@ export type {
     CreatePlayerInputActionsOptions,
     InputActionMap,
 } from "./inputActions";
+export type {
+    DirectionalActions,
+    InputComponentAdapters,
+    InputDirection,
+    InputDirectionAlias,
+} from "./inputMappingAdapters";
 export type { OnScreenArrowControlProps } from "./onScreenArrowControl";
 export type { ScreenControlGroupProps } from "./ScreenControlGroup";
 export type { SideScrollerControlsProps } from "./SideScrollerControls";
@@ -31,6 +46,10 @@ export type {
     InputKeyMap,
     UseActionKeyBindingsOptions,
 } from "./useActionKeyBindings";
+export type {
+    FocusNavigationOrientation,
+    HandleArrowFocusNavigationOptions,
+} from "./focusNavigation";
 export type {
     ScreenControllerChildProps,
     ScreenControlProps,

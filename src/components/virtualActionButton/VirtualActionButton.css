@@ -1,0 +1,62 @@
+.um-virtual-action-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--um-space-1);
+    min-width: 4.25rem;
+    min-height: 4.25rem;
+    border-radius: var(--um-radius-pill);
+    border: 1px solid var(--um-border-soft);
+    background: var(--um-surface);
+    color: var(--um-text-primary);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background-color var(--um-duration-fast) var(--um-ease-standard),
+        border-color var(--um-duration-fast) var(--um-ease-standard),
+        transform var(--um-duration-fast) var(--um-ease-standard);
+}
+
+.um-virtual-action-button:hover {
+    background: var(--um-surface-hover);
+}
+
+.um-virtual-action-button:focus-visible {
+    outline: 2px solid var(--um-focus-ring);
+    outline-offset: 2px;
+}
+
+.um-virtual-action-button--held {
+    border-color: var(--um-accent-border);
+    background: var(--um-accent-soft);
+    transform: translateY(1px);
+}
+
+.um-virtual-action-button--cooldown,
+.um-virtual-action-button--disabled {
+    cursor: not-allowed;
+    color: var(--um-text-muted);
+}
+
+.um-virtual-action-button--disabled {
+    opacity: 0.72;
+}
+
+.um-virtual-action-button__label {
+    position: relative;
+    z-index: 1;
+}
+
+.um-virtual-action-button__cooldown {
+    position: absolute;
+    inset-inline: 10%;
+    bottom: 10%;
+    display: inline-flex;
+    justify-content: center;
+}
+
+.um-virtual-action-button__indicator {
+    min-width: 2.2rem;
+}

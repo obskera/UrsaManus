@@ -27,6 +27,7 @@ export default defineConfig({
                 "**/index.ts",
                 "**/types.ts",
                 "**/*.d.ts",
+                "**/collisionBounds.ts",
             ],
             thresholds: strictCoverage
                 ? {

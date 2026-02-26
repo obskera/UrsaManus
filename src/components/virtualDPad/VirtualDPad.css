@@ -1,0 +1,64 @@
+.um-virtual-dpad {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    grid-template-rows: repeat(3, auto);
+    grid-template-areas:
+        ". up ."
+        "left . right"
+        ". down .";
+    gap: 0;
+}
+
+.um-virtual-dpad__button {
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: var(--um-radius-sm);
+    border: 1px solid var(--um-border-soft);
+    background: var(--um-surface);
+    color: var(--um-text-primary);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background-color var(--um-duration-fast) var(--um-ease-standard),
+        border-color var(--um-duration-fast) var(--um-ease-standard);
+}
+
+.um-virtual-dpad__button:hover {
+    background: var(--um-surface-hover);
+}
+
+.um-virtual-dpad__button:focus-visible {
+    outline: 2px solid var(--um-focus-ring);
+    outline-offset: 2px;
+}
+
+.um-virtual-dpad__button.is-held {
+    border-color: var(--um-accent-border);
+    background: var(--um-accent-soft);
+}
+
+.um-virtual-dpad__up {
+    grid-area: up;
+}
+
+.um-virtual-dpad__left {
+    grid-area: left;
+}
+
+.um-virtual-dpad__right {
+    grid-area: right;
+}
+
+.um-virtual-dpad__down {
+    grid-area: down;
+}
+
+.um-virtual-dpad--disabled {
+    opacity: 0.7;
+}
+
+.um-virtual-dpad--disabled .um-virtual-dpad__button {
+    cursor: not-allowed;
+    color: var(--um-text-muted);
+}

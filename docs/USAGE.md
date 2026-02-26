@@ -20,9 +20,12 @@ Quick links for reusable, copy/paste-friendly UI building blocks:
 - [LifeGauge UI primitive (default + skinnable)](#lifegauge-ui-primitive-default--skinnable)
 - [ActionButton UI primitive (pressed + cooldown)](#actionbutton-ui-primitive-pressed--cooldown)
 - [Toggle UI primitive (on/off state)](#toggle-ui-primitive-onoff-state)
+- [VirtualActionButton UI primitive (mobile action)](#virtualactionbutton-ui-primitive-mobile-action)
+- [VirtualDPad UI primitive (mobile movement)](#virtualdpad-ui-primitive-mobile-movement)
 - [CooldownIndicator UI primitive](#cooldownindicator-ui-primitive)
 - [HUDSlot UI primitive](#hudslot-ui-primitive)
 - [HUDAnchor UI primitive](#hudanchor-ui-primitive)
+- [HUD preset composition helper](#hud-preset-composition-helper)
 - [LifeGauge full example component](../src/components/examples/LifeGaugeExample.tsx)
 
 ---
@@ -634,6 +637,127 @@ import { Toggle } from "@/components/toggle";
 />;
 ```
 
+### VirtualActionButton UI primitive (mobile action)
+
+Use `VirtualActionButton` from `@/components/virtualActionButton` when you need a touch-friendly action control with:
+
+- hold lifecycle callbacks,
+- cooldown lockout support,
+- default skin plus full render override support.
+
+#### Default usage (quickest)
+
+```tsx
+import { VirtualActionButton } from "@/components/virtualActionButton";
+
+<VirtualActionButton
+    label="A"
+    onActivate={() => {
+        // trigger action
+    }}
+/>;
+```
+
+#### Hold lifecycle + cooldown
+
+```tsx
+import { VirtualActionButton } from "@/components/virtualActionButton";
+
+<VirtualActionButton
+    label="A"
+    cooldownRemainingMs={900}
+    cooldownTotalMs={1200}
+    onPressStart={() => {
+        // start hold intent
+    }}
+    onPressEnd={() => {
+        // clear hold intent
+    }}
+    onActivate={() => {
+        // activate when ready
+    }}
+/>;
+```
+
+#### Full custom skin (render override)
+
+```tsx
+import { VirtualActionButton } from "@/components/virtualActionButton";
+
+<VirtualActionButton
+    label="Skill"
+    cooldownRemainingMs={600}
+    cooldownTotalMs={1200}
+    render={(state) => (
+        <button
+            type="button"
+            className="um-button"
+            disabled={!state.canActivate}
+            aria-disabled={!state.canActivate}
+        >
+            Skill {state.isCoolingDown ? `(${state.cooldownText})` : ""}
+        </button>
+    )}
+/>;
+```
+
+### VirtualDPad UI primitive (mobile movement)
+
+Use `VirtualDPad` from `@/components/virtualDPad` when you need an on-screen directional pad with:
+
+- controlled/uncontrolled pressed state,
+- direction start/end callbacks,
+- default skin plus full render override support.
+
+#### Default usage (quickest)
+
+```tsx
+import { VirtualDPad } from "@/components/virtualDPad";
+
+<VirtualDPad
+    label="Movement DPad"
+    onPressedChange={(next) => {
+        // next.up / next.down / next.left / next.right
+    }}
+/>;
+```
+
+#### Controlled state
+
+```tsx
+import { useState } from "react";
+import {
+    VirtualDPad,
+    type VirtualDPadPressedState,
+} from "@/components/virtualDPad";
+
+function MovementPad() {
+    const [pressed, setPressed] = useState<VirtualDPadPressedState>({
+        up: false,
+        down: false,
+        left: false,
+        right: false,
+    });
+
+    return <VirtualDPad pressed={pressed} onPressedChange={setPressed} />;
+}
+```
+
+#### Full custom skin (render override)
+
+```tsx
+import { VirtualDPad } from "@/components/virtualDPad";
+
+<VirtualDPad
+    pressed={{ right: true }}
+    render={(state) => (
+        <output className="um-capsule">
+            Vector: {state.vectorX},{state.vectorY}
+        </output>
+    )}
+/>;
+```
+
 ### CooldownIndicator UI primitive
 
 Use `CooldownIndicator` from `@/components/cooldownIndicator` as a reusable cooldown visual for any action/widget.
@@ -871,6 +995,57 @@ import { TopDownHUDPreset } from "@/components/hudAnchor";
 />;
 ```
 
+### HUD preset composition helper
+
+Use `createHudPresetSlots` from `@/components/hudAnchor` to keep slot override handling consistent when you build new mode presets.
+
+```tsx
+import { type ReactNode } from "react";
+import { ActionButton } from "@/components/actionButton";
+import { HUDSlot } from "@/components/hudSlot";
+import { createHudPresetSlots } from "@/components/hudAnchor";
+
+type MyHUDPresetProps = {
+    topLeftSlot?: ReactNode;
+    topRightSlot?: ReactNode;
+    bottomLeftSlot?: ReactNode;
+    bottomRightSlot?: ReactNode;
+};
+
+function MyHUDPreset({
+    topLeftSlot,
+    topRightSlot,
+    bottomLeftSlot,
+    bottomRightSlot,
+}: MyHUDPresetProps) {
+    const slots = createHudPresetSlots(
+        {
+            topLeftSlot,
+            topRightSlot,
+            bottomLeftSlot,
+            bottomRightSlot,
+        },
+        {
+            topLeft: <HUDSlot label="Health" value="100/100" icon="❤" />,
+            topRight: <HUDSlot label="Minimap" value="Zone A" icon="⌖" />,
+            bottomLeft: (
+                <HUDSlot label="Objective" value="Find beacon" icon="◎" />
+            ),
+            bottomRight: <ActionButton label="Interact" />,
+        },
+    );
+
+    return (
+        <>
+            {slots.topLeft}
+            {slots.topRight}
+            {slots.bottomLeft}
+            {slots.bottomRight}
+        </>
+    );
+}
+```
+
 #### Dev tab location (default app)
 
 In the default app (`src/App.tsx`), both component demos are grouped under one expandable dev section:
@@ -881,6 +1056,8 @@ In the default app (`src/App.tsx`), both component demos are grouped under one e
     - `LifeGaugeExample` (`src/components/examples/LifeGaugeExample.tsx`)
     - `ActionButtonExample` (`src/components/examples/ActionButtonExample.tsx`)
     - `ToggleExample` (`src/components/examples/ToggleExample.tsx`)
+    - `VirtualActionButtonExample` (`src/components/examples/VirtualActionButtonExample.tsx`)
+    - `VirtualDPadExample` (`src/components/examples/VirtualDPadExample.tsx`)
     - `CooldownIndicatorExample` (`src/components/examples/CooldownIndicatorExample.tsx`)
     - `HUDSlotExample` (`src/components/examples/HUDSlotExample.tsx`)
     - `HUDAnchorExample` (`src/components/examples/HUDAnchorExample.tsx`)
@@ -1385,6 +1562,8 @@ All screen controls are under `src/components/screenController/` and re-exported
 - `CompassActionControl` — compass control that directly consumes a provided action map
 - `createPlayerInputActions` — reusable gameplay action map factory
 - `useActionKeyBindings` — reusable keyboard-to-action binding hook
+- `getFocusableElements` / `handleArrowFocusNavigation` — lightweight focus + arrow-key navigation helpers
+- `createInputComponentAdapters` — adapter factory for reusing one action map across multiple input components
 
 ### Recommended composition
 
@@ -1430,6 +1609,83 @@ function ControlsModule({ onChanged }: { onChanged?: () => void }) {
     });
 
     return <CompassDirectionControl mode="player-actions" onMove={onChanged} />;
+}
+```
+
+### Focus + keyboard navigation helpers
+
+Use `getFocusableElements` and `handleArrowFocusNavigation` from `@/components/screenController` to add simple roving focus in button groups, menus, or control clusters.
+
+```tsx
+import {
+    getFocusableElements,
+    handleArrowFocusNavigation,
+} from "@/components/screenController";
+
+function FocusableActionRow() {
+    return (
+        <div
+            role="group"
+            aria-label="Quick actions"
+            onKeyDown={(event) => {
+                handleArrowFocusNavigation(
+                    event.nativeEvent,
+                    event.currentTarget,
+                    {
+                        orientation: "horizontal",
+                        wrap: true,
+                    },
+                );
+            }}
+        >
+            <button type="button">Save</button>
+            <button type="button">Load</button>
+            <button type="button">Reset</button>
+        </div>
+    );
+}
+
+// Programmatic access when needed
+const focusables = getFocusableElements(document.body);
+console.log(focusables.length);
+```
+
+### Input mapping adapters (reuse one action map across components)
+
+Use `createInputComponentAdapters` when you want one `InputActionMap` to drive multiple controls (keyboard, compass buttons, virtual DPad, action buttons) without duplicating wiring.
+
+```tsx
+import {
+    CompassActionControl,
+    createInputComponentAdapters,
+    createPlayerInputActions,
+    useActionKeyBindings,
+} from "@/components/screenController";
+import { VirtualDPad } from "@/components/virtualDPad";
+import { VirtualActionButton } from "@/components/virtualActionButton";
+
+function MobileControls() {
+    const actions = createPlayerInputActions({
+        onChanged: () => {
+            // trigger render sync
+        },
+    });
+
+    const adapters = createInputComponentAdapters(actions);
+    useActionKeyBindings(actions);
+
+    return (
+        <div className="um-row">
+            <CompassActionControl actions={adapters.compassActions} />
+            <VirtualDPad
+                onDirectionStart={adapters.virtualDPad.onDirectionStart}
+            />
+            <VirtualActionButton
+                label="A"
+                onActivate={adapters.actionButton.onActivate}
+            />
+        </div>
+    );
 }
 ```
 

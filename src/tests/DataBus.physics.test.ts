@@ -394,4 +394,70 @@ describe("DataBus physics integration", () => {
         expect(player.position.x).toBe(start.x);
         expect(player.position.y).toBe(start.y);
     });
+
+    it("ignores invalid camera viewport updates", () => {
+        const before = { ...dataBus.getState().camera.viewport };
+
+        dataBus.setCameraViewport(0, 200);
+        dataBus.setCameraViewport(200, -1);
+
+        expect(dataBus.getState().camera.viewport).toEqual(before);
+    });
+
+    it("falls back to clamped camera state when follow target is missing", () => {
+        dataBus.setWorldSize(500, 500);
+        dataBus.setCameraViewport(300, 300);
+        dataBus.setCameraMode("manual");
+        dataBus.setCameraPosition(180, 180);
+
+        dataBus.setCameraFollowTarget("missing-target-id");
+
+        const { camera } = dataBus.getState();
+        expect(camera.mode).toBe("follow-player");
+        expect(camera.x).toBe(180);
+        expect(camera.y).toBe(180);
+    });
+
+    it("merges physics body velocity overrides when physics already exists", () => {
+        const player = dataBus.getPlayer();
+
+        dataBus.enableEntityPhysics(player.id, {
+            velocity: { x: 5, y: -7 },
+            gravityScale: 1.5,
+        });
+
+        dataBus.enableEntityPhysics(player.id, {
+            velocity: { x: 11 },
+        });
+
+        expect(player.physicsBody?.velocity.x).toBe(11);
+        expect(player.physicsBody?.velocity.y).toBe(-7);
+        expect(player.physicsBody?.gravityScale).toBe(1.5);
+    });
+
+    it("zeros horizontal velocity when physics movement collides on x", () => {
+        const player = dataBus.getPlayer();
+        const state = dataBus.getState();
+        const blocker = Object.values(state.entitiesById).find(
+            (entity) => entity.name === "testBox",
+        );
+
+        expect(blocker).toBeDefined();
+
+        if (!blocker) {
+            return;
+        }
+
+        player.position.x = blocker.position.x - 20;
+        player.position.y = blocker.position.y;
+
+        dataBus.enablePlayerPhysics({
+            affectedByGravity: false,
+            velocity: { x: 180, y: 0 },
+        });
+
+        dataBus.stepPhysics(100);
+
+        expect(player.physicsBody?.velocity.x).toBe(0);
+    });
 });

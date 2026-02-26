@@ -4,6 +4,7 @@ import {
     SAVE_GAME_VERSION,
     parseSaveGame,
     rehydrateGameState,
+    serializeDataBusState,
     serializeGameState,
 } from "@/services/save";
 
@@ -178,5 +179,62 @@ describe("save state foundation", () => {
         expect(savedPlayer.collider).toBeUndefined();
         expect(savedPlayer.physicsBody).toBeUndefined();
         expect(savedPlayer.fps).toBeUndefined();
+    });
+
+    it("serializes DataBus state and rehydrates nested animation/physics data", () => {
+        const playerId = dataBus.getState().playerId;
+
+        dataBus.setState((prev) => ({
+            ...prev,
+            entitiesById: {
+                ...prev.entitiesById,
+                [playerId]: {
+                    ...prev.entitiesById[playerId],
+                    animations: [
+                        {
+                            spriteSheet: "hero",
+                            name: "run",
+                            frames: [
+                                [1, 2],
+                                [3, 4],
+                            ],
+                        },
+                    ],
+                    currentAnimation: "run",
+                    physicsBody: {
+                        enabled: true,
+                        affectedByGravity: true,
+                        gravityScale: 1,
+                        velocity: { x: 2, y: -3 },
+                        dragX: 0.8,
+                        maxVelocityY: 24,
+                    },
+                },
+            },
+        }));
+
+        const serialized = serializeDataBusState();
+        expect(serialized.version).toBe(SAVE_GAME_VERSION);
+
+        const savedPlayer = serialized.state.entitiesById[playerId];
+        expect(savedPlayer.animations[0].frames).toEqual([
+            [1, 2],
+            [3, 4],
+        ]);
+        expect(savedPlayer.physicsBody?.velocity).toEqual({ x: 2, y: -3 });
+
+        savedPlayer.animations[0].frames[0][0] = 99;
+        const livePlayer = dataBus.getState().entitiesById[playerId];
+        expect(livePlayer.animations[0].frames[0][0]).toBe(1);
+
+        const didRehydrate = rehydrateGameState(serialized);
+        expect(didRehydrate).toBe(true);
+
+        const rehydratedPlayer = dataBus.getState().entitiesById[playerId];
+        expect(rehydratedPlayer.animations[0].frames).toEqual([
+            [99, 2],
+            [3, 4],
+        ]);
+        expect(rehydratedPlayer.physicsBody?.velocity).toEqual({ x: 2, y: -3 });
     });
 });
