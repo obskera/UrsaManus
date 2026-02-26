@@ -1,0 +1,10 @@
+.hud-anchor-example__surface {
+    position: relative;
+    min-height: 12rem;
+    border: 1px solid var(--um-border-soft);
+    border-radius: var(--um-radius-md);
+    background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.36), rgba(2, 6, 23, 0.38)),
+        rgba(15, 23, 42, 0.3);
+    overflow: hidden;
+}

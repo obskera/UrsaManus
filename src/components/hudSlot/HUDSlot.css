@@ -1,0 +1,49 @@
+.um-hud-slot {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--um-space-2);
+    border: 1px solid var(--um-border-soft);
+    border-radius: var(--um-radius-md);
+    background: var(--um-surface);
+    padding: 0.4rem 0.55rem;
+    min-width: 10.5rem;
+}
+
+.um-hud-slot__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: var(--um-radius-sm);
+    background: var(--um-surface-base);
+    font-size: 0.85rem;
+}
+
+.um-hud-slot__content {
+    display: grid;
+    line-height: 1.1;
+}
+
+.um-hud-slot__label {
+    color: var(--um-text-muted);
+    font-size: 0.76rem;
+}
+
+.um-hud-slot__value {
+    color: var(--um-text-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.um-hud-slot__cooldown {
+    margin-left: auto;
+}
+
+.um-hud-slot--cooldown {
+    border-color: var(--um-accent-border);
+}
+
+.um-hud-slot--disabled {
+    opacity: 0.65;
+}

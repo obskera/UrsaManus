@@ -1,0 +1,68 @@
+.um-action-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--um-space-1);
+    min-width: 6rem;
+    border: 1px solid var(--um-border-soft);
+    border-radius: var(--um-radius-sm);
+    padding: 0.4rem var(--um-space-4);
+    background: var(--um-surface);
+    color: var(--um-text-primary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden;
+    transition:
+        background-color var(--um-duration-fast) var(--um-ease-standard),
+        border-color var(--um-duration-fast) var(--um-ease-standard),
+        color var(--um-duration-fast) var(--um-ease-standard);
+}
+
+.um-action-button:hover {
+    background: var(--um-surface-hover);
+}
+
+.um-action-button:focus-visible {
+    outline: 2px solid var(--um-focus-ring);
+    outline-offset: 2px;
+}
+
+.um-action-button__label {
+    position: relative;
+    z-index: 1;
+}
+
+.um-action-button__cooldown {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+}
+
+.um-action-button__indicator {
+    position: relative;
+    z-index: 1;
+}
+
+.um-action-button__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.34);
+}
+
+.um-action-button--pressed {
+    border-color: var(--um-accent-border);
+    background: rgba(79, 70, 229, 0.35);
+}
+
+.um-action-button--cooldown,
+.um-action-button--disabled {
+    cursor: not-allowed;
+    color: var(--um-text-muted);
+}
+
+.um-action-button--disabled {
+    opacity: 0.68;
+}

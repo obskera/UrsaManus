@@ -1,0 +1,50 @@
+.um-hud-anchor {
+    position: absolute;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--um-space-2);
+    max-width: calc(100% - 1rem);
+}
+
+.um-hud-anchor--safe {
+    --um-hud-anchor-safe-top: env(safe-area-inset-top, 0px);
+    --um-hud-anchor-safe-right: env(safe-area-inset-right, 0px);
+    --um-hud-anchor-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --um-hud-anchor-safe-left: env(safe-area-inset-left, 0px);
+}
+
+.um-hud-anchor--unsafe {
+    --um-hud-anchor-safe-top: 0px;
+    --um-hud-anchor-safe-right: 0px;
+    --um-hud-anchor-safe-bottom: 0px;
+    --um-hud-anchor-safe-left: 0px;
+}
+
+.um-hud-anchor--top-left {
+    top: calc(var(--um-hud-anchor-safe-top) + var(--um-hud-anchor-offset-y));
+    left: calc(var(--um-hud-anchor-safe-left) + var(--um-hud-anchor-offset-x));
+}
+
+.um-hud-anchor--top-right {
+    top: calc(var(--um-hud-anchor-safe-top) + var(--um-hud-anchor-offset-y));
+    right: calc(
+        var(--um-hud-anchor-safe-right) + var(--um-hud-anchor-offset-x)
+    );
+}
+
+.um-hud-anchor--bottom-left {
+    bottom: calc(
+        var(--um-hud-anchor-safe-bottom) + var(--um-hud-anchor-offset-y)
+    );
+    left: calc(var(--um-hud-anchor-safe-left) + var(--um-hud-anchor-offset-x));
+}
+
+.um-hud-anchor--bottom-right {
+    bottom: calc(
+        var(--um-hud-anchor-safe-bottom) + var(--um-hud-anchor-offset-y)
+    );
+    right: calc(
+        var(--um-hud-anchor-safe-right) + var(--um-hud-anchor-offset-x)
+    );
+}

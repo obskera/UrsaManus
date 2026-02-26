@@ -11,6 +11,16 @@ import {
     TopDownControls,
 } from "./components/screenController";
 import { SideScrollerCanvas, TopDownCanvas } from "./components/gameModes";
+import {
+    ActionButtonExample,
+    CooldownIndicatorExample,
+    HUDAnchorExample,
+    HUDSlotExample,
+    LifeGaugeExample,
+    PlatformerHUDPresetExample,
+    QuickHUDLayoutExample,
+    TopDownHUDPresetExample,
+} from "./components/examples";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
 import { GAME_VIEW_CONFIG } from "@/config/gameViewConfig";
 import { dataBus } from "./services/DataBus";
@@ -42,6 +52,7 @@ export default function App() {
     const isDevMode = import.meta.env.DEV;
     const [showDebugOutlines, setShowDebugOutlines] = useState(isDevMode);
     const [showDevControls, setShowDevControls] = useState(false);
+    const [showExamplesTab, setShowExamplesTab] = useState(false);
     const [devSaveStatus, setDevSaveStatus] = useState<{
         tone: DevSaveStatusTone;
         message: string;
@@ -422,6 +433,24 @@ export default function App() {
                                     ? "Hide dev controls"
                                     : "Show dev controls"}
                             </button>
+
+                            <button
+                                type="button"
+                                className={
+                                    showExamplesTab
+                                        ? "DebugToggle DebugToggle--active"
+                                        : "DebugToggle"
+                                }
+                                aria-pressed={showExamplesTab}
+                                onClick={(event) => {
+                                    setShowExamplesTab((current) => !current);
+                                    event.currentTarget.blur();
+                                }}
+                            >
+                                {showExamplesTab
+                                    ? "Hide example components"
+                                    : "Show example components"}
+                            </button>
                         </div>
                     ) : null}
                 </div>
@@ -548,6 +577,22 @@ export default function App() {
                                 Jump in side-scroller mode
                             </li>
                         </ul>
+                    </aside>
+                ) : null}
+
+                {isDevMode && showExamplesTab ? (
+                    <aside className="DevControlsTab DevExamplesTab">
+                        <p className="DevControlsTitle">Example components</p>
+                        <div className="DevExamplesArea DevExamplesStack">
+                            <LifeGaugeExample title="LifeGauge preview" />
+                            <ActionButtonExample title="ActionButton preview" />
+                            <CooldownIndicatorExample title="CooldownIndicator preview" />
+                            <HUDSlotExample title="HUDSlot preview" />
+                            <HUDAnchorExample title="HUDAnchor preview" />
+                            <QuickHUDLayoutExample title="QuickHUDLayout preview" />
+                            <PlatformerHUDPresetExample title="PlatformerHUDPreset preview" />
+                            <TopDownHUDPresetExample title="TopDownHUDPreset preview" />
+                        </div>
                     </aside>
                 ) : null}
 

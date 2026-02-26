@@ -1,0 +1,27 @@
+.um-cooldown-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--um-space-1);
+}
+
+.um-cooldown-indicator__track {
+    width: 3.2rem;
+    height: 0.38rem;
+    border: 1px solid var(--um-border-soft);
+    border-radius: var(--um-radius-pill);
+    overflow: hidden;
+    background: var(--um-surface-base);
+}
+
+.um-cooldown-indicator__fill {
+    width: 0;
+    height: 100%;
+    background: var(--um-accent);
+    opacity: 0.78;
+    transition: width var(--um-duration-fast) var(--um-ease-standard);
+}
+
+.um-cooldown-indicator__text {
+    font-size: 0.78rem;
+    color: var(--um-text-muted);
+}

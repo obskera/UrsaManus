@@ -1,0 +1,56 @@
+.um-life-gauge {
+    display: grid;
+    gap: var(--um-space-2);
+    min-width: 10rem;
+    border: 1px solid var(--um-border-soft);
+    border-radius: var(--um-radius-md);
+    background: var(--um-surface);
+    padding: var(--um-space-3);
+}
+
+.um-life-gauge__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--um-space-2);
+}
+
+.um-life-gauge__label {
+    color: var(--um-text-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.um-life-gauge__value {
+    color: var(--um-text-muted);
+    font-size: 0.84rem;
+}
+
+.um-life-gauge__track {
+    width: 100%;
+    height: 0.56rem;
+    border-radius: var(--um-radius-pill);
+    border: 1px solid var(--um-border-soft);
+    background: var(--um-surface-base);
+    overflow: hidden;
+}
+
+.um-life-gauge__fill {
+    height: 100%;
+    width: 0;
+    border-radius: var(--um-radius-pill);
+    background: var(--um-accent);
+    transition: width var(--um-duration-fast) var(--um-ease-standard);
+}
+
+.um-life-gauge--healthy .um-life-gauge__fill {
+    opacity: 1;
+}
+
+.um-life-gauge--warning .um-life-gauge__fill {
+    opacity: 0.82;
+}
+
+.um-life-gauge--critical .um-life-gauge__fill {
+    opacity: 0.64;
+}

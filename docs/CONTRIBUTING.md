@@ -85,6 +85,16 @@ Update docs whenever architecture, APIs, or workflows change:
 - `docs/USAGE.md` for practical usage/API patterns
 - `docs/ARCHITECTURE.md` for system flow and responsibilities
 
+Local planning note:
+
+- `docs/TODO.md` is intentionally local-only and git-ignored.
+- Do not include `docs/TODO.md` changes in pull requests.
+
+Prefab demo note:
+
+- Mount new UI prefab demos in the default app examples panel (`Show example components` in `src/App.tsx`).
+- Keep demo components under `src/components/examples/` and re-export from `src/components/examples/index.ts`.
+
 ---
 
 ## 6) Dev Preview Controls (Effects)
@@ -203,6 +213,7 @@ Before opening a PR:
 - [ ] Coverage still healthy (`npm run test:coverage` when relevant)
 - [ ] Strict coverage gate still passes (`npm run test:coverage:strict`) when behavior changed
 - [ ] Docs updated for behavioral/API changes
+- [ ] New UI prefabs include both: demo wiring in `src/App.tsx` (`Show example components`) and copy/paste docs in `docs/USAGE.md`
 - [ ] Change is scoped to the stated objective
 - [ ] GitHub Actions CI (`.github/workflows/ci.yml`) is green
 

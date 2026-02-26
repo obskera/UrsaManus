@@ -11,6 +11,19 @@ For system-level flow and responsibilities, see [ARCHITECTURE.md](ARCHITECTURE.m
 - [save/CHEATSHEET.md](save/CHEATSHEET.md) — quick save/load API and shortcut reference
 - [../src/services/save/README.md](../src/services/save/README.md) — contributor notes for save internals
 
+### UI Primitives Index
+
+Quick links for reusable, copy/paste-friendly UI building blocks:
+
+- [Default style primitives (`um-*`)](#default-style-primitives-srcstylesdefaultscss)
+- [Reusable input helpers (keys + compass)](#reusable-input-helpers-keys--compass)
+- [LifeGauge UI primitive (default + skinnable)](#lifegauge-ui-primitive-default--skinnable)
+- [ActionButton UI primitive (pressed + cooldown)](#actionbutton-ui-primitive-pressed--cooldown)
+- [CooldownIndicator UI primitive](#cooldownindicator-ui-primitive)
+- [HUDSlot UI primitive](#hudslot-ui-primitive)
+- [HUDAnchor UI primitive](#hudanchor-ui-primitive)
+- [LifeGauge full example component](../src/components/examples/LifeGaugeExample.tsx)
+
 ---
 
 ## 1) Project Structure
@@ -403,6 +416,429 @@ import { DefaultInputStyleExample } from "@/components/examples";
     }}
 />;
 ```
+
+### LifeGauge UI primitive (default + skinnable)
+
+Use `LifeGauge` from `@/components/lifeGauge` when you want a health/energy meter with:
+
+- default plug-and-play skin,
+- headless render state for custom skin overrides,
+- built-in clamping + tone thresholds (`healthy` / `warning` / `critical`).
+
+#### Default skin (quickest)
+
+```tsx
+import { LifeGauge } from "@/components/lifeGauge";
+
+function Hud() {
+    return <LifeGauge value={64} max={100} label="Player HP" />;
+}
+```
+
+#### Custom text formatting
+
+```tsx
+import { LifeGauge } from "@/components/lifeGauge";
+
+function Hud() {
+    return (
+        <LifeGauge
+            value={42}
+            max={100}
+            label="Shield"
+            formatValueText={(state) => `${state.percentage}%`}
+        />
+    );
+}
+```
+
+#### Full custom skin (render override)
+
+```tsx
+import { LifeGauge } from "@/components/lifeGauge";
+
+function CustomHud() {
+    return (
+        <LifeGauge
+            value={28}
+            max={100}
+            label="Player HP"
+            render={(state) => (
+                <div
+                    role="meter"
+                    aria-label={state.ariaLabel}
+                    aria-valuemin={state.min}
+                    aria-valuemax={state.max}
+                    aria-valuenow={state.clampedValue}
+                    aria-valuetext={state.valueText}
+                    data-tone={state.tone}
+                    className="um-panel um-stack"
+                >
+                    <div className="um-row">
+                        <span className="um-capsule">{state.tone}</span>
+                        <span className="um-text">{state.valueText}</span>
+                    </div>
+
+                    <div
+                        style={{
+                            height: "0.5rem",
+                            borderRadius: "999px",
+                            overflow: "hidden",
+                            border: "1px solid var(--um-border-soft)",
+                            background: "var(--um-surface-base)",
+                        }}
+                        aria-hidden="true"
+                    >
+                        <div
+                            style={{
+                                width: `${state.percentage}%`,
+                                height: "100%",
+                                background: "var(--um-accent)",
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+        />
+    );
+}
+```
+
+#### Full reference example component
+
+Use the full demo component if you want side-by-side default and custom skins with built-in controls:
+
+- `LifeGaugeExample` from `src/components/examples/LifeGaugeExample.tsx`
+
+```tsx
+import { LifeGaugeExample } from "@/components/examples";
+
+<LifeGaugeExample title="LifeGauge preview" />;
+```
+
+### ActionButton UI primitive (pressed + cooldown)
+
+Use `ActionButton` from `@/components/actionButton` when you need a gameplay action trigger with:
+
+- explicit pressed/disabled states,
+- cooldown lockout behavior,
+- default skin plus full render override support.
+
+#### Default usage (quickest)
+
+```tsx
+import { ActionButton } from "@/components/actionButton";
+
+<ActionButton
+    label="Dash"
+    onClick={() => {
+        // trigger action
+    }}
+/>;
+```
+
+#### Controlled pressed/cooldown
+
+```tsx
+import { ActionButton } from "@/components/actionButton";
+
+<ActionButton
+    label="Dash"
+    pressed={isDashQueued}
+    cooldownRemainingMs={dashCooldownRemainingMs}
+    cooldownTotalMs={dashCooldownMs}
+    onClick={attemptDash}
+/>;
+```
+
+#### Custom cooldown text
+
+```tsx
+import { ActionButton } from "@/components/actionButton";
+
+<ActionButton
+    label="Pulse"
+    cooldownRemainingMs={900}
+    cooldownTotalMs={1200}
+    formatCooldownText={(state) => `${state.cooldownPercentage}%`}
+/>;
+```
+
+#### Full custom skin (render override)
+
+```tsx
+import { ActionButton } from "@/components/actionButton";
+
+<ActionButton
+    label="Dash"
+    cooldownRemainingMs={1400}
+    cooldownTotalMs={2000}
+    render={(state) => (
+        <button
+            type="button"
+            className="um-button"
+            disabled={!state.canActivate}
+            aria-disabled={!state.canActivate}
+            data-status={state.status}
+        >
+            Dash {state.isCoolingDown ? `(${state.cooldownText})` : ""}
+        </button>
+    )}
+/>;
+```
+
+### CooldownIndicator UI primitive
+
+Use `CooldownIndicator` from `@/components/cooldownIndicator` as a reusable cooldown visual for any action/widget.
+
+#### Default usage
+
+```tsx
+import { CooldownIndicator } from "@/components/cooldownIndicator";
+
+<CooldownIndicator label="Dash cooldown" remainingMs={900} totalMs={1800} />;
+```
+
+#### Hide text + custom text formatting
+
+```tsx
+import { CooldownIndicator } from "@/components/cooldownIndicator";
+
+<CooldownIndicator
+    remainingMs={1200}
+    totalMs={2000}
+    showText={false}
+    formatText={(state) => `${state.percentage}%`}
+/>;
+```
+
+### HUDSlot UI primitive
+
+Use `HUDSlot` from `@/components/hudSlot` for compact HUD items with icon + label + optional badge and cooldown hookup.
+
+#### Default usage
+
+```tsx
+import { HUDSlot } from "@/components/hudSlot";
+
+<HUDSlot label="Health" value="84/100" icon="❤" badge="Buffed" />;
+```
+
+#### With cooldown hookup
+
+```tsx
+import { HUDSlot } from "@/components/hudSlot";
+
+<HUDSlot
+    label="Ammo"
+    value="12/30"
+    icon="✦"
+    cooldownRemainingMs={900}
+    cooldownTotalMs={1800}
+    showCooldownText
+/>;
+```
+
+#### Full custom render override
+
+```tsx
+import { HUDSlot } from "@/components/hudSlot";
+
+<HUDSlot
+    label="Artifact"
+    value="Ready"
+    render={(state) => (
+        <output>
+            {state.label}: {state.value}
+        </output>
+    )}
+/>;
+```
+
+#### Composition recipe: ability slot (`HUDSlot` + `ActionButton`)
+
+```tsx
+import { useState } from "react";
+import { HUDSlot } from "@/components/hudSlot";
+import { ActionButton } from "@/components/actionButton";
+
+function AbilitySlot() {
+    const [cooldownRemainingMs, setCooldownRemainingMs] = useState(0);
+
+    return (
+        <HUDSlot
+            label="Ability"
+            value="Blink"
+            icon="✧"
+            render={(state) => (
+                <div
+                    className="um-panel um-stack"
+                    role="group"
+                    aria-label={state.ariaLabel}
+                >
+                    <div className="um-row">
+                        <span className="um-capsule">{state.label}</span>
+                        <span className="um-text">{state.value}</span>
+                    </div>
+
+                    <ActionButton
+                        label="Blink"
+                        cooldownRemainingMs={cooldownRemainingMs}
+                        cooldownTotalMs={2000}
+                        onClick={() => {
+                            setCooldownRemainingMs(2000);
+                        }}
+                    />
+                </div>
+            )}
+        />
+    );
+}
+```
+
+### HUDAnchor UI primitive
+
+Use HUDAnchor from @/components/hudAnchor to pin HUD content to top-left, top-right, bottom-left, or bottom-right with safe-area-aware offsets.
+
+#### Default usage
+
+```tsx
+import { HUDAnchor } from "@/components/hudAnchor";
+
+<div style={{ position: "relative", minHeight: 220 }}>
+    <HUDAnchor anchor="top-left">
+        <span className="um-capsule">Top Left</span>
+    </HUDAnchor>
+</div>;
+```
+
+#### Safe-area + offsets
+
+```tsx
+import { HUDAnchor } from "@/components/hudAnchor";
+
+<HUDAnchor anchor="bottom-right" safeArea offsetX={12} offsetY={12}>
+    <span className="um-capsule">Skills</span>
+</HUDAnchor>;
+```
+
+#### Full custom render override
+
+```tsx
+import { HUDAnchor } from "@/components/hudAnchor";
+
+<HUDAnchor
+    anchor="top-right"
+    render={(state) => <output>{state.anchor}</output>}
+/>;
+```
+
+### QuickHUDLayout preset
+
+Use QuickHUDLayout from @/components/hudAnchor for a fast default HUD shell:
+
+- top-left health slot
+- top-right minimap slot
+- safe-area + shared offsets built in
+
+#### Default usage
+
+```tsx
+import { QuickHUDLayout } from "@/components/hudAnchor";
+
+<QuickHUDLayout healthValue="90/100" minimapValue="Zone 3" />;
+```
+
+#### Custom slot override
+
+```tsx
+import { QuickHUDLayout } from "@/components/hudAnchor";
+
+<QuickHUDLayout
+    leftSlot={<span className="um-capsule">HP Custom</span>}
+    rightSlot={<span className="um-capsule">Map Custom</span>}
+/>;
+```
+
+### PlatformerHUDPreset starter
+
+Use PlatformerHUDPreset from @/components/hudAnchor for a ready-made platformer HUD built from existing primitives.
+
+#### Default usage
+
+```tsx
+import { PlatformerHUDPreset } from "@/components/hudAnchor";
+
+<PlatformerHUDPreset
+    healthValue="92/100"
+    minimapValue="Stage 1-1"
+    coinsValue={12}
+    livesValue={3}
+/>;
+```
+
+#### With jump action cooldown
+
+```tsx
+import { PlatformerHUDPreset } from "@/components/hudAnchor";
+
+<PlatformerHUDPreset
+    jumpLabel="Jump"
+    jumpCooldownRemainingMs={900}
+    jumpCooldownTotalMs={1200}
+    onJump={() => {
+        // trigger jump/ability
+    }}
+/>;
+```
+
+### TopDownHUDPreset starter
+
+Use TopDownHUDPreset from @/components/hudAnchor for a ready-made top-down HUD with objective + stance slots and an interact action.
+
+#### Default usage
+
+```tsx
+import { TopDownHUDPreset } from "@/components/hudAnchor";
+
+<TopDownHUDPreset
+    healthValue="76/100"
+    minimapValue="Sector B4"
+    objectivesValue="2/5"
+    stanceValue="Stealth"
+/>;
+```
+
+#### With interact cooldown
+
+```tsx
+import { TopDownHUDPreset } from "@/components/hudAnchor";
+
+<TopDownHUDPreset
+    interactLabel="Interact"
+    interactCooldownRemainingMs={700}
+    interactCooldownTotalMs={1000}
+    onInteract={() => {
+        // trigger interaction
+    }}
+/>;
+```
+
+#### Dev tab location (default app)
+
+In the default app (`src/App.tsx`), both component demos are grouped under one expandable dev section:
+
+- toggle button: **Show example components**
+- panel title: **Example components**
+- included demos:
+    - `LifeGaugeExample` (`src/components/examples/LifeGaugeExample.tsx`)
+    - `ActionButtonExample` (`src/components/examples/ActionButtonExample.tsx`)
+    - `CooldownIndicatorExample` (`src/components/examples/CooldownIndicatorExample.tsx`)
+    - `HUDSlotExample` (`src/components/examples/HUDSlotExample.tsx`)
+    - `HUDAnchorExample` (`src/components/examples/HUDAnchorExample.tsx`)
+    - `QuickHUDLayoutExample` (`src/components/examples/QuickHUDLayoutExample.tsx`)
+    - `PlatformerHUDPresetExample` (`src/components/examples/PlatformerHUDPresetExample.tsx`)
+    - `TopDownHUDPresetExample` (`src/components/examples/TopDownHUDPresetExample.tsx`)
 
 ---
 

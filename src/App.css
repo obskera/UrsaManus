@@ -103,6 +103,10 @@
     padding: 0.65rem 0.8rem;
 }
 
+.DevExamplesTab {
+    padding-bottom: 0.8rem;
+}
+
 .DevControlsTitle {
     margin: 0;
     font-size: 0.82rem;
@@ -155,6 +159,15 @@
     gap: 0.28rem;
     font-size: 0.8rem;
     color: rgba(248, 250, 252, 0.82);
+}
+
+.DevExamplesArea {
+    margin-top: 0.7rem;
+}
+
+.DevExamplesStack {
+    display: grid;
+    gap: 0.8rem;
 }
 
 .DevKey {
