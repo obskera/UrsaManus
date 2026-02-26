@@ -67,7 +67,45 @@ Update docs whenever architecture, APIs, or workflows change:
 
 ---
 
-## 6) Pull Request Checklist
+## 6) Dev Preview Controls (Effects)
+
+For local development, use the dev hotkey helper instead of wiring ad-hoc key listeners in `App`.
+
+Source module:
+
+- `src/components/effects/dev/devEffectHotkeys.ts`
+
+Recommended setup:
+
+```ts
+import { setupDevEffectHotkeys } from "@/components/effects";
+
+const cleanupDevHotkeys = setupDevEffectHotkeys({
+    enabled: import.meta.env.DEV,
+    width: 400,
+    height: 300,
+    getContainer: () => gameScreenRef.current,
+});
+
+// call cleanupDevHotkeys() on unmount
+```
+
+Default development keybinds:
+
+- `T`: cycle transition variants/corners
+- `P`: cycle particle presets
+- `F`: start/reposition torch emitter at mouse position (center fallback)
+- `Shift+F`: stop torch emitter
+
+Contributors adding/changing dev key behavior should:
+
+- keep all logic in the `effects/dev` module (not in `App`),
+- preserve cleanup behavior (remove listeners, stop emitters),
+- update tests and docs in the same change.
+
+---
+
+## 7) Pull Request Checklist
 
 Before opening a PR:
 
@@ -79,7 +117,7 @@ Before opening a PR:
 
 ---
 
-## 7) Design Intent Reminder
+## 8) Design Intent Reminder
 
 UrsaManus is intentionally a **small core engine** that can be **extended indefinitely**.
 

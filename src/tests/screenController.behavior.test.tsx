@@ -10,6 +10,9 @@ const dataBusMocks = vi.hoisted(() => {
         movePlayerDown: vi.fn(),
         movePlayerLeft: vi.fn(),
         movePlayerRight: vi.fn(),
+        requestPlayerJump: vi.fn(),
+        setPlayerMoveInput: vi.fn(),
+        isPlayerGravityActive: vi.fn(() => false),
     };
 });
 
@@ -20,6 +23,9 @@ vi.mock("../services/DataBus", () => {
             movePlayerDown: dataBusMocks.movePlayerDown,
             movePlayerLeft: dataBusMocks.movePlayerLeft,
             movePlayerRight: dataBusMocks.movePlayerRight,
+            requestPlayerJump: dataBusMocks.requestPlayerJump,
+            setPlayerMoveInput: dataBusMocks.setPlayerMoveInput,
+            isPlayerGravityActive: dataBusMocks.isPlayerGravityActive,
         },
     };
 });
@@ -27,6 +33,7 @@ vi.mock("../services/DataBus", () => {
 describe("screenController behavior", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        dataBusMocks.isPlayerGravityActive.mockReturnValue(false);
     });
 
     it("logs compass directions when compass buttons are clicked", () => {
@@ -47,24 +54,60 @@ describe("screenController behavior", () => {
         logSpy.mockRestore();
     });
 
-    it("moves player and triggers onMove for on-screen arrow buttons", () => {
+    it("uses hold intent for on-screen left/right and click for up/down", () => {
         const onMove = vi.fn();
 
         render(<OnScreenArrowControl onMove={onMove} />);
 
         fireEvent.click(screen.getByRole("button", { name: "↑" }));
         fireEvent.click(screen.getByRole("button", { name: "↓" }));
-        fireEvent.click(screen.getByRole("button", { name: "←" }));
-        fireEvent.click(screen.getByRole("button", { name: "→" }));
+        fireEvent.pointerDown(screen.getByRole("button", { name: "←" }));
+        fireEvent.pointerUp(screen.getByRole("button", { name: "←" }));
+        fireEvent.pointerDown(screen.getByRole("button", { name: "→" }));
+        fireEvent.pointerCancel(screen.getByRole("button", { name: "→" }));
 
         expect(dataBusMocks.movePlayerUp).toHaveBeenCalledTimes(1);
         expect(dataBusMocks.movePlayerDown).toHaveBeenCalledTimes(1);
-        expect(dataBusMocks.movePlayerLeft).toHaveBeenCalledTimes(1);
-        expect(dataBusMocks.movePlayerRight).toHaveBeenCalledTimes(1);
+        expect(dataBusMocks.movePlayerLeft).toHaveBeenCalledTimes(0);
+        expect(dataBusMocks.movePlayerRight).toHaveBeenCalledTimes(0);
+        expect(dataBusMocks.setPlayerMoveInput).toHaveBeenCalledWith(-1);
+        expect(dataBusMocks.setPlayerMoveInput).toHaveBeenCalledWith(1);
+        expect(dataBusMocks.setPlayerMoveInput).toHaveBeenLastCalledWith(0);
         expect(onMove).toHaveBeenCalledTimes(4);
     });
 
-    it("handles Arrow keys and WASD in ArrowKeyControl", () => {
+    it("resets on-screen movement intent on window blur", () => {
+        render(<OnScreenArrowControl />);
+
+        fireEvent.pointerDown(screen.getByRole("button", { name: "→" }));
+        fireEvent.blur(window);
+
+        expect(dataBusMocks.setPlayerMoveInput).toHaveBeenLastCalledWith(0);
+    });
+
+    it("uses jump request for on-screen up button when gravity is active", () => {
+        dataBusMocks.isPlayerGravityActive.mockReturnValue(true);
+
+        render(<OnScreenArrowControl />);
+        fireEvent.click(screen.getByRole("button", { name: "↑" }));
+
+        expect(dataBusMocks.requestPlayerJump).toHaveBeenCalledTimes(1);
+        expect(dataBusMocks.movePlayerUp).not.toHaveBeenCalled();
+    });
+
+    it("shows pressed visual state while on-screen direction is held", () => {
+        render(<OnScreenArrowControl />);
+
+        const rightButton = screen.getByRole("button", { name: "→" });
+
+        fireEvent.pointerDown(rightButton);
+        expect(rightButton.className).toContain("is-held");
+
+        fireEvent.pointerUp(rightButton);
+        expect(rightButton.className).not.toContain("is-held");
+    });
+
+    it("handles up/down keys and smooth left/right intent in ArrowKeyControl", () => {
         const onMove = vi.fn();
 
         render(<ArrowKeyControl onMove={onMove} />);
@@ -77,12 +120,47 @@ describe("screenController behavior", () => {
         fireEvent.keyDown(window, { key: "s" });
         fireEvent.keyDown(window, { key: "a" });
         fireEvent.keyDown(window, { key: "d" });
+        fireEvent.keyUp(window, { key: "ArrowRight" });
+        fireEvent.keyUp(window, { key: "ArrowLeft" });
 
         expect(dataBusMocks.movePlayerUp).toHaveBeenCalledTimes(2);
         expect(dataBusMocks.movePlayerDown).toHaveBeenCalledTimes(2);
-        expect(dataBusMocks.movePlayerLeft).toHaveBeenCalledTimes(2);
-        expect(dataBusMocks.movePlayerRight).toHaveBeenCalledTimes(2);
+        expect(dataBusMocks.movePlayerLeft).toHaveBeenCalledTimes(0);
+        expect(dataBusMocks.movePlayerRight).toHaveBeenCalledTimes(0);
+        expect(dataBusMocks.setPlayerMoveInput).toHaveBeenCalled();
         expect(onMove).toHaveBeenCalledTimes(8);
+    });
+
+    it("handles Space key jump in ArrowKeyControl", () => {
+        const onMove = vi.fn();
+
+        render(<ArrowKeyControl onMove={onMove} />);
+
+        fireEvent.keyDown(window, { key: " ", code: "Space" });
+
+        expect(dataBusMocks.requestPlayerJump).toHaveBeenCalledTimes(1);
+        expect(onMove).toHaveBeenCalledTimes(1);
+    });
+
+    it("uses jump request for ArrowUp/W when gravity is active", () => {
+        dataBusMocks.isPlayerGravityActive.mockReturnValue(true);
+
+        render(<ArrowKeyControl />);
+
+        fireEvent.keyDown(window, { key: "ArrowUp" });
+        fireEvent.keyDown(window, { key: "w" });
+
+        expect(dataBusMocks.requestPlayerJump).toHaveBeenCalledTimes(2);
+        expect(dataBusMocks.movePlayerUp).not.toHaveBeenCalled();
+    });
+
+    it("resets movement intent when window loses focus", () => {
+        render(<ArrowKeyControl />);
+
+        fireEvent.keyDown(window, { key: "ArrowRight" });
+        fireEvent.blur(window);
+
+        expect(dataBusMocks.setPlayerMoveInput).toHaveBeenLastCalledWith(0);
     });
 
     it("does not move when ArrowKeyControl is disabled", () => {
@@ -126,6 +204,7 @@ describe("screenController behavior", () => {
         expect(dataBusMocks.movePlayerDown).not.toHaveBeenCalled();
         expect(dataBusMocks.movePlayerLeft).not.toHaveBeenCalled();
         expect(dataBusMocks.movePlayerRight).not.toHaveBeenCalled();
+        expect(dataBusMocks.requestPlayerJump).not.toHaveBeenCalled();
         expect(onMove).not.toHaveBeenCalled();
     });
 });

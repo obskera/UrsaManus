@@ -9,6 +9,8 @@ export interface ScreenControlProps extends ScreenControllerChildProps {
     label: string;
     disabled?: boolean;
     onActivate?: () => void;
+    onPressStart?: () => void;
+    onPressEnd?: () => void;
     className?: string;
 }
 

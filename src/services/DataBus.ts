@@ -5,6 +5,13 @@ import { createRectangleCollider, CollisionLayer } from "@/logic/collision";
 import { getEntityById } from "@/logic/entity/getEntityById";
 import { isBlockedBySolid } from "@/logic/collision/isBlockedBySolid";
 import { createWorldBounds } from "@/logic/collision/worldBoundsFactory";
+import {
+    createPhysicsBody,
+    DEFAULT_GRAVITY_CONFIG,
+    stepEntityPhysics,
+    type GravityConfig,
+    type PhysicsBody,
+} from "@/logic/physics";
 
 export type GameState = {
     entitiesById: Record<string, Entity>;
@@ -15,9 +22,42 @@ export type GameState = {
     worldBoundsIds: string[];
 };
 
+type PlayerMovementConfig = {
+    maxSpeedX: number;
+    groundAcceleration: number;
+    airAcceleration: number;
+    groundDeceleration: number;
+    airDeceleration: number;
+    jumpVelocity: number;
+};
+
+type JumpAssistConfig = {
+    coyoteTimeMs: number;
+    jumpBufferMs: number;
+    groundProbeDistance: number;
+};
+
 class DataBus {
     private moveByAmount: number = 10;
     private collisionSystem = new CollisionSystem();
+    private physicsConfig: GravityConfig = { ...DEFAULT_GRAVITY_CONFIG };
+    private playerMoveInputX: number = 0;
+    private simulationTimeMs: number = 0;
+    private playerLastGroundedAtMs: number = Number.NEGATIVE_INFINITY;
+    private playerJumpRequestedAtMs: number = Number.NEGATIVE_INFINITY;
+    private playerMovementConfig: PlayerMovementConfig = {
+        maxSpeedX: 220,
+        groundAcceleration: 1800,
+        airAcceleration: 1100,
+        groundDeceleration: 2200,
+        airDeceleration: 700,
+        jumpVelocity: 520,
+    };
+    private jumpAssistConfig: JumpAssistConfig = {
+        coyoteTimeMs: 120,
+        jumpBufferMs: 120,
+        groundProbeDistance: 2,
+    };
 
     private state: GameState = (() => {
         const player: Entity = {
@@ -202,6 +242,269 @@ class DataBus {
     }
     public setPlayerCanPassWorldBounds(canPass: boolean) {
         this.setEntityCanPassWorldBounds(this.state.playerId, canPass);
+    }
+
+    public setPlayerMoveInput(inputX: number) {
+        if (!Number.isFinite(inputX)) {
+            this.playerMoveInputX = 0;
+            return;
+        }
+
+        this.playerMoveInputX = Math.max(-1, Math.min(1, inputX));
+    }
+
+    public setPlayerMovementConfig(config: Partial<PlayerMovementConfig>) {
+        this.playerMovementConfig = {
+            ...this.playerMovementConfig,
+            ...config,
+        };
+    }
+
+    public setPlayerJumpAssistConfig(config: Partial<JumpAssistConfig>) {
+        this.jumpAssistConfig = {
+            ...this.jumpAssistConfig,
+            ...config,
+        };
+    }
+
+    public enablePlayerPhysics(bodyOverrides: Partial<PhysicsBody> = {}) {
+        this.enableEntityPhysics(this.state.playerId, bodyOverrides);
+    }
+
+    public enablePlayerGravity(bodyOverrides: Partial<PhysicsBody> = {}) {
+        this.enableEntityPhysics(this.state.playerId, {
+            affectedByGravity: true,
+            ...bodyOverrides,
+        });
+    }
+
+    public disablePlayerPhysics() {
+        this.disableEntityPhysics(this.state.playerId);
+    }
+
+    public isPlayerGravityActive() {
+        const player = this.getPlayer();
+        const body = player.physicsBody;
+        return !!body && body.enabled && body.affectedByGravity;
+    }
+
+    public setPhysicsConfig(config: Partial<GravityConfig>) {
+        this.physicsConfig = {
+            ...this.physicsConfig,
+            ...config,
+        };
+    }
+
+    public enableEntityPhysics(
+        entityId: string,
+        bodyOverrides: Partial<PhysicsBody> = {},
+    ) {
+        const entity = this.state.entitiesById[entityId];
+        if (!entity) return;
+
+        entity.physicsBody = entity.physicsBody
+            ? {
+                  ...entity.physicsBody,
+                  ...bodyOverrides,
+                  velocity: {
+                      x:
+                          bodyOverrides.velocity?.x ??
+                          entity.physicsBody.velocity.x,
+                      y:
+                          bodyOverrides.velocity?.y ??
+                          entity.physicsBody.velocity.y,
+                  },
+              }
+            : createPhysicsBody(bodyOverrides);
+    }
+
+    public disableEntityPhysics(entityId: string) {
+        const entity = this.state.entitiesById[entityId];
+        if (!entity) return;
+        entity.physicsBody = undefined;
+    }
+
+    public setEntityVelocity(entityId: string, x: number, y: number) {
+        const entity = this.state.entitiesById[entityId];
+        if (!entity) return;
+
+        if (!entity.physicsBody) {
+            entity.physicsBody = createPhysicsBody();
+        }
+
+        entity.physicsBody.velocity.x = x;
+        entity.physicsBody.velocity.y = y;
+    }
+
+    public isEntityGrounded(entityId: string, probeDistance: number = 1) {
+        const entity = this.state.entitiesById[entityId];
+        if (!entity?.collider || probeDistance <= 0) return false;
+
+        return this.isEntityGroundedFromSet(
+            entity,
+            this.getEntities(),
+            probeDistance,
+        );
+    }
+
+    public isPlayerGrounded(probeDistance: number = 1) {
+        return this.isEntityGrounded(this.state.playerId, probeDistance);
+    }
+
+    public jumpEntity(entityId: string, jumpVelocity: number = 520) {
+        const entity = this.state.entitiesById[entityId];
+        if (!entity) return false;
+        if (!this.isEntityGrounded(entityId)) return false;
+
+        this.enableEntityPhysics(entityId, {
+            affectedByGravity: true,
+        });
+
+        if (!entity.physicsBody) return false;
+        entity.physicsBody.velocity.y = -Math.abs(jumpVelocity);
+
+        return true;
+    }
+
+    public jumpPlayer(jumpVelocity: number = 520) {
+        return this.jumpEntity(this.state.playerId, jumpVelocity);
+    }
+
+    public requestPlayerJump() {
+        this.playerJumpRequestedAtMs = this.simulationTimeMs;
+    }
+
+    private moveToward(current: number, target: number, maxDelta: number) {
+        if (current < target) {
+            return Math.min(target, current + maxDelta);
+        }
+
+        if (current > target) {
+            return Math.max(target, current - maxDelta);
+        }
+
+        return current;
+    }
+
+    private isEntityGroundedFromSet(
+        entity: Entity,
+        entities: Entity[],
+        probeDistance: number,
+    ) {
+        if (!entity.collider || probeDistance <= 0) return false;
+
+        entity.position.y += probeDistance;
+        const grounded = isBlockedBySolid(entity, entities);
+        entity.position.y -= probeDistance;
+
+        return grounded;
+    }
+
+    private applyPlayerMotionAssists(
+        entity: Entity,
+        entities: Entity[],
+        dt: number,
+    ) {
+        const body = entity.physicsBody;
+        if (!body) return;
+
+        const isGroundedNow = this.isEntityGroundedFromSet(
+            entity,
+            entities,
+            this.jumpAssistConfig.groundProbeDistance,
+        );
+
+        if (isGroundedNow) {
+            this.playerLastGroundedAtMs = this.simulationTimeMs;
+        }
+
+        const targetVelocityX =
+            this.playerMoveInputX * this.playerMovementConfig.maxSpeedX;
+        const hasInput = this.playerMoveInputX !== 0;
+        const acceleration = isGroundedNow
+            ? this.playerMovementConfig.groundAcceleration
+            : this.playerMovementConfig.airAcceleration;
+        const deceleration = isGroundedNow
+            ? this.playerMovementConfig.groundDeceleration
+            : this.playerMovementConfig.airDeceleration;
+        const maxDelta = (hasInput ? acceleration : deceleration) * dt;
+
+        body.velocity.x = this.moveToward(
+            body.velocity.x,
+            targetVelocityX,
+            maxDelta,
+        );
+
+        const hasBufferedJump =
+            this.simulationTimeMs - this.playerJumpRequestedAtMs <=
+            this.jumpAssistConfig.jumpBufferMs;
+        const hasCoyoteJump =
+            this.simulationTimeMs - this.playerLastGroundedAtMs <=
+            this.jumpAssistConfig.coyoteTimeMs;
+
+        if (hasBufferedJump && hasCoyoteJump) {
+            body.velocity.y = -Math.abs(this.playerMovementConfig.jumpVelocity);
+            this.playerJumpRequestedAtMs = Number.NEGATIVE_INFINITY;
+            this.playerLastGroundedAtMs = Number.NEGATIVE_INFINITY;
+        }
+    }
+
+    public stepPhysics(deltaMs: number): boolean {
+        if (deltaMs <= 0) return false;
+
+        const entities = this.getEntities();
+        let hasPositionChanges = false;
+        const clampedDeltaMs = Math.min(deltaMs, this.physicsConfig.maxDeltaMs);
+        this.simulationTimeMs += clampedDeltaMs;
+        const dt = clampedDeltaMs / 1000;
+
+        for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
+            if (entity.id === this.state.playerId) {
+                this.applyPlayerMotionAssists(entity, entities, dt);
+            }
+
+            const startX = entity.position.x;
+            const startY = entity.position.y;
+            const result = stepEntityPhysics(
+                entity,
+                deltaMs,
+                this.physicsConfig,
+            );
+            if (result.dx === 0 && result.dy === 0) {
+                continue;
+            }
+
+            if (result.dx !== 0) {
+                entity.position.x += result.dx;
+                if (isBlockedBySolid(entity, entities)) {
+                    entity.position.x -= result.dx;
+                    if (entity.physicsBody) {
+                        entity.physicsBody.velocity.x = 0;
+                    }
+                }
+            }
+
+            if (result.dy !== 0) {
+                entity.position.y += result.dy;
+                if (isBlockedBySolid(entity, entities)) {
+                    entity.position.y -= result.dy;
+                    if (entity.physicsBody) {
+                        entity.physicsBody.velocity.y = 0;
+                    }
+                }
+            }
+
+            if (entity.position.x !== startX || entity.position.y !== startY) {
+                hasPositionChanges = true;
+            }
+        }
+
+        if (hasPositionChanges) {
+            this.runCollisions();
+        }
+
+        return hasPositionChanges;
     }
 }
 

@@ -29,8 +29,25 @@ export type EmitParticlesPayload = {
     emissionShape: EmissionShape;
     lifeMs: number;
     color: string;
+    colorPalette?: string[];
     size?: number;
     sizeJitter?: number;
+    sizeRange?: { min: number; max: number };
+    emissionRadius?: number;
+    emissionLength?: number;
+    gravity?: number;
+    drag?: number;
+};
+
+export type ParticlePresetOptions = {
+    amount?: number;
+    color?: string;
+    colorPalette?: string[];
+    size?: number;
+    sizeJitter?: number;
+    sizeRange?: { min: number; max: number };
+    lifeMs?: number;
+    emissionShape?: EmissionShape;
     emissionRadius?: number;
     emissionLength?: number;
     gravity?: number;

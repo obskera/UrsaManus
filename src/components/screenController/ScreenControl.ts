@@ -6,6 +6,8 @@ const ScreenControl = ({
     label,
     disabled = false,
     onActivate,
+    onPressStart,
+    onPressEnd,
     className,
 }: ScreenControlProps) => {
     return createElement(
@@ -17,6 +19,10 @@ const ScreenControl = ({
                 : "screen-control",
             disabled,
             onClick: onActivate,
+            onPointerDown: onPressStart,
+            onPointerUp: onPressEnd,
+            onPointerCancel: onPressEnd,
+            onPointerLeave: onPressEnd,
             onMouseUp: (event) => event.currentTarget.blur(),
             onTouchEnd: (event) => event.currentTarget.blur(),
             type: "button",

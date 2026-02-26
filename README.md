@@ -57,6 +57,15 @@ Current direction is principle-led rather than milestone-led.
 - Prioritize practical building blocks for small projects first
 - Preserve strong TypeScript contracts and high test coverage as the project grows
 
+## Modular Physics (Opt-In)
+
+UrsaManus now includes a lightweight modular gravity/physics layer under `src/logic/physics`.
+
+- Per-entity opt-in via `DataBus` (`enableEntityPhysics`, `disableEntityPhysics`)
+- Configurable gravity and terminal velocity (`setPhysicsConfig`)
+- Collision-aware stepping (`stepPhysics(deltaMs)`)
+- Pure reusable helpers (`createPhysicsBody`, `stepEntityPhysics`)
+
 ## Effects Quick Start
 
 UrsaManus includes signal-driven transition and particle effects.
@@ -107,6 +116,26 @@ emitParticles({
 });
 ```
 
+4. (Optional) enable development effect hotkeys:
+
+```ts
+import { setupDevEffectHotkeys } from "@/components/effects";
+
+setupDevEffectHotkeys({
+    enabled: import.meta.env.DEV,
+    width: 400,
+    height: 300,
+    getContainer: () => gameScreenRef.current,
+});
+```
+
+Default dev keys:
+
+- `T` cycles transition variants/corners
+- `P` cycles particle presets
+- `F` starts/repositions a torch emitter at mouse position (center fallback)
+- `Shift+F` stops the torch emitter
+
 ### Effects API Cheat Sheet
 
 | Effect                   | Helper                                   | Signal                           | Required fields                                                       | Common options                                                                    |
@@ -118,6 +147,8 @@ emitParticles({
 | Iris                     | `playIrisTransition(options)`            | `effects:screen-transition:play` | `from`                                                                | `color (default black)`, `irisOrigin`, `durationMs`, `boxSize`                    |
 | Directional push         | `playDirectionalPushTransition(options)` | `effects:screen-transition:play` | `from`                                                                | `color (default black)`, `pushFrom`, `durationMs`, `boxSize`                      |
 | Particle emitter         | `emitParticles(payload)`                 | `effects:particles:emit`         | `amount`, `location`, `direction`, `emissionShape`, `lifeMs`, `color` | `size`, `sizeJitter`, `emissionRadius`, `emissionLength`, `gravity`, `drag`       |
+| Particle presets         | `emitSmokeParticles(...)` etc.           | `effects:particles:emit`         | `location`                                                            | `ParticlePresetOptions` (`amount`, `lifeMs`, `colorPalette`, `sizeRange`)         |
+| Torch emitter            | `startTorchFlameEmitter(...)`            | `effects:particles:emit`         | `id`, `location`                                                      | `intervalMs`, `amount`, `flameAmount`, `smokeAmount`, preset overrides            |
 
 | `direction` field | Type     | Meaning                            |
 | ----------------- | -------- | ---------------------------------- |
@@ -174,6 +205,45 @@ emitParticles({
     gravity: 130,
     drag: 0.12,
 });
+```
+
+### Preset Helper Examples
+
+```ts
+import {
+    emitBurningFlameParticles,
+    emitDebrisParticles,
+    emitMagicShimmerParticles,
+    emitSmokeParticles,
+    emitSparkParticles,
+} from "@/components/effects";
+
+emitSmokeParticles({ x: 180, y: 180 });
+emitSparkParticles({ x: 220, y: 140 });
+emitMagicShimmerParticles({ x: 140, y: 120 });
+emitDebrisParticles({ x: 200, y: 210 });
+emitBurningFlameParticles({ x: 200, y: 190 });
+```
+
+### Torch Emitter Example
+
+```ts
+import {
+    startTorchFlameEmitter,
+    stopTorchFlameEmitter,
+} from "@/components/effects";
+
+const stopTorch = startTorchFlameEmitter(
+    "left-wall-torch",
+    { x: 72, y: 104 },
+    { intervalMs: 100, amount: 14 },
+);
+
+// either stop by cleanup callback
+stopTorch();
+
+// or stop by id elsewhere
+stopTorchFlameEmitter("left-wall-torch");
 ```
 
 ### Particle Tuning by Feel

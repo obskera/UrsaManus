@@ -135,4 +135,59 @@ describe("particle emitter math", () => {
         expect(next).toHaveLength(1);
         expect(next[0].id).toBe(2);
     });
+
+    it("uses sizeRange for random particle sizes", () => {
+        const payload: EmitParticlesPayload = {
+            amount: 4,
+            location: { x: 10, y: 10 },
+            direction: { angleDeg: 0, speed: 0 },
+            emissionShape: "point",
+            lifeMs: 300,
+            color: "#fff",
+            sizeRange: { min: 2, max: 6 },
+        };
+
+        const values = [0, 0.25, 0.5, 1];
+        let idx = 0;
+        const random = () => {
+            const value = values[idx % values.length];
+            idx += 1;
+            return value;
+        };
+
+        const { particles } = spawnParticles(payload, 1, random);
+
+        expect(particles).toHaveLength(4);
+        for (const particle of particles) {
+            expect(particle.size).toBeGreaterThanOrEqual(2);
+            expect(particle.size).toBeLessThanOrEqual(6);
+        }
+    });
+
+    it("uses colorPalette when provided", () => {
+        const payload: EmitParticlesPayload = {
+            amount: 5,
+            location: { x: 10, y: 10 },
+            direction: { angleDeg: 0, speed: 0 },
+            emissionShape: "point",
+            lifeMs: 300,
+            color: "#fff",
+            colorPalette: ["#111", "#222", "#333"],
+        };
+
+        const values = [0.0, 0.34, 0.67, 0.99, 0.12, 0.45];
+        let idx = 0;
+        const random = () => {
+            const value = values[idx % values.length];
+            idx += 1;
+            return value;
+        };
+
+        const { particles } = spawnParticles(payload, 1, random);
+
+        expect(particles).toHaveLength(5);
+        for (const particle of particles) {
+            expect(payload.colorPalette).toContain(particle.color);
+        }
+    });
 });

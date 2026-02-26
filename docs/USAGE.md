@@ -83,6 +83,22 @@ Run lint:
 - `setWorldSize(width, height)` — updates world dimensions
 - `setWorldBoundsEnabled(true|false)` — toggles world boundary entities
 - `setPlayerCanPassWorldBounds(true|false)` — toggles player vs world collisions
+- `setPlayerMoveInput(inputX)` — smooth horizontal input (`-1` to `1`)
+- `setPhysicsConfig(config)` — configure gravity/terminal velocity/frame clamp
+- `enableEntityPhysics(entityId, bodyOverrides?)` — opt an entity into gravity/physics
+- `disableEntityPhysics(entityId)` — opt an entity out
+- `enablePlayerPhysics(bodyOverrides?)` — player convenience wrapper
+- `enablePlayerGravity(bodyOverrides?)` — one-line player gravity setup
+- `disablePlayerPhysics()` — player convenience wrapper
+- `setPlayerMovementConfig(config)` — tune horizontal accel/decel and jump velocity
+- `setPlayerJumpAssistConfig(config)` — tune coyote time / jump buffer
+- `setEntityVelocity(entityId, x, y)` — set per-entity velocity
+- `isEntityGrounded(entityId, probeDistance?)` — grounded check helper
+- `isPlayerGrounded(probeDistance?)` — player grounded check helper
+- `jumpEntity(entityId, jumpVelocity?)` — grounded-gated jump helper
+- `jumpPlayer(jumpVelocity?)` — one-line player jump helper
+- `requestPlayerJump()` — buffered jump request (consumed in `stepPhysics`)
+- `stepPhysics(deltaMs)` — advance physics and return whether positions changed
 
 ### Usage pattern
 
@@ -92,6 +108,59 @@ Use `dataBus` as the single source of engine state in UI components:
 dataBus.movePlayerRight();
 const entities = Object.values(dataBus.getState().entitiesById);
 ```
+
+### Gravity/physics (opt-in)
+
+Physics is modular and disabled per entity until enabled.
+
+```ts
+const player = dataBus.getPlayer();
+
+dataBus.setPhysicsConfig({
+    gravityPxPerSec2: 1600,
+    terminalVelocityPxPerSec: 900,
+    maxDeltaMs: 50,
+});
+
+dataBus.enableEntityPhysics(player.id, {
+    gravityScale: 1,
+    velocity: { x: 0, y: 0 },
+    dragX: 0,
+});
+
+// Example jump impulse
+dataBus.setEntityVelocity(player.id, 0, -520);
+
+// Called each animation frame; returns true when entities moved
+const didMove = dataBus.stepPhysics(deltaMs);
+```
+
+Player shortcut:
+
+```ts
+dataBus.enablePlayerGravity({
+    gravityScale: 1,
+    velocity: { x: 0, y: 0 },
+});
+
+if (dataBus.isPlayerGrounded()) {
+    dataBus.jumpPlayer(520);
+}
+
+// smooth movement input loop (keyboard/controller)
+dataBus.setPlayerMoveInput(1); // move right
+
+// buffered jump input for coyote-time flows
+dataBus.requestPlayerJump();
+```
+
+### Reusable physics module
+
+Import from `src/logic/physics` when you want physics behavior outside `DataBus`:
+
+- `createPhysicsBody(overrides?)`
+- `stepEntityPhysics(entityLike, deltaMs, config?)`
+- `DEFAULT_GRAVITY_CONFIG`
 
 ---
 
@@ -122,6 +191,11 @@ All screen controls are under `src/components/screenController/` and re-exported
 </ScreenController>
 ```
 
+Default keyboard controls:
+
+- Movement: Arrow keys / `WASD`
+- Jump: `Space`
+
 ---
 
 ## 6) Screen Transition Effects (`components/effects`)
@@ -132,6 +206,7 @@ The transition system is signal-driven.
 - `playScreenTransition(payload)` emits a transition signal with full control.
 - `playBlackFade(options)` is a preset helper for black transitions.
 - Variant helpers: `playVenetianBlindsTransition`, `playMosaicDissolveTransition`, `playIrisTransition`, `playDirectionalPushTransition`.
+- `setupDevEffectHotkeys(options)` wires development preview keys (`T`, `P`, `F`, `Shift+F`).
 
 ### Required app wiring
 
@@ -247,8 +322,34 @@ playBlackFade({
 
 - Transition signal: `effects:screen-transition:play`
 - Overlay is visual-only (`pointer-events: none`), so gameplay input still routes normally.
-- Current `T`-key preview trigger in `App.tsx` is development-only.
+- Development hotkeys now live in `src/components/effects/dev/devEffectHotkeys.ts`.
 - New effects can start from `src/components/effects/_template/`.
+
+### Dev hotkeys setup (optional)
+
+Use this helper in development to preview transitions and particles quickly.
+
+```ts
+import { setupDevEffectHotkeys } from "@/components/effects";
+
+const cleanup = setupDevEffectHotkeys({
+    enabled: import.meta.env.DEV,
+    width: 400,
+    height: 300,
+    getContainer: () => gameScreenRef.current,
+});
+
+// call cleanup() on unmount
+```
+
+Default keybinds:
+
+- `T` — cycle transition variants/corners
+- `P` — cycle particle presets at random in-bounds positions
+- `F` — start/reposition a continuous torch emitter at mouse position (or center fallback)
+- `Shift+F` — stop the torch emitter
+
+Contributor workflow notes for these controls are documented in [CONTRIBUTING.md](CONTRIBUTING.md#6-dev-preview-controls-effects).
 
 ---
 
@@ -307,12 +408,56 @@ emitParticles({
 - `emissionShape: "point" | "circle" | "line"`
 - `lifeMs: number` — lifetime per particle
 - `color: string` — fill color
+- `colorPalette?: string[]` — optional random palette per particle
 - `size?: number` — base particle size
 - `sizeJitter?: number` — random size variance
+- `sizeRange?: { min: number; max: number }` — optional min/max random size
 - `emissionRadius?: number` — used by `circle` shape
 - `emissionLength?: number` — used by `line` shape
 - `gravity?: number` — vertical acceleration per second
 - `drag?: number` — velocity damping factor
+
+### Preset helpers
+
+Use these for faster setup before fine-tuning with `emitParticles`:
+
+- `emitSmokeParticles(location, options?)`
+- `emitSparkParticles(location, options?)`
+- `emitMagicShimmerParticles(location, options?)`
+- `emitDebrisParticles(location, options?)`
+- `emitBurningFlameParticles(location, options?)` (flame + smoke combo)
+
+```ts
+import {
+    emitBurningFlameParticles,
+    emitSmokeParticles,
+    startTorchFlameEmitter,
+    stopTorchFlameEmitter,
+} from "@/components/effects";
+
+emitSmokeParticles({ x: 180, y: 170 });
+
+emitBurningFlameParticles(
+    { x: 200, y: 190 },
+    {
+        flameAmount: 20,
+        smokeAmount: 10,
+    },
+);
+
+const stopTorch = startTorchFlameEmitter(
+    "campfire",
+    { x: 220, y: 210 },
+    {
+        intervalMs: 100,
+        amount: 14,
+    },
+);
+
+// later
+stopTorch();
+stopTorchFlameEmitter("campfire");
+```
 
 ### Emission shape notes
 
@@ -385,7 +530,8 @@ Quick tip: if particles feel too “stiff,” raise `speedJitter`; if they feel 
 
 - Particle signal: `effects:particles:emit`
 - Overlay is visual-only (`pointer-events: none`)
-- Current `P`-key burst preview in `App.tsx` is development-only
+- Torch helpers: `startTorchFlameEmitter(id, location, options?)`, `stopTorchFlameEmitter(id)`, `stopAllTorchFlameEmitters()`
+- Development particle/transition previews are handled by `setupDevEffectHotkeys` in development mode
 
 ### Effects API quick reference
 
@@ -394,6 +540,8 @@ Quick tip: if particles feel too “stiff,” raise `speedJitter`; if they feel 
 | Screen transition          | `playScreenTransition(payload)` | `effects:screen-transition:play` | `color`, `from`                                                       | `durationMs`, `stepMs`, `boxSize`, `onCovered`, `onComplete`                |
 | Screen transition (preset) | `playBlackFade(options)`        | `effects:screen-transition:play` | `from`                                                                | `durationMs`, `stepMs`, `boxSize`, `onCovered`, `onComplete`                |
 | Particle emitter           | `emitParticles(payload)`        | `effects:particles:emit`         | `amount`, `location`, `direction`, `emissionShape`, `lifeMs`, `color` | `size`, `sizeJitter`, `emissionRadius`, `emissionLength`, `gravity`, `drag` |
+| Particle presets           | `emitSmokeParticles(...)` etc.  | `effects:particles:emit`         | `location`                                                            | `ParticlePresetOptions` (`amount`, `lifeMs`, `colorPalette`, `sizeRange`)   |
+| Torch emitter              | `startTorchFlameEmitter(...)`   | `effects:particles:emit`         | `id`, `location`                                                      | `intervalMs`, `amount`, `flameAmount`, `smokeAmount`, preset overrides      |
 
 | Particle `direction` field | Type     | Meaning                            |
 | -------------------------- | -------- | ---------------------------------- |

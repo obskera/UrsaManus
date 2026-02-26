@@ -42,14 +42,30 @@ function buildSeed(
     spawnLocation: { x: number; y: number },
     random: () => number,
 ): ParticleSeed {
+    const palette = payload.colorPalette ?? [];
+    const color =
+        palette.length > 0
+            ? palette[Math.floor(random() * palette.length)]
+            : payload.color;
+
     const sizeBase = payload.size ?? 2;
     const sizeJitter = payload.sizeJitter ?? 0;
+    const size = payload.sizeRange
+        ? Math.max(
+              1,
+              randomInRange(
+                  Math.min(payload.sizeRange.min, payload.sizeRange.max),
+                  Math.max(payload.sizeRange.min, payload.sizeRange.max),
+                  random,
+              ),
+          )
+        : Math.max(1, sizeBase + (random() * 2 - 1) * sizeJitter);
 
     return {
         x: spawnLocation.x,
         y: spawnLocation.y,
-        color: payload.color,
-        size: Math.max(1, sizeBase + (random() * 2 - 1) * sizeJitter),
+        color,
+        size,
         lifeMs: payload.lifeMs,
         direction: payload.direction,
         gravity: payload.gravity ?? 0,

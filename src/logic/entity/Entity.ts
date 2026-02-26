@@ -1,5 +1,6 @@
 import type { RenderableItem } from "@/components/Render/Render";
 import type { RectangleCollider } from "./collision";
+import type { PhysicsBody } from "@/logic/physics";
 
 export type Position = {
     x: number;
@@ -33,6 +34,7 @@ export type Entity = RenderableItem & {
     updateState: (deltaMS: number) => void;
 
     collider?: RectangleCollider;
+    physicsBody?: PhysicsBody;
 };
 //for reference:
 // export interface RenderableItem {

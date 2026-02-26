@@ -1,5 +1,5 @@
 // src/App.tsx (dynamic: sync DataBus to Render props)
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Render from "./components/Render/Render";
 import {
     ArrowKeyControl,
@@ -11,17 +11,15 @@ import {
 import {
     ParticleEmitterOverlay,
     ScreenTransitionOverlay,
-    emitParticles,
-    playScreenTransition,
-    type TransitionCorner,
-    type ScreenTransitionVariant,
 } from "./components/effects";
+import { setupDevEffectHotkeys } from "./components/effects/dev";
 import { dataBus } from "./services/DataBus";
 import "./App.css";
 
 export default function App() {
     const [, force] = useState(0);
     const [hasProgress, setHasProgress] = useState(false);
+    const gameScreenRef = useRef<HTMLDivElement | null>(null);
 
     const width = 400;
     const height = 300;
@@ -31,6 +29,24 @@ export default function App() {
         dataBus.setWorldBoundsEnabled(true);
         // dataBus.setPlayerCanPassWorldBounds(true);
         dataBus.setPlayerCanPassWorldBounds(false);
+        dataBus.setPlayerMovementConfig({
+            maxSpeedX: 240,
+            groundAcceleration: 2200,
+            airAcceleration: 1300,
+            groundDeceleration: 2600,
+            airDeceleration: 800,
+            jumpVelocity: 560,
+        });
+        dataBus.setPlayerJumpAssistConfig({
+            coyoteTimeMs: 130,
+            jumpBufferMs: 130,
+            groundProbeDistance: 2,
+        });
+        dataBus.enablePlayerGravity({
+            gravityScale: 1,
+            velocity: { x: 0, y: 0 },
+            dragX: 0,
+        });
     }, [width, height]);
 
     useEffect(() => {
@@ -48,110 +64,48 @@ export default function App() {
     }, [hasProgress]);
 
     useEffect(() => {
-        if (!import.meta.env.DEV) return;
+        return setupDevEffectHotkeys({
+            enabled: import.meta.env.DEV,
+            width,
+            height,
+            getContainer: () => gameScreenRef.current,
+        });
+    }, [height, width]);
 
-        const corners: TransitionCorner[] = [
-            "top-left",
-            "top-right",
-            "bottom-left",
-            "bottom-right",
-        ];
-        const transitionVariants: ScreenTransitionVariant[] = [
-            "diagonal",
-            "venetian-blinds",
-            "mosaic-dissolve",
-            "iris",
-            "directional-push",
-        ];
-        const particleColors = [
-            "#ffd166",
-            "#ef476f",
-            "#06d6a0",
-            "#118ab2",
-            "#f78c6b",
-            "#c77dff",
-        ];
-        let transitionIndex = 0;
+    useEffect(() => {
+        let rafId = 0;
+        let lastFrame = performance.now();
 
-        const onKeyDown = (event: KeyboardEvent) => {
-            const key = event.key.toLowerCase();
-            if (event.repeat) return;
+        const tick = (now: number) => {
+            const deltaMs = now - lastFrame;
+            lastFrame = now;
 
-            if (key === "p") {
-                const x = Math.random() * width;
-                const y = Math.random() * height;
-                const color =
-                    particleColors[
-                        Math.floor(Math.random() * particleColors.length)
-                    ];
-
-                emitParticles({
-                    amount: 40,
-                    location: { x, y },
-                    direction: {
-                        angleDeg: 270,
-                        speed: 160,
-                        spreadDeg: 360,
-                        speedJitter: 80,
-                    },
-                    emissionShape: "point",
-                    lifeMs: 700,
-                    color,
-                    size: 2,
-                    sizeJitter: 1,
-                    gravity: 120,
-                    drag: 0.15,
-                });
-                return;
+            const didUpdate = dataBus.stepPhysics(deltaMs);
+            if (didUpdate) {
+                setHasProgress(true);
+                force((n) => n + 1);
             }
 
-            if (key !== "t") return;
-
-            const from = corners[transitionIndex % corners.length];
-            const variant =
-                transitionVariants[transitionIndex % transitionVariants.length];
-            transitionIndex += 1;
-
-            const variantOptions =
-                variant === "venetian-blinds"
-                    ? { venetianOrientation: "horizontal" as const }
-                    : variant === "mosaic-dissolve"
-                      ? { mosaicSeed: transitionIndex }
-                      : variant === "iris"
-                        ? { irisOrigin: "center" as const }
-                        : variant === "directional-push"
-                          ? {
-                                pushFrom: (
-                                    ["left", "right", "top", "bottom"] as const
-                                )[transitionIndex % 4],
-                            }
-                          : {};
-
-            playScreenTransition({
-                color: "black",
-                from,
-                variant,
-                durationMs: 500,
-                stepMs: 16,
-                boxSize: 16,
-                ...variantOptions,
-            });
+            rafId = requestAnimationFrame(tick);
         };
 
-        window.addEventListener("keydown", onKeyDown);
+        rafId = requestAnimationFrame(tick);
+
         return () => {
-            window.removeEventListener("keydown", onKeyDown);
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+            }
         };
     }, []);
 
-    const handleMove = () => {
+    const handleMove = useCallback(() => {
         setHasProgress(true);
         force((n) => n + 1);
-    };
+    }, []);
 
     return (
         <div className="GameContainer">
-            <div className="GameScreen">
+            <div className="GameScreen" ref={gameScreenRef}>
                 <Render
                     items={Object.values(dataBus.getState().entitiesById)}
                     width={width}

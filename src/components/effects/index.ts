@@ -18,7 +18,15 @@ export {
 } from "./screenTransition";
 export {
     ParticleEmitterOverlay,
+    emitBurningFlameParticles,
+    emitDebrisParticles,
+    emitMagicShimmerParticles,
     emitParticles,
+    emitSmokeParticles,
+    emitSparkParticles,
+    startTorchFlameEmitter,
+    stopAllTorchFlameEmitters,
+    stopTorchFlameEmitter,
     EMIT_PARTICLES_SIGNAL,
     createParticle,
     spawnParticles,
@@ -27,5 +35,12 @@ export {
     type ParticleDirection,
     type EmissionShape,
     type EmitParticlesPayload,
+    type BurningFlameOptions,
+    type TorchFlameEmitterOptions,
     type ParticleSeed,
+    type ParticlePresetOptions,
 } from "./particleEmitter";
+export {
+    setupDevEffectHotkeys,
+    type SetupDevEffectHotkeysOptions,
+} from "./dev";

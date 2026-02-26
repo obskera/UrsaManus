@@ -1,5 +1,18 @@
 export { default as ParticleEmitterOverlay } from "./ParticleEmitterOverlay";
-export { emitParticles, EMIT_PARTICLES_SIGNAL } from "./particleEmitterSignal";
+export {
+    emitBurningFlameParticles,
+    emitDebrisParticles,
+    emitMagicShimmerParticles,
+    emitParticles,
+    emitSmokeParticles,
+    emitSparkParticles,
+    startTorchFlameEmitter,
+    stopAllTorchFlameEmitters,
+    stopTorchFlameEmitter,
+    EMIT_PARTICLES_SIGNAL,
+    type BurningFlameOptions,
+    type TorchFlameEmitterOptions,
+} from "./particleEmitterSignal";
 export { createParticle } from "./particleFactory";
 export { spawnParticles, updateParticles } from "./particleEmitterMath";
 export type {
@@ -7,5 +20,6 @@ export type {
     ParticleDirection,
     EmissionShape,
     EmitParticlesPayload,
+    ParticlePresetOptions,
     ParticleSeed,
 } from "./types";

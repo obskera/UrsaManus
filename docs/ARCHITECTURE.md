@@ -11,7 +11,9 @@ flowchart LR
     K[Keyboard: Arrow/WASD] --> AK[ArrowKeyControl]
     C[On-Screen D-Pad Clicks] --> OSC[OnScreenArrowControl]
     N[Compass N/S/E/W Clicks] --> CDC[CompassDirectionControl]
+    D[Dev Keys: T/P/F] --> DE[setupDevEffectHotkeys]
     E[Game/Event Layer] --> SB[SignalBus]
+    DE --> SB
     SB --> STO[ScreenTransitionOverlay]
     SB --> PEO[ParticleEmitterOverlay]
 
@@ -23,6 +25,8 @@ flowchart LR
     CS --> DB
 
     DB --> APP[App.tsx force re-render]
+    APP --> PHYS[Physics RAF Tick]
+    PHYS --> DB
     APP --> RENDER[Render component]
     RENDER --> CANVAS[Canvas frame draw]
     PEO --> CANVAS
@@ -60,6 +64,16 @@ flowchart LR
 - Owns entity collection (`entitiesById`, `playerId`).
 - Applies movement and collision resolution.
 - Manages world bounds entities and collision masking.
+- Exposes opt-in gravity/physics stepping per entity.
+
+### Physics (`src/logic/physics/`)
+
+- `createPhysicsBody`
+    - Builds typed physics bodies with sensible defaults.
+- `stepEntityPhysics`
+    - Integrates velocity/gravity using clamped delta time for stable frame behavior.
+- `DEFAULT_GRAVITY_CONFIG`
+    - Baseline gravity, terminal velocity, and max frame delta.
 
 ### Rendering (`Render`)
 
@@ -82,6 +96,10 @@ flowchart LR
 - `particleEmitterSignal`
     - Defines particle burst payload contract.
     - Emits the `effects:particles:emit` signal.
+- `dev/devEffectHotkeys`
+    - Development-only keybind wiring for effect previews.
+    - Emits transition and particle presets with `T`/`P`.
+    - Controls continuous torch emitter lifecycle with `F` / `Shift+F`.
 
 ---
 
@@ -92,6 +110,14 @@ flowchart LR
 3. `DataBus` updates player position and resolves blocking collisions.
 4. App triggers a re-render (`force` state increment).
 5. `Render` receives updated entity data and paints next frame.
+
+### Physics frame lifecycle (opt-in)
+
+1. App RAF loop computes `deltaMs` and calls `dataBus.stepPhysics(deltaMs)`.
+2. `DataBus` runs `stepEntityPhysics` for entities with physics bodies.
+3. Axis movement is applied with collision checks (`isBlockedBySolid`).
+4. Blocked axes are reverted and axis velocity is zeroed.
+5. App re-renders only when physics reports position changes.
 
 ### Transition lifecycle (signal path)
 
@@ -108,6 +134,14 @@ flowchart LR
 3. RAF updates apply velocity, drag, gravity, and life decay.
 4. Particle overlay draws active particles over the game canvas.
 5. Expired/out-of-bounds particles are removed from the simulation.
+
+### Dev preview lifecycle (development only)
+
+1. `setupDevEffectHotkeys` attaches window key/mouse listeners.
+2. `T` emits screen transition previews across variants/corners.
+3. `P` emits particle preset previews at random in-bounds coordinates.
+4. `F` starts/repositions a named torch emitter at mouse position (or center fallback).
+5. `Shift+F` and teardown cleanup stop the named torch emitter.
 
 ---
 

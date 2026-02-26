@@ -65,6 +65,11 @@
     transform: translateY(1px);
 }
 
+.screen-control.is-held {
+    filter: brightness(0.85);
+    transform: translateY(1px);
+}
+
 .compass-direction-control {
     display: grid;
     grid-template-columns: repeat(3, auto);
