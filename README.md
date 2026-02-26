@@ -77,6 +77,17 @@ UrsaManus now includes prebuilt canvas + controls presets for two common genres:
     - gravity-disabled top-down movement
     - supports 4-way or 8-way input via `allowDiagonal`
 
+### Dev Landing Controls (Default App)
+
+In development mode, the default landing page includes two capsule toggles:
+
+- `Show/Hide debug outlines`
+    - toggles render-frame debug outline and collider debug rectangles
+- `Show/Hide dev controls`
+    - opens a compact in-page hotkey/movement cheat sheet
+
+These controls are UI wrappers around existing engine/dev functionality and do not change production behavior.
+
 ### Game Mode Cheat Sheet
 
 | Goal                               | Canvas preset        | Controls preset        | Key options                                         |
@@ -106,6 +117,7 @@ export default function SideScrollerExample() {
                 width={400}
                 height={300}
                 containerRef={gameScreenRef}
+                showDebugOutlines={import.meta.env.DEV}
             />
             <SideScrollerControls onMove={onMove} />
         </>
@@ -133,6 +145,7 @@ export default function TopDownExample() {
                 width={400}
                 height={300}
                 containerRef={gameScreenRef}
+                showDebugOutlines={import.meta.env.DEV}
             />
             <TopDownControls
                 onMove={onMove}
@@ -164,6 +177,11 @@ import {
 <TopDownCanvas width={400} height={300} />;
 <TopDownControls onMove={handleMove} allowDiagonal={true} />;
 ```
+
+Default movement keys:
+
+- `Arrow keys` / `WASD` move the player
+- `Space` / `ArrowUp` triggers jump in side-scroller mode
 
 ## Effects Quick Start
 

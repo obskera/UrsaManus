@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { dataBus } from "@/services/DataBus";
 import type { GameState } from "@/services/DataBus";
+import { CollisionLayer } from "@/logic/collision";
 
 function cloneGameState(state: GameState): GameState {
     const entitiesById: GameState["entitiesById"] = {};
@@ -40,11 +41,99 @@ describe("DataBus physics integration", () => {
         baseline = cloneGameState(dataBus.getState());
         dataBus.setState(() => cloneGameState(baseline));
         dataBus.setWorldBoundsEnabled(false);
+        dataBus.disablePlayerPhysics();
+        dataBus.setPlayerMoveInput(0);
+        dataBus.setPlayerMovementConfig({
+            maxSpeedX: 220,
+            groundAcceleration: 1800,
+            airAcceleration: 1100,
+            groundDeceleration: 2200,
+            airDeceleration: 700,
+            jumpVelocity: 520,
+        });
+        dataBus.setPlayerJumpAssistConfig({
+            coyoteTimeMs: 120,
+            jumpBufferMs: 120,
+            groundProbeDistance: 2,
+        });
+    });
+
+    it("adds and removes world bounds entities", () => {
+        dataBus.setWorldBoundsEnabled(true);
+        const withBounds = dataBus.getState();
+
+        expect(withBounds.worldBoundsIds).toHaveLength(4);
+        for (const id of withBounds.worldBoundsIds) {
+            expect(withBounds.entitiesById[id]).toBeDefined();
+        }
+
+        dataBus.setWorldBoundsEnabled(false);
+        const withoutBounds = dataBus.getState();
+
+        expect(withoutBounds.worldBoundsIds).toEqual([]);
+    });
+
+    it("rebuilds world bounds when world size changes", () => {
+        dataBus.setWorldBoundsEnabled(true);
+        const firstBoundIds = [...dataBus.getState().worldBoundsIds];
+
+        dataBus.setWorldSize(520, 360);
+        const resizedState = dataBus.getState();
+
+        expect(resizedState.worldBoundsIds).toHaveLength(4);
+        expect(resizedState.worldBoundsIds).not.toEqual(firstBoundIds);
+
+        const rightBound = Object.values(resizedState.entitiesById).find(
+            (entity) => entity.name === "worldBoundRight",
+        );
+        expect(rightBound?.position.x).toBe(520);
+    });
+
+    it("can toggle player world-bound collision participation", () => {
+        const player = dataBus.getPlayer();
+        const before = player.collider?.collidesWith ?? 0;
+
+        dataBus.setPlayerCanPassWorldBounds(true);
+        const disabled = player.collider?.collidesWith ?? 0;
+        expect(disabled & CollisionLayer.world).toBe(0);
+
+        dataBus.setPlayerCanPassWorldBounds(false);
+        const enabled = player.collider?.collidesWith ?? 0;
+
+        expect(enabled & CollisionLayer.world).toBe(CollisionLayer.world);
+        expect(enabled).toBe(before | CollisionLayer.world);
+    });
+
+    it("handles world-bound toggles for missing/non-collider entities", () => {
+        expect(() => {
+            dataBus.setEntityCanPassWorldBounds("missing-id", true);
+        }).not.toThrow();
+
+        dataBus.setState((prev) => ({
+            ...prev,
+            entitiesById: {
+                ...prev.entitiesById,
+                noCollider: {
+                    ...dataBus.getPlayer(),
+                    id: "noCollider" as never,
+                    collider: undefined,
+                },
+            },
+        }));
+
+        expect(() => {
+            dataBus.setEntityCanPassWorldBounds("noCollider", true);
+        }).not.toThrow();
     });
 
     it("does nothing when no entities have physics bodies", () => {
         const changed = dataBus.stepPhysics(16);
         expect(changed).toBe(false);
+    });
+
+    it("returns false for non-positive delta in physics step", () => {
+        expect(dataBus.stepPhysics(0)).toBe(false);
+        expect(dataBus.stepPhysics(-10)).toBe(false);
     });
 
     it("applies gravity to an enabled entity", () => {
@@ -74,6 +163,47 @@ describe("DataBus physics integration", () => {
         expect(player.physicsBody).toBeDefined();
         expect(player.physicsBody?.affectedByGravity).toBe(true);
         expect(player.physicsBody?.gravityScale).toBe(1.25);
+    });
+
+    it("reports gravity-active state from player physics body", () => {
+        expect(dataBus.isPlayerGravityActive()).toBe(false);
+
+        dataBus.enablePlayerGravity({ velocity: { x: 0, y: 0 } });
+        expect(dataBus.isPlayerGravityActive()).toBe(true);
+
+        dataBus.disablePlayerPhysics();
+        expect(dataBus.isPlayerGravityActive()).toBe(false);
+    });
+
+    it("creates and updates entity velocity even when physics body is absent", () => {
+        const player = dataBus.getPlayer();
+        dataBus.disableEntityPhysics(player.id);
+
+        dataBus.setEntityVelocity(player.id, 15, -25);
+
+        expect(player.physicsBody).toBeDefined();
+        expect(player.physicsBody?.velocity).toEqual({ x: 15, y: -25 });
+    });
+
+    it("clamps invalid and out-of-range move input", () => {
+        const player = dataBus.getPlayer();
+        dataBus.enablePlayerGravity({ velocity: { x: 0, y: 0 } });
+
+        dataBus.setPlayerMoveInput(Number.NaN);
+        dataBus.stepPhysics(16);
+        const afterNaN = player.physicsBody?.velocity.x ?? 0;
+
+        dataBus.setPlayerMoveInput(999);
+        dataBus.stepPhysics(16);
+        const afterPositiveClamp = player.physicsBody?.velocity.x ?? 0;
+
+        dataBus.setPlayerMoveInput(-999);
+        dataBus.stepPhysics(16);
+        const afterNegativeClamp = player.physicsBody?.velocity.x ?? 0;
+
+        expect(afterNaN).toBe(0);
+        expect(afterPositiveClamp).toBeGreaterThan(0);
+        expect(afterNegativeClamp).toBeLessThan(afterPositiveClamp);
     });
 
     it("returns false when attempted motion is fully blocked", () => {
@@ -120,6 +250,12 @@ describe("DataBus physics integration", () => {
 
         expect(jumped).toBe(false);
         expect(player.physicsBody?.velocity.y).toBe(0);
+    });
+
+    it("returns false for invalid entity in jump/ground checks", () => {
+        expect(dataBus.isEntityGrounded("missing", 1)).toBe(false);
+        expect(dataBus.isEntityGrounded(dataBus.getPlayer().id, 0)).toBe(false);
+        expect(dataBus.jumpEntity("missing", 300)).toBe(false);
     });
 
     it("applies smooth horizontal movement from input intent", () => {
@@ -173,5 +309,26 @@ describe("DataBus physics integration", () => {
 
         expect(changed).toBe(false);
         expect(player.physicsBody).toBeUndefined();
+    });
+
+    it("ignores enable/disable velocity operations for missing entities", () => {
+        expect(() => {
+            dataBus.enableEntityPhysics("missing");
+            dataBus.disableEntityPhysics("missing");
+            dataBus.setEntityVelocity("missing", 1, 2);
+        }).not.toThrow();
+    });
+
+    it("supports directional movement wrappers", () => {
+        const player = dataBus.getPlayer();
+        const start = { ...player.position };
+
+        dataBus.movePlayerRight(5);
+        dataBus.movePlayerLeft(5);
+        dataBus.movePlayerUp(5);
+        dataBus.movePlayerDown(5);
+
+        expect(player.position.x).toBe(start.x);
+        expect(player.position.y).toBe(start.y);
     });
 });

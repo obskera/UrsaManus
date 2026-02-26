@@ -42,6 +42,9 @@ flowchart LR
 - Selects active game mode (`side-scroller` / `top-down`) via local state.
 - Syncs active mode to URL query (`?mode=...`) for shareable demos.
 - Mounts matching prebuilt canvas + controls presets for the active mode.
+- In development, exposes capsule toggles for:
+    - `Show/Hide debug outlines`
+    - `Show/Hide dev controls` (in-page cheat sheet panel)
 
 ### Game mode presets (`src/components/gameModes/`)
 
@@ -93,7 +96,7 @@ flowchart LR
 - Loads/caches sprite sheets.
 - Animates frame selection from tile sequences.
 - Draws entities to canvas each RAF tick.
-- Optionally draws collider debug rectangles.
+- Optionally draws collider debug rectangles (via `showDebugOutlines`).
 
 ### Effects (`src/components/effects/`)
 
@@ -151,10 +154,11 @@ flowchart LR
 ### Dev preview lifecycle (development only)
 
 1. `setupDevEffectHotkeys` attaches window key/mouse listeners.
-2. `T` emits screen transition previews across variants/corners.
-3. `P` emits particle preset previews at random in-bounds coordinates.
-4. `F` starts/repositions a named torch emitter at mouse position (or center fallback).
-5. `Shift+F` and teardown cleanup stop the named torch emitter.
+2. Landing-page dev controls tab provides in-page hotkey/input reference.
+3. `T` emits screen transition previews across variants/corners.
+4. `P` emits particle preset previews at random in-bounds coordinates.
+5. `F` starts/repositions a named torch emitter at mouse position (or center fallback).
+6. `Shift+F` and teardown cleanup stop the named torch emitter.
 
 ---
 

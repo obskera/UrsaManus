@@ -48,6 +48,7 @@ Run lint:
 - `items: RenderableItem[]` (required)
 - `width?: number` (default `300`)
 - `height?: number` (default `300`)
+- `showDebugOutlines?: boolean` (default `true`) — toggles collider debug draw + debug frame style
 
 ### `RenderableItem` essentials
 
@@ -80,8 +81,16 @@ Use these for faster setup without manually wiring mode-specific `DataBus` confi
 ```tsx
 import { SideScrollerCanvas, TopDownCanvas } from "@/components/gameModes";
 
-<SideScrollerCanvas width={400} height={300} />;
-<TopDownCanvas width={400} height={300} />;
+<SideScrollerCanvas
+    width={400}
+    height={300}
+    showDebugOutlines={import.meta.env.DEV}
+/>;
+<TopDownCanvas
+    width={400}
+    height={300}
+    showDebugOutlines={import.meta.env.DEV}
+/>;
 ```
 
 Pair them with matching control presets from `@/components/screenController`:
@@ -116,6 +125,7 @@ export function SideScrollerModule() {
                 width={400}
                 height={300}
                 containerRef={gameScreenRef}
+                showDebugOutlines={import.meta.env.DEV}
             />
             <SideScrollerControls onMove={handleMove} />
         </>
@@ -142,6 +152,7 @@ export function TopDownModule() {
                 width={400}
                 height={300}
                 containerRef={gameScreenRef}
+                showDebugOutlines={import.meta.env.DEV}
             />
             <TopDownControls
                 onMove={handleMove}
@@ -180,6 +191,26 @@ return mode === "side-scroller" ? (
 
 - `?mode=side-scroller`
 - `?mode=top-down`
+
+### Dev landing controls (default app)
+
+In development mode, the default landing page includes capsule toggles for debugging/help:
+
+- `Show/Hide debug outlines` toggles frame/collider debug visuals.
+- `Show/Hide dev controls` opens a compact in-page controls/hotkeys tab.
+
+### Dev + Input Cheat Sheet
+
+| Key / Control         | Action                                      |
+| --------------------- | ------------------------------------------- |
+| `Arrow keys` / `WASD` | Move player                                 |
+| `Space` / `ArrowUp`   | Jump (side-scroller mode)                   |
+| `T`                   | Cycle screen transition previews            |
+| `P`                   | Spawn/cycle particle presets                |
+| `F`                   | Start torch flame at mouse/center fallback  |
+| `Shift+F`             | Stop torch flame emitter                    |
+| `Show/Hide debug...`  | Toggle debug outlines in landing page       |
+| `Show/Hide dev...`    | Toggle landing-page dev controls help panel |
 
 ### Quick recipes (copy/paste)
 
@@ -250,6 +281,7 @@ export default function App() {
                 width={400}
                 height={300}
                 containerRef={gameScreenRef}
+                showDebugOutlines={import.meta.env.DEV}
             />
             <SideScrollerControls onMove={handleMove} />
         </div>
@@ -299,6 +331,7 @@ export default function App() {
                 width={400}
                 height={300}
                 containerRef={gameScreenRef}
+                showDebugOutlines={import.meta.env.DEV}
             />
             <TopDownControls
                 onMove={handleMove}
@@ -313,29 +346,20 @@ export default function App() {
 ### Full starter file: `App.css` (works for both presets)
 
 ```css
-html,
-body,
-#root {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-body,
-#root {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
 .GameContainer {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    width: min(100%, 980px);
+    margin: 0 auto;
+    padding: 2.25rem 1rem 1.5rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.GameSurface {
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: rgba(15, 23, 42, 0.72);
+    padding: 1rem;
+    display: grid;
     gap: 1rem;
 }
 
@@ -344,6 +368,16 @@ body,
     display: flex;
     justify-content: center;
     align-items: center;
+    width: fit-content;
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: linear-gradient(
+        180deg,
+        rgba(15, 23, 42, 0.92) 0%,
+        rgba(2, 6, 23, 0.92) 100%
+    );
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.35);
+    overflow: hidden;
 }
 ```
 

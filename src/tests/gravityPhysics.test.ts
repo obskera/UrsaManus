@@ -69,4 +69,59 @@ describe("gravity physics helpers", () => {
 
         expect(entity.physicsBody.velocity.y).toBe(300);
     });
+
+    it("does not apply gravity when affectedByGravity is false", () => {
+        const entity = {
+            position: { x: 0, y: 0 },
+            physicsBody: createPhysicsBody({
+                affectedByGravity: false,
+                velocity: { x: 0, y: 0 },
+            }),
+        };
+
+        const result = stepEntityPhysics(entity, 16, {
+            gravityPxPerSec2: 1000,
+            terminalVelocityPxPerSec: 500,
+            maxDeltaMs: 50,
+        });
+
+        expect(result.dy).toBe(0);
+        expect(result.changedVelocity).toBe(false);
+    });
+
+    it("clamps negative terminal velocity limits", () => {
+        const entity = {
+            position: { x: 0, y: 0 },
+            physicsBody: createPhysicsBody({
+                velocity: { x: 0, y: -1000 },
+                maxVelocityY: 350,
+            }),
+        };
+
+        stepEntityPhysics(entity, 16, {
+            gravityPxPerSec2: 0,
+            terminalVelocityPxPerSec: 900,
+            maxDeltaMs: 50,
+        });
+
+        expect(entity.physicsBody.velocity.y).toBe(-350);
+    });
+
+    it("applies horizontal drag and clamps at zero factor", () => {
+        const entity = {
+            position: { x: 0, y: 0 },
+            physicsBody: createPhysicsBody({
+                velocity: { x: 120, y: 0 },
+                dragX: 200,
+            }),
+        };
+
+        stepEntityPhysics(entity, 16, {
+            gravityPxPerSec2: 0,
+            terminalVelocityPxPerSec: 900,
+            maxDeltaMs: 50,
+        });
+
+        expect(entity.physicsBody.velocity.x).toBe(0);
+    });
 });

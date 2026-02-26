@@ -55,6 +55,24 @@ Recommended split for larger features:
 - `*.behavior.test.tsx` for interaction/state behavior
 - `*.layout.test.tsx` for rendering/layout wrappers
 
+### Coverage goals (project-wide)
+
+- Aim to keep overall coverage in the **low-to-mid 90s** whenever practical.
+- Baseline target for strict gating:
+    - Statements: `>= 90%`
+    - Lines: `>= 90%`
+    - Functions: `>= 90%`
+    - Branches: `>= 85%`
+
+Commands:
+
+- Report-only coverage: `npm run test:coverage`
+- Enforced thresholds: `npm run test:coverage:strict`
+
+Notes:
+
+- Barrel/type-only files are excluded from coverage gating (`index.ts`, `types.ts`, `*.d.ts`) to keep the metric focused on executable behavior.
+
 ---
 
 ## 5) Docs Requirements
@@ -96,6 +114,16 @@ Default development keybinds:
 - `P`: cycle particle presets
 - `F`: start/reposition torch emitter at mouse position (center fallback)
 - `Shift+F`: stop torch emitter
+
+Default movement/testing keys in presets:
+
+- `Arrow keys` / `WASD`: move player
+- `Space` / `ArrowUp`: jump in side-scroller mode
+
+Default app (dev-only) helper UI:
+
+- `Show/Hide debug outlines` capsule (debug visual toggles)
+- `Show/Hide dev controls` capsule (in-page controls/hotkeys tab)
 
 Contributors adding/changing dev key behavior should:
 
