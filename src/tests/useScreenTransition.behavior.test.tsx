@@ -105,4 +105,85 @@ describe("useScreenTransition behavior", () => {
             expect(latestTransition?.active).toBe(false);
         });
     });
+
+    it("supports venetian blinds variant", async () => {
+        render(<Probe />);
+
+        act(() => {
+            playScreenTransition({
+                color: "#000",
+                from: "top-left",
+                variant: "venetian-blinds",
+                venetianOrientation: "horizontal",
+                durationMs: 80,
+                stepMs: 8,
+                boxSize: 8,
+            });
+        });
+
+        await waitFor(() => {
+            expect(latestTransition?.active).toBe(true);
+            expect((latestTransition?.cells.length ?? 0) > 0).toBe(true);
+        });
+    });
+
+    it("supports mosaic dissolve variant", async () => {
+        render(<Probe />);
+
+        act(() => {
+            playScreenTransition({
+                color: "#333",
+                from: "top-left",
+                variant: "mosaic-dissolve",
+                mosaicSeed: 42,
+                durationMs: 80,
+                boxSize: 8,
+            });
+        });
+
+        await waitFor(() => {
+            expect(latestTransition?.active).toBe(true);
+            expect((latestTransition?.cells.length ?? 0) > 0).toBe(true);
+        });
+    });
+
+    it("supports iris variant", async () => {
+        render(<Probe />);
+
+        act(() => {
+            playScreenTransition({
+                color: "#666",
+                from: "top-left",
+                variant: "iris",
+                irisOrigin: "center",
+                durationMs: 80,
+                boxSize: 8,
+            });
+        });
+
+        await waitFor(() => {
+            expect(latestTransition?.active).toBe(true);
+            expect((latestTransition?.cells.length ?? 0) > 0).toBe(true);
+        });
+    });
+
+    it("supports directional push variant", async () => {
+        render(<Probe />);
+
+        act(() => {
+            playScreenTransition({
+                color: "#111",
+                from: "top-left",
+                variant: "directional-push",
+                pushFrom: "right",
+                durationMs: 80,
+                boxSize: 8,
+            });
+        });
+
+        await waitFor(() => {
+            expect(latestTransition?.active).toBe(true);
+            expect((latestTransition?.cells.length ?? 0) > 0).toBe(true);
+        });
+    });
 });

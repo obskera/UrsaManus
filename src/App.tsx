@@ -14,6 +14,7 @@ import {
     emitParticles,
     playScreenTransition,
     type TransitionCorner,
+    type ScreenTransitionVariant,
 } from "./components/effects";
 import { dataBus } from "./services/DataBus";
 import "./App.css";
@@ -55,6 +56,13 @@ export default function App() {
             "bottom-left",
             "bottom-right",
         ];
+        const transitionVariants: ScreenTransitionVariant[] = [
+            "diagonal",
+            "venetian-blinds",
+            "mosaic-dissolve",
+            "iris",
+            "directional-push",
+        ];
         const particleColors = [
             "#ffd166",
             "#ef476f",
@@ -63,7 +71,7 @@ export default function App() {
             "#f78c6b",
             "#c77dff",
         ];
-        let index = 0;
+        let transitionIndex = 0;
 
         const onKeyDown = (event: KeyboardEvent) => {
             const key = event.key.toLowerCase();
@@ -99,15 +107,34 @@ export default function App() {
 
             if (key !== "t") return;
 
-            const from = corners[index % corners.length];
-            index += 1;
+            const from = corners[transitionIndex % corners.length];
+            const variant =
+                transitionVariants[transitionIndex % transitionVariants.length];
+            transitionIndex += 1;
+
+            const variantOptions =
+                variant === "venetian-blinds"
+                    ? { venetianOrientation: "horizontal" as const }
+                    : variant === "mosaic-dissolve"
+                      ? { mosaicSeed: transitionIndex }
+                      : variant === "iris"
+                        ? { irisOrigin: "center" as const }
+                        : variant === "directional-push"
+                          ? {
+                                pushFrom: (
+                                    ["left", "right", "top", "bottom"] as const
+                                )[transitionIndex % 4],
+                            }
+                          : {};
 
             playScreenTransition({
                 color: "black",
                 from,
+                variant,
                 durationMs: 500,
                 stepMs: 16,
                 boxSize: 16,
+                ...variantOptions,
             });
         };
 

@@ -5,7 +5,11 @@ import {
     PLAY_SCREEN_TRANSITION_SIGNAL,
     emitParticles,
     playBlackFade,
+    playDirectionalPushTransition,
+    playIrisTransition,
+    playMosaicDissolveTransition,
     playScreenTransition,
+    playVenetianBlindsTransition,
 } from "@/components/effects";
 
 describe("effects signal helpers", () => {
@@ -69,5 +73,63 @@ describe("effects signal helpers", () => {
         emitParticles(payload);
 
         expect(emitSpy).toHaveBeenCalledWith(EMIT_PARTICLES_SIGNAL, payload);
+    });
+
+    it("variant helper emitters set correct transition variant", () => {
+        const emitSpy = vi.spyOn(signalBus, "emit");
+
+        playVenetianBlindsTransition({
+            color: "#111111",
+            from: "top-left",
+            venetianOrientation: "vertical",
+        });
+        playMosaicDissolveTransition({
+            color: "#222222",
+            from: "top-left",
+            mosaicSeed: 7,
+        });
+        playIrisTransition({
+            color: "#333333",
+            from: "top-left",
+            irisOrigin: "center",
+        });
+        playDirectionalPushTransition({
+            color: "#444444",
+            from: "top-left",
+            pushFrom: "left",
+        });
+
+        expect(emitSpy).toHaveBeenNthCalledWith(
+            1,
+            PLAY_SCREEN_TRANSITION_SIGNAL,
+            expect.objectContaining({
+                variant: "venetian-blinds",
+                color: "#111111",
+            }),
+        );
+        expect(emitSpy).toHaveBeenNthCalledWith(
+            2,
+            PLAY_SCREEN_TRANSITION_SIGNAL,
+            expect.objectContaining({
+                variant: "mosaic-dissolve",
+                color: "#222222",
+            }),
+        );
+        expect(emitSpy).toHaveBeenNthCalledWith(
+            3,
+            PLAY_SCREEN_TRANSITION_SIGNAL,
+            expect.objectContaining({
+                variant: "iris",
+                color: "#333333",
+            }),
+        );
+        expect(emitSpy).toHaveBeenNthCalledWith(
+            4,
+            PLAY_SCREEN_TRANSITION_SIGNAL,
+            expect.objectContaining({
+                variant: "directional-push",
+                color: "#444444",
+            }),
+        );
     });
 });

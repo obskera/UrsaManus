@@ -6,9 +6,25 @@ export type TransitionCorner =
     | "bottom-left"
     | "bottom-right";
 
+export type ScreenTransitionVariant =
+    | "diagonal"
+    | "venetian-blinds"
+    | "mosaic-dissolve"
+    | "iris"
+    | "directional-push";
+
+export type VenetianOrientation = "horizontal" | "vertical";
+export type PushDirection = "left" | "right" | "top" | "bottom";
+export type IrisOrigin = "center" | TransitionCorner;
+
 export type PlayScreenTransitionPayload = {
     color: string;
     from: TransitionCorner;
+    variant?: ScreenTransitionVariant;
+    venetianOrientation?: VenetianOrientation;
+    pushFrom?: PushDirection;
+    irisOrigin?: IrisOrigin;
+    mosaicSeed?: number;
     durationMs?: number;
     stepMs?: number;
     boxSize?: number;
@@ -23,10 +39,49 @@ export function playScreenTransition(payload: PlayScreenTransitionPayload) {
 }
 
 export type BlackFadeOptions = Omit<PlayScreenTransitionPayload, "color">;
+export type ColoredTransitionOptions = BlackFadeOptions & { color?: string };
 
 export function playBlackFade(options: BlackFadeOptions) {
     playScreenTransition({
         color: "black",
         ...options,
+    });
+}
+
+export function playVenetianBlindsTransition(
+    options: ColoredTransitionOptions,
+) {
+    playScreenTransition({
+        color: options.color ?? "black",
+        ...options,
+        variant: "venetian-blinds",
+    });
+}
+
+export function playMosaicDissolveTransition(
+    options: ColoredTransitionOptions,
+) {
+    playScreenTransition({
+        color: options.color ?? "black",
+        ...options,
+        variant: "mosaic-dissolve",
+    });
+}
+
+export function playIrisTransition(options: ColoredTransitionOptions) {
+    playScreenTransition({
+        color: options.color ?? "black",
+        ...options,
+        variant: "iris",
+    });
+}
+
+export function playDirectionalPushTransition(
+    options: ColoredTransitionOptions,
+) {
+    playScreenTransition({
+        color: options.color ?? "black",
+        ...options,
+        variant: "directional-push",
     });
 }

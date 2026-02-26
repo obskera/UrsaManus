@@ -131,6 +131,7 @@ The transition system is signal-driven.
 - `ScreenTransitionOverlay` renders the pixel transition above the game canvas.
 - `playScreenTransition(payload)` emits a transition signal with full control.
 - `playBlackFade(options)` is a preset helper for black transitions.
+- Variant helpers: `playVenetianBlindsTransition`, `playMosaicDissolveTransition`, `playIrisTransition`, `playDirectionalPushTransition`.
 
 ### Required app wiring
 
@@ -174,6 +175,41 @@ playBlackFade({
 });
 ```
 
+### Trigger a specific variant
+
+```ts
+import {
+    playDirectionalPushTransition,
+    playIrisTransition,
+    playMosaicDissolveTransition,
+    playVenetianBlindsTransition,
+} from "@/components/effects";
+
+playVenetianBlindsTransition({
+    color: "#2f3e46",
+    from: "top-left",
+    venetianOrientation: "horizontal",
+});
+
+playMosaicDissolveTransition({
+    color: "#5e548e",
+    from: "top-left",
+    mosaicSeed: 42,
+});
+
+playIrisTransition({
+    color: "#2a9d8f",
+    from: "top-left",
+    irisOrigin: "center",
+});
+
+playDirectionalPushTransition({
+    color: "#bc4749",
+    from: "top-left",
+    pushFrom: "right",
+});
+```
+
 ### Transition payload reference
 
 - `color: string` — fill color for transition boxes
@@ -181,8 +217,15 @@ playBlackFade({
 - `durationMs?: number` — per phase duration (cover and reveal)
 - `stepMs?: number` — delay between diagonal wave cells
 - `boxSize?: number` — pixel block size
+- `variant?: "diagonal" | "venetian-blinds" | "mosaic-dissolve" | "iris" | "directional-push"`
+- `venetianOrientation?: "horizontal" | "vertical"` (venetian only)
+- `mosaicSeed?: number` (mosaic only)
+- `irisOrigin?: "center" | TransitionCorner` (iris only)
+- `pushFrom?: "left" | "right" | "top" | "bottom"` (directional push only)
 - `onCovered?: () => void` — called when screen is fully covered
 - `onComplete?: () => void` — called after reveal finishes
+
+Variant helper note: `playVenetianBlindsTransition`, `playMosaicDissolveTransition`, `playIrisTransition`, and `playDirectionalPushTransition` now accept optional `color` and default to `"black"` when omitted.
 
 ### Recommended scene-swap flow
 

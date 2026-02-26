@@ -109,18 +109,22 @@ emitParticles({
 
 ### Effects API Cheat Sheet
 
-| Effect | Helper | Signal | Required fields | Common options |
-| --- | --- | --- | --- | --- |
-| Screen transition | `playScreenTransition(payload)` | `effects:screen-transition:play` | `color`, `from` | `durationMs`, `stepMs`, `boxSize`, `onCovered`, `onComplete` |
-| Screen transition preset | `playBlackFade(options)` | `effects:screen-transition:play` | `from` | `durationMs`, `stepMs`, `boxSize`, `onCovered`, `onComplete` |
-| Particle emitter | `emitParticles(payload)` | `effects:particles:emit` | `amount`, `location`, `direction`, `emissionShape`, `lifeMs`, `color` | `size`, `sizeJitter`, `emissionRadius`, `emissionLength`, `gravity`, `drag` |
+| Effect                   | Helper                                   | Signal                           | Required fields                                                       | Common options                                                                    |
+| ------------------------ | ---------------------------------------- | -------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Screen transition        | `playScreenTransition(payload)`          | `effects:screen-transition:play` | `color`, `from`                                                       | `durationMs`, `stepMs`, `boxSize`, `onCovered`, `onComplete`                      |
+| Screen transition preset | `playBlackFade(options)`                 | `effects:screen-transition:play` | `from`                                                                | `durationMs`, `stepMs`, `boxSize`, `onCovered`, `onComplete`                      |
+| Venetian blinds          | `playVenetianBlindsTransition(options)`  | `effects:screen-transition:play` | `from`                                                                | `color (default black)`, `venetianOrientation`, `durationMs`, `stepMs`, `boxSize` |
+| Mosaic dissolve          | `playMosaicDissolveTransition(options)`  | `effects:screen-transition:play` | `from`                                                                | `color (default black)`, `mosaicSeed`, `durationMs`, `boxSize`                    |
+| Iris                     | `playIrisTransition(options)`            | `effects:screen-transition:play` | `from`                                                                | `color (default black)`, `irisOrigin`, `durationMs`, `boxSize`                    |
+| Directional push         | `playDirectionalPushTransition(options)` | `effects:screen-transition:play` | `from`                                                                | `color (default black)`, `pushFrom`, `durationMs`, `boxSize`                      |
+| Particle emitter         | `emitParticles(payload)`                 | `effects:particles:emit`         | `amount`, `location`, `direction`, `emissionShape`, `lifeMs`, `color` | `size`, `sizeJitter`, `emissionRadius`, `emissionLength`, `gravity`, `drag`       |
 
-| `direction` field | Type | Meaning |
-| --- | --- | --- |
-| `angleDeg` | `number` | Base movement angle in degrees |
-| `speed` | `number` | Base speed |
-| `spreadDeg` | `number` | Direction spread around `angleDeg` |
-| `speedJitter` | `number` | Random variation around `speed` |
+| `direction` field | Type     | Meaning                            |
+| ----------------- | -------- | ---------------------------------- |
+| `angleDeg`        | `number` | Base movement angle in degrees     |
+| `speed`           | `number` | Base speed                         |
+| `spreadDeg`       | `number` | Direction spread around `angleDeg` |
+| `speedJitter`     | `number` | Random variation around `speed`    |
 
 ### Common Particle Presets
 
@@ -174,12 +178,12 @@ emitParticles({
 
 ### Particle Tuning by Feel
 
-| Feel | Increase | Decrease | Typical ranges |
-| --- | --- | --- | --- |
-| Soft / floaty | `lifeMs`, `drag` | `gravity`, `speed` | `lifeMs: 500-1200`, `drag: 0.18-0.35`, `gravity: 20-120` |
-| Punchy / impact | `amount`, `speed`, `spreadDeg` | `lifeMs` | `amount: 20-50`, `speed: 140-280`, `spreadDeg: 180-360`, `lifeMs: 180-450` |
-| Heavy / debris | `size`, `gravity` | `spreadDeg`, `speedJitter` | `size: 2-5`, `gravity: 140-260`, `spreadDeg: 60-200` |
-| Chaotic / explosive | `spreadDeg`, `speedJitter`, `amount` | `drag` | `spreadDeg: 300-360`, `speedJitter: 80-180`, `amount: 40-90`, `drag: 0.05-0.18` |
+| Feel                | Increase                             | Decrease                   | Typical ranges                                                                  |
+| ------------------- | ------------------------------------ | -------------------------- | ------------------------------------------------------------------------------- |
+| Soft / floaty       | `lifeMs`, `drag`                     | `gravity`, `speed`         | `lifeMs: 500-1200`, `drag: 0.18-0.35`, `gravity: 20-120`                        |
+| Punchy / impact     | `amount`, `speed`, `spreadDeg`       | `lifeMs`                   | `amount: 20-50`, `speed: 140-280`, `spreadDeg: 180-360`, `lifeMs: 180-450`      |
+| Heavy / debris      | `size`, `gravity`                    | `spreadDeg`, `speedJitter` | `size: 2-5`, `gravity: 140-260`, `spreadDeg: 60-200`                            |
+| Chaotic / explosive | `spreadDeg`, `speedJitter`, `amount` | `drag`                     | `spreadDeg: 300-360`, `speedJitter: 80-180`, `amount: 40-90`, `drag: 0.05-0.18` |
 
 Quick tip: if particles feel too “stiff,” raise `speedJitter`; if they feel too “noisy,” lower `spreadDeg` first.
 

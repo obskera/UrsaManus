@@ -1,11 +1,20 @@
 export {
     ScreenTransitionOverlay,
     playBlackFade,
+    playDirectionalPushTransition,
+    playIrisTransition,
+    playMosaicDissolveTransition,
     playScreenTransition,
+    playVenetianBlindsTransition,
     PLAY_SCREEN_TRANSITION_SIGNAL,
     type BlackFadeOptions,
+    type ColoredTransitionOptions,
+    type IrisOrigin,
     type PlayScreenTransitionPayload,
+    type PushDirection,
+    type ScreenTransitionVariant,
     type TransitionCorner,
+    type VenetianOrientation,
 } from "./screenTransition";
 export {
     ParticleEmitterOverlay,
