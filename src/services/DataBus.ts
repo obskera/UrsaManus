@@ -161,24 +161,38 @@ class DataBus {
         }
     }
 
+    public movePlayerBy(dx: number, dy: number): boolean {
+        if (dx === 0 && dy === 0) return false;
+
+        const player = this.getPlayer();
+        const startX = player.position.x;
+        const startY = player.position.y;
+
+        this.tryMovePlayer(dx, dy);
+        const moved =
+            player.position.x !== startX || player.position.y !== startY;
+
+        if (moved) {
+            this.runCollisions();
+        }
+
+        return moved;
+    }
+
     movePlayerRight(moveAmount: number = this.moveByAmount): void {
-        this.tryMovePlayer(moveAmount, 0);
-        this.runCollisions();
+        this.movePlayerBy(moveAmount, 0);
     }
 
     movePlayerLeft(moveAmount: number = this.moveByAmount): void {
-        this.tryMovePlayer(-moveAmount, 0);
-        this.runCollisions();
+        this.movePlayerBy(-moveAmount, 0);
     }
 
     movePlayerUp(moveAmount: number = this.moveByAmount): void {
-        this.tryMovePlayer(0, -moveAmount);
-        this.runCollisions();
+        this.movePlayerBy(0, -moveAmount);
     }
 
     movePlayerDown(moveAmount: number = this.moveByAmount): void {
-        this.tryMovePlayer(0, moveAmount);
-        this.runCollisions();
+        this.movePlayerBy(0, moveAmount);
     }
 
     getState(): GameState {

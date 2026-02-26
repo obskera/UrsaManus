@@ -1,53 +1,45 @@
 // src/App.tsx (dynamic: sync DataBus to Render props)
 import { useCallback, useEffect, useRef, useState } from "react";
-import Render from "./components/Render/Render";
 import {
-    ArrowKeyControl,
-    CompassDirectionControl,
-    OnScreenArrowControl,
-    ScreenControlGroup,
-    ScreenController,
+    SideScrollerControls,
+    TopDownControls,
 } from "./components/screenController";
-import {
-    ParticleEmitterOverlay,
-    ScreenTransitionOverlay,
-} from "./components/effects";
+import { SideScrollerCanvas, TopDownCanvas } from "./components/gameModes";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
 import { dataBus } from "./services/DataBus";
 import "./App.css";
 
+type GameMode = "side-scroller" | "top-down";
+
+const GAME_MODE_QUERY_KEY = "mode";
+
+function normalizeGameMode(value: string | null): GameMode | null {
+    if (value === "side-scroller" || value === "top-down") {
+        return value;
+    }
+
+    return null;
+}
+
 export default function App() {
     const [, force] = useState(0);
     const [hasProgress, setHasProgress] = useState(false);
+    const isDevMode = import.meta.env.DEV;
+    const [showDebugOutlines, setShowDebugOutlines] = useState(isDevMode);
+    const [showDevControls, setShowDevControls] = useState(false);
+    const [gameMode, setGameMode] = useState<GameMode>(() => {
+        const modeFromQuery = normalizeGameMode(
+            new URLSearchParams(window.location.search).get(
+                GAME_MODE_QUERY_KEY,
+            ),
+        );
+
+        return modeFromQuery ?? "side-scroller";
+    });
     const gameScreenRef = useRef<HTMLDivElement | null>(null);
 
     const width = 400;
     const height = 300;
-
-    useEffect(() => {
-        dataBus.setWorldSize(width, height);
-        dataBus.setWorldBoundsEnabled(true);
-        // dataBus.setPlayerCanPassWorldBounds(true);
-        dataBus.setPlayerCanPassWorldBounds(false);
-        dataBus.setPlayerMovementConfig({
-            maxSpeedX: 240,
-            groundAcceleration: 2200,
-            airAcceleration: 1300,
-            groundDeceleration: 2600,
-            airDeceleration: 800,
-            jumpVelocity: 560,
-        });
-        dataBus.setPlayerJumpAssistConfig({
-            coyoteTimeMs: 130,
-            jumpBufferMs: 130,
-            groundProbeDistance: 2,
-        });
-        dataBus.enablePlayerGravity({
-            gravityScale: 1,
-            velocity: { x: 0, y: 0 },
-            dragX: 0,
-        });
-    }, [width, height]);
 
     useEffect(() => {
         if (!hasProgress) return;
@@ -71,6 +63,14 @@ export default function App() {
             getContainer: () => gameScreenRef.current,
         });
     }, [height, width]);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        params.set(GAME_MODE_QUERY_KEY, gameMode);
+        const query = params.toString();
+        const url = `${window.location.pathname}?${query}${window.location.hash}`;
+        window.history.replaceState(null, "", url);
+    }, [gameMode]);
 
     useEffect(() => {
         let rafId = 0;
@@ -103,26 +103,177 @@ export default function App() {
         force((n) => n + 1);
     }, []);
 
+    const switchToSideScroller = () => {
+        dataBus.setPlayerMoveInput(0);
+        setGameMode("side-scroller");
+    };
+
+    const switchToTopDown = () => {
+        dataBus.setPlayerMoveInput(0);
+        setGameMode("top-down");
+    };
+
+    const canvas =
+        gameMode === "side-scroller" ? (
+            <SideScrollerCanvas
+                width={width}
+                height={height}
+                containerRef={gameScreenRef}
+                showDebugOutlines={showDebugOutlines}
+            />
+        ) : (
+            <TopDownCanvas
+                width={width}
+                height={height}
+                containerRef={gameScreenRef}
+                showDebugOutlines={showDebugOutlines}
+            />
+        );
+
+    const controls =
+        gameMode === "side-scroller" ? (
+            <SideScrollerControls onMove={handleMove} />
+        ) : (
+            <TopDownControls onMove={handleMove} allowDiagonal />
+        );
+
+    const modeLabel =
+        gameMode === "side-scroller" ? "Side Scroller" : "Top Down";
+
     return (
         <div className="GameContainer">
-            <div className="GameScreen" ref={gameScreenRef}>
-                <Render
-                    items={Object.values(dataBus.getState().entitiesById)}
-                    width={width}
-                    height={height}
-                />
-                <ParticleEmitterOverlay width={width} height={height} />
-                <ScreenTransitionOverlay width={width} height={height} />
+            <header className="AppHeader">
+                <p className="AppEyebrow">UrsaManus Engine</p>
+                <h1 className="AppTitle">
+                    Build fast with modular gameplay presets
+                </h1>
+                <p className="AppSubtitle">
+                    Start in side-scroller or top-down mode, then extend systems
+                    as your project grows.
+                </p>
+            </header>
+
+            <div className="GameSurface">
+                <div className="GameControlsRow">
+                    <div
+                        className="GameModeSwitcher"
+                        role="group"
+                        aria-label="Game mode"
+                    >
+                        <button
+                            type="button"
+                            className={
+                                gameMode === "side-scroller"
+                                    ? "game-mode-button game-mode-button--side-scroller is-active"
+                                    : "game-mode-button game-mode-button--side-scroller"
+                            }
+                            onClick={switchToSideScroller}
+                        >
+                            Side Scroller
+                        </button>
+                        <button
+                            type="button"
+                            className={
+                                gameMode === "top-down"
+                                    ? "game-mode-button game-mode-button--top-down is-active"
+                                    : "game-mode-button game-mode-button--top-down"
+                            }
+                            onClick={switchToTopDown}
+                        >
+                            Top Down
+                        </button>
+                    </div>
+                    {isDevMode ? (
+                        <div className="DevToolsGroup">
+                            <button
+                                type="button"
+                                className={
+                                    showDebugOutlines
+                                        ? "DebugToggle DebugToggle--active"
+                                        : "DebugToggle"
+                                }
+                                aria-pressed={showDebugOutlines}
+                                onClick={(event) => {
+                                    setShowDebugOutlines((current) => !current);
+                                    event.currentTarget.blur();
+                                }}
+                            >
+                                {showDebugOutlines
+                                    ? "Hide debug outlines"
+                                    : "Show debug outlines"}
+                            </button>
+
+                            <button
+                                type="button"
+                                className={
+                                    showDevControls
+                                        ? "DebugToggle DebugToggle--active"
+                                        : "DebugToggle"
+                                }
+                                aria-pressed={showDevControls}
+                                onClick={(event) => {
+                                    setShowDevControls((current) => !current);
+                                    event.currentTarget.blur();
+                                }}
+                            >
+                                {showDevControls
+                                    ? "Hide dev controls"
+                                    : "Show dev controls"}
+                            </button>
+                        </div>
+                    ) : null}
+                </div>
+
+                {isDevMode && showDevControls ? (
+                    <aside
+                        className="DevControlsTab"
+                        aria-label="Default dev controls"
+                    >
+                        <p className="DevControlsTitle">Default dev controls</p>
+                        <ul className="DevControlsList">
+                            <li>
+                                <span className="DevKey">T</span>
+                                Cycle screen transition previews
+                            </li>
+                            <li>
+                                <span className="DevKey">P</span>
+                                Spawn particle presets
+                            </li>
+                            <li>
+                                <span className="DevKey">F</span>
+                                Start torch flame at mouse position
+                            </li>
+                            <li>
+                                <span className="DevKey">Shift + F</span>
+                                Stop torch flame emitter
+                            </li>
+                            <li>
+                                <span className="DevKey">Arrows / WASD</span>
+                                Move player
+                            </li>
+                            <li>
+                                <span className="DevKey">Space / ↑</span>
+                                Jump in side-scroller mode
+                            </li>
+                        </ul>
+                    </aside>
+                ) : null}
+
+                <div className="CanvasPanel">
+                    <div className="CanvasMetaRow" aria-label="Canvas details">
+                        <span
+                            className={`CanvasMetaPill CanvasMetaPill--mode CanvasMetaPill--${gameMode}`}
+                        >
+                            Mode: {modeLabel}
+                        </span>
+                        <span className="CanvasMetaPill">
+                            Resolution: {width}×{height}
+                        </span>
+                    </div>
+                    {canvas}
+                </div>
+                <div className="ControlsPanel">{controls}</div>
             </div>
-            <ScreenController className="snes-layout">
-                <ArrowKeyControl onMove={handleMove} />
-                <ScreenControlGroup className="dpad-group">
-                    <OnScreenArrowControl onMove={handleMove} />
-                </ScreenControlGroup>
-                <ScreenControlGroup className="face-button-group">
-                    <CompassDirectionControl />
-                </ScreenControlGroup>
-            </ScreenController>
         </div>
     );
 }

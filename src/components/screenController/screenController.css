@@ -10,11 +10,14 @@
 .screen-controller.snes-layout {
     width: min(100%, 40rem);
     justify-content: space-between;
-    gap: 1rem;
+    gap: 1.5rem;
     flex-wrap: nowrap;
-    border: 2px solid currentColor;
-    border-radius: 0;
-    padding: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.6);
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.14);
+    padding: 1.5rem;
+    box-sizing: border-box;
 }
 
 .screen-control-group {
@@ -28,13 +31,14 @@
     margin: 0;
     font-size: 0.9rem;
     font-weight: 600;
+    color: rgba(248, 250, 252, 0.85);
 }
 
 .screen-control-group-content {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.75rem;
+    gap: 1rem;
 }
 
 .dpad-group,
@@ -51,13 +55,27 @@
 }
 
 .screen-control {
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    background: rgba(30, 41, 59, 0.8);
+    color: #f8fafc;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
 
+.screen-control:hover {
+    background: rgba(51, 65, 85, 0.9);
+}
+
 .screen-control:focus {
     outline: none;
+}
+
+.screen-control:focus-visible {
+    outline: 2px solid rgba(125, 211, 252, 0.95);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(14, 116, 144, 0.35);
 }
 
 .screen-control:active {
@@ -87,6 +105,7 @@
     width: 4.5rem;
     height: 4.5rem;
     font-size: 1.2rem;
+    font-weight: 600;
 }
 
 .direction-button.north,
@@ -123,7 +142,10 @@
 @media (max-width: 700px) {
     .screen-controller.snes-layout {
         width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
         gap: 1rem;
+        padding: 1rem;
     }
 
     .direction-button,

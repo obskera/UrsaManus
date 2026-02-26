@@ -139,6 +139,65 @@ describe("Render coverage tests", () => {
         if (!ctx) throw new Error("Expected mocked canvas context");
         await waitFor(() => expect(ctx.drawImage).toHaveBeenCalled());
         await waitFor(() => expect(ctx.strokeRect).toHaveBeenCalled());
+        expect(ctx.strokeStyle).toBe("#60a5fa");
+
+        unmount();
+    });
+
+    it("skips collider drawing when showDebugOutlines is false", async () => {
+        class MockImageHiddenDebug {
+            onload: (() => void) | null = null;
+            onerror: ((error?: unknown) => void) | null = null;
+            _src = "";
+            set src(val: string) {
+                this._src = val;
+                if (this.onload)
+                    Promise.resolve().then(() => this.onload && this.onload());
+            }
+            get src() {
+                return this._src;
+            }
+        }
+
+        testGlobals.Image = MockImageHiddenDebug;
+
+        const items = [
+            {
+                spriteImageSheet: "sheet.png",
+                spriteSize: 8,
+                spriteSheetTileWidth: 4,
+                spriteSheetTileHeight: 4,
+                characterSpriteTiles: [[0, 0]],
+                scaler: 2,
+                position: { x: 2, y: 3 },
+                collider: {
+                    type: "rectangle" as const,
+                    size: { width: 4, height: 4 },
+                    offset: { x: 1, y: 1 },
+                    debugDraw: true,
+                },
+            },
+        ];
+
+        const { container, unmount } = render(
+            <Render
+                items={items}
+                width={64}
+                height={64}
+                showDebugOutlines={false}
+            />,
+        );
+
+        const canvas = container.querySelector("canvas") as HTMLCanvasElement;
+        expect(canvas).toBeTruthy();
+
+        await Promise.resolve();
+        await new Promise((r) => setTimeout(r, 0));
+
+        const ctx = getMockContext(canvas);
+        if (!ctx) throw new Error("Expected mocked canvas context");
+        await waitFor(() => expect(ctx.drawImage).toHaveBeenCalled());
+        expect(ctx.strokeRect).not.toHaveBeenCalled();
 
         unmount();
     });

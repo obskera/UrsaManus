@@ -1,36 +1,229 @@
-html,
-body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#root {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
-    margin: 0;
-    max-width: none;
-}
-
 .GameContainer {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    width: min(100%, 980px);
+    margin: 0 auto;
+    padding: 2.25rem 1rem 1.5rem;
+    display: grid;
     gap: 1rem;
+}
+
+.AppHeader {
+    display: grid;
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.AppEyebrow {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(248, 250, 252, 0.75);
+}
+
+.AppTitle {
+    margin: 0;
+    font-size: clamp(1.7rem, 2.6vw, 2.2rem);
+    line-height: 1.15;
+}
+
+.AppSubtitle {
+    margin: 0;
+    max-width: 62ch;
+    justify-self: center;
+    color: rgba(248, 250, 252, 0.82);
+}
+
+.GameSurface {
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(8px);
+    padding: 1rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.GameModeSwitcher {
+    width: fit-content;
+    display: inline-flex;
+    gap: 0.45rem;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 999px;
+    padding: 0.25rem;
+    background: rgba(15, 23, 42, 0.82);
+}
+
+.GameControlsRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.DevToolsGroup {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.DebugToggle {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+    font-family: inherit;
+    color: rgba(248, 250, 252, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 999px;
+    padding: 0.28rem 0.72rem;
+    background: rgba(15, 23, 42, 0.52);
+    cursor: pointer;
+}
+
+.DebugToggle:hover {
+    background: rgba(30, 41, 59, 0.75);
+}
+
+.DebugToggle--active {
+    border-color: rgba(96, 165, 250, 0.58);
+    background: rgba(37, 99, 235, 0.28);
+    color: rgba(219, 234, 254, 0.95);
+}
+
+.DebugToggle:focus-visible {
+    outline: 2px solid rgba(125, 211, 252, 0.95);
+    outline-offset: 2px;
+}
+
+.DevControlsTab {
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.46);
+    padding: 0.65rem 0.8rem;
+}
+
+.DevControlsTitle {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(191, 219, 254, 0.95);
+}
+
+.DevControlsList {
+    margin: 0.55rem 0 0;
+    padding-left: 1rem;
+    display: grid;
+    gap: 0.28rem;
+    font-size: 0.8rem;
+    color: rgba(248, 250, 252, 0.82);
+}
+
+.DevKey {
+    display: inline-block;
+    min-width: 6.4rem;
+    font-weight: 600;
+    color: rgba(125, 211, 252, 0.96);
+}
+
+.game-mode-button {
+    border: none;
+    border-radius: 999px;
+    padding: 0.38rem 0.9rem;
+    font: inherit;
+    font-size: 0.9rem;
+    color: rgba(248, 250, 252, 0.9);
+    background: transparent;
+    cursor: pointer;
+}
+
+.game-mode-button:hover {
+    background: rgba(148, 163, 184, 0.2);
+}
+
+.game-mode-button.is-active {
+    color: #0f172a;
+    background: #c7d2fe;
+}
+
+.game-mode-button--side-scroller:hover {
+    background: rgba(79, 70, 229, 0.24);
+}
+
+.game-mode-button--top-down:hover {
+    background: rgba(14, 116, 144, 0.24);
+}
+
+.game-mode-button--side-scroller.is-active {
+    color: #e0e7ff;
+    background: rgba(79, 70, 229, 0.62);
+}
+
+.game-mode-button--top-down.is-active {
+    color: #e0f2fe;
+    background: rgba(14, 116, 144, 0.62);
+}
+
+.game-mode-button:focus-visible {
+    outline: 2px solid rgba(191, 219, 254, 0.95);
+    outline-offset: 2px;
+}
+
+.game-mode-button--side-scroller:focus-visible {
+    outline-color: rgba(165, 180, 252, 0.98);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.35);
+}
+
+.game-mode-button--top-down:focus-visible {
+    outline-color: rgba(125, 211, 252, 0.98);
+    box-shadow: 0 0 0 2px rgba(14, 116, 144, 0.35);
+}
+
+.CanvasPanel,
+.ControlsPanel {
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: rgba(15, 23, 42, 0.55);
+    padding: 0.75rem;
+}
+
+.CanvasPanel {
+    display: grid;
+    gap: 0.6rem;
+    justify-items: center;
+}
+
+.CanvasMetaRow {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.CanvasMetaPill {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.78rem;
+    color: rgba(248, 250, 252, 0.82);
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.CanvasMetaPill--mode.CanvasMetaPill--side-scroller {
+    border-color: rgba(129, 140, 248, 0.45);
+    background: rgba(79, 70, 229, 0.22);
+}
+
+.CanvasMetaPill--mode.CanvasMetaPill--top-down {
+    border-color: rgba(56, 189, 248, 0.45);
+    background: rgba(14, 116, 144, 0.24);
+}
+
+.ControlsPanel {
+    justify-self: center;
 }
 
 .GameScreen {
@@ -38,7 +231,14 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    width: fit-content;
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: linear-gradient(
+        180deg,
+        rgba(15, 23, 42, 0.92) 0%,
+        rgba(2, 6, 23, 0.92) 100%
+    );
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.35);
+    overflow: hidden;
 }
-/* .GameContainer {
-    outline: 10px solid lime !important;
-} */

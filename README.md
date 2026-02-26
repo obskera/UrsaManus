@@ -66,6 +66,105 @@ UrsaManus now includes a lightweight modular gravity/physics layer under `src/lo
 - Collision-aware stepping (`stepPhysics(deltaMs)`)
 - Pure reusable helpers (`createPhysicsBody`, `stepEntityPhysics`)
 
+## Prebuilt Game Modes
+
+UrsaManus now includes prebuilt canvas + controls presets for two common genres:
+
+- **SideScrollerCanvas + SideScrollerControls**
+    - gravity-enabled movement and jump assists
+    - up/space mapped to jump when gravity is active
+- **TopDownCanvas + TopDownControls**
+    - gravity-disabled top-down movement
+    - supports 4-way or 8-way input via `allowDiagonal`
+
+### Game Mode Cheat Sheet
+
+| Goal                               | Canvas preset        | Controls preset        | Key options                                         |
+| ---------------------------------- | -------------------- | ---------------------- | --------------------------------------------------- |
+| Platformer/side-scroller feel      | `SideScrollerCanvas` | `SideScrollerControls` | gravity/jump already configured                     |
+| Top-down (8-way)                   | `TopDownCanvas`      | `TopDownControls`      | `allowDiagonal={true}` (default)                    |
+| Top-down (4-way only)              | `TopDownCanvas`      | `TopDownControls`      | `allowDiagonal={false}`                             |
+| Share a demo with fixed start mode | either preset        | matching controls      | URL query `?mode=side-scroller` or `?mode=top-down` |
+
+### Copy/Paste: Side-Scroller Setup
+
+```tsx
+import { useCallback, useRef } from "react";
+import { SideScrollerCanvas } from "@/components/gameModes";
+import { SideScrollerControls } from "@/components/screenController";
+
+export default function SideScrollerExample() {
+    const gameScreenRef = useRef<HTMLDivElement | null>(null);
+
+    const onMove = useCallback(() => {
+        // optional UI updates when input occurs
+    }, []);
+
+    return (
+        <>
+            <SideScrollerCanvas
+                width={400}
+                height={300}
+                containerRef={gameScreenRef}
+            />
+            <SideScrollerControls onMove={onMove} />
+        </>
+    );
+}
+```
+
+### Copy/Paste: Top-Down Setup
+
+```tsx
+import { useCallback, useRef } from "react";
+import { TopDownCanvas } from "@/components/gameModes";
+import { TopDownControls } from "@/components/screenController";
+
+export default function TopDownExample() {
+    const gameScreenRef = useRef<HTMLDivElement | null>(null);
+
+    const onMove = useCallback(() => {
+        // optional UI updates when input occurs
+    }, []);
+
+    return (
+        <>
+            <TopDownCanvas
+                width={400}
+                height={300}
+                containerRef={gameScreenRef}
+            />
+            <TopDownControls
+                onMove={onMove}
+                allowDiagonal={true}
+                speedPxPerSec={220}
+            />
+        </>
+    );
+}
+```
+
+### URL Mode Query
+
+The default app supports mode sharing via query param:
+
+- `?mode=side-scroller`
+- `?mode=top-down`
+
+```tsx
+import { SideScrollerCanvas, TopDownCanvas } from "@/components/gameModes";
+import {
+    SideScrollerControls,
+    TopDownControls,
+} from "@/components/screenController";
+
+<SideScrollerCanvas width={400} height={300} />;
+<SideScrollerControls onMove={handleMove} />;
+
+<TopDownCanvas width={400} height={300} />;
+<TopDownControls onMove={handleMove} allowDiagonal={true} />;
+```
+
 ## Effects Quick Start
 
 UrsaManus includes signal-driven transition and particle effects.

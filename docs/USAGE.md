@@ -70,6 +70,283 @@ Run lint:
 />
 ```
 
+### Prebuilt game-mode canvas presets
+
+Use these for faster setup without manually wiring mode-specific `DataBus` config:
+
+- `SideScrollerCanvas` — enables gravity + side-scroller movement tuning
+- `TopDownCanvas` — disables player gravity/physics for top-down movement
+
+```tsx
+import { SideScrollerCanvas, TopDownCanvas } from "@/components/gameModes";
+
+<SideScrollerCanvas width={400} height={300} />;
+<TopDownCanvas width={400} height={300} />;
+```
+
+Pair them with matching control presets from `@/components/screenController`:
+
+- `SideScrollerControls`
+- `TopDownControls`
+
+### Game mode presets cheat sheet
+
+| Mode             | Canvas               | Controls               | Input model                      |
+| ---------------- | -------------------- | ---------------------- | -------------------------------- |
+| Side scroller    | `SideScrollerCanvas` | `SideScrollerControls` | smooth horizontal + gravity jump |
+| Top-down (8-way) | `TopDownCanvas`      | `TopDownControls`      | hold-based 8-way movement        |
+| Top-down (4-way) | `TopDownCanvas`      | `TopDownControls`      | set `allowDiagonal={false}`      |
+
+### Copy/paste: side-scroller module wiring
+
+```tsx
+import { useCallback, useRef } from "react";
+import { SideScrollerCanvas } from "@/components/gameModes";
+import { SideScrollerControls } from "@/components/screenController";
+
+export function SideScrollerModule() {
+    const gameScreenRef = useRef<HTMLDivElement | null>(null);
+    const handleMove = useCallback(() => {
+        // optional UI updates
+    }, []);
+
+    return (
+        <>
+            <SideScrollerCanvas
+                width={400}
+                height={300}
+                containerRef={gameScreenRef}
+            />
+            <SideScrollerControls onMove={handleMove} />
+        </>
+    );
+}
+```
+
+### Copy/paste: top-down module wiring
+
+```tsx
+import { useCallback, useRef } from "react";
+import { TopDownCanvas } from "@/components/gameModes";
+import { TopDownControls } from "@/components/screenController";
+
+export function TopDownModule() {
+    const gameScreenRef = useRef<HTMLDivElement | null>(null);
+    const handleMove = useCallback(() => {
+        // optional UI updates
+    }, []);
+
+    return (
+        <>
+            <TopDownCanvas
+                width={400}
+                height={300}
+                containerRef={gameScreenRef}
+            />
+            <TopDownControls
+                onMove={handleMove}
+                allowDiagonal={true}
+                speedPxPerSec={220}
+            />
+        </>
+    );
+}
+```
+
+### Copy/paste: switch between both modes in one app
+
+```tsx
+import { useState } from "react";
+
+type Mode = "side-scroller" | "top-down";
+const [mode, setMode] = useState<Mode>("side-scroller");
+
+return mode === "side-scroller" ? (
+    <>
+        <SideScrollerCanvas width={400} height={300} />
+        <SideScrollerControls />
+    </>
+) : (
+    <>
+        <TopDownCanvas width={400} height={300} />
+        <TopDownControls allowDiagonal />
+    </>
+);
+```
+
+### URL mode query in the default app
+
+`App.tsx` supports mode selection via URL query:
+
+- `?mode=side-scroller`
+- `?mode=top-down`
+
+### Quick recipes (copy/paste)
+
+- Platformer starter (`SideScrollerCanvas` + `SideScrollerControls`):
+
+```tsx
+<SideScrollerCanvas width={400} height={300} />
+<SideScrollerControls onMove={handleMove} />
+```
+
+- Dungeon crawler (4-way, `TopDownCanvas` + `TopDownControls`):
+
+```tsx
+<TopDownCanvas width={400} height={300} />
+<TopDownControls onMove={handleMove} allowDiagonal={false} />
+```
+
+- Action RPG (8-way, `TopDownCanvas` + `TopDownControls`):
+
+```tsx
+<TopDownCanvas width={400} height={300} />
+<TopDownControls onMove={handleMove} allowDiagonal speedPxPerSec={240} />
+```
+
+- Shareable start-mode links:
+    - side scroller: `?mode=side-scroller`
+    - top down: `?mode=top-down`
+
+### Full starter file: `App.tsx` (side scroller)
+
+```tsx
+import { useCallback, useEffect, useRef, useState } from "react";
+import { SideScrollerControls } from "@/components/screenController";
+import { SideScrollerCanvas } from "@/components/gameModes";
+import { dataBus } from "@/services/DataBus";
+import "./App.css";
+
+export default function App() {
+    const [, force] = useState(0);
+    const gameScreenRef = useRef<HTMLDivElement | null>(null);
+
+    const handleMove = useCallback(() => {
+        force((n) => n + 1);
+    }, []);
+
+    useEffect(() => {
+        let rafId = 0;
+        let lastFrame = performance.now();
+
+        const tick = (now: number) => {
+            const deltaMs = now - lastFrame;
+            lastFrame = now;
+
+            if (dataBus.stepPhysics(deltaMs)) {
+                force((n) => n + 1);
+            }
+
+            rafId = requestAnimationFrame(tick);
+        };
+
+        rafId = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(rafId);
+    }, []);
+
+    return (
+        <div className="GameContainer">
+            <SideScrollerCanvas
+                width={400}
+                height={300}
+                containerRef={gameScreenRef}
+            />
+            <SideScrollerControls onMove={handleMove} />
+        </div>
+    );
+}
+```
+
+### Full starter file: `App.tsx` (top down)
+
+```tsx
+import { useCallback, useEffect, useRef, useState } from "react";
+import { TopDownControls } from "@/components/screenController";
+import { TopDownCanvas } from "@/components/gameModes";
+import { dataBus } from "@/services/DataBus";
+import "./App.css";
+
+export default function App() {
+    const [, force] = useState(0);
+    const gameScreenRef = useRef<HTMLDivElement | null>(null);
+
+    const handleMove = useCallback(() => {
+        force((n) => n + 1);
+    }, []);
+
+    useEffect(() => {
+        let rafId = 0;
+        let lastFrame = performance.now();
+
+        const tick = (now: number) => {
+            const deltaMs = now - lastFrame;
+            lastFrame = now;
+
+            if (dataBus.stepPhysics(deltaMs)) {
+                force((n) => n + 1);
+            }
+
+            rafId = requestAnimationFrame(tick);
+        };
+
+        rafId = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(rafId);
+    }, []);
+
+    return (
+        <div className="GameContainer">
+            <TopDownCanvas
+                width={400}
+                height={300}
+                containerRef={gameScreenRef}
+            />
+            <TopDownControls
+                onMove={handleMove}
+                allowDiagonal={true}
+                speedPxPerSec={220}
+            />
+        </div>
+    );
+}
+```
+
+### Full starter file: `App.css` (works for both presets)
+
+```css
+html,
+body,
+#root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body,
+#root {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.GameContainer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.GameScreen {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+```
+
 ---
 
 ## 4) Game State + Movement (`DataBus`)

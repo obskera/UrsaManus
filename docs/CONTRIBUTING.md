@@ -105,7 +105,27 @@ Contributors adding/changing dev key behavior should:
 
 ---
 
-## 7) Pull Request Checklist
+## 7) Game Mode Presets
+
+Prebuilt presets live in:
+
+- `src/components/gameModes/` (canvas/runtime setup)
+- `src/components/screenController/` (mode-matched controls)
+
+Current preset pairs:
+
+- `SideScrollerCanvas` + `SideScrollerControls`
+- `TopDownCanvas` + `TopDownControls`
+
+When changing one side of a preset pair, also verify:
+
+- matching controls still feel correct for that mode,
+- docs include copy/paste usage snippets,
+- test coverage reflects expected mode behavior.
+
+---
+
+## 8) Pull Request Checklist
 
 Before opening a PR:
 
@@ -117,7 +137,7 @@ Before opening a PR:
 
 ---
 
-## 8) Design Intent Reminder
+## 9) Design Intent Reminder
 
 UrsaManus is intentionally a **small core engine** that can be **extended indefinitely**.
 

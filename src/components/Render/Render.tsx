@@ -22,6 +22,7 @@ export interface RenderProps {
     items: RenderableItem[];
     width?: number;
     height?: number;
+    showDebugOutlines?: boolean;
 }
 
 type TilePosition = { x: number; y: number };
@@ -71,7 +72,14 @@ function loadImage(src: string) {
     return p;
 }
 
-const Render = ({ items, width = 300, height = 300 }: RenderProps) => {
+const DEBUG_OUTLINE_COLOR = "#60a5fa";
+
+const Render = ({
+    items,
+    width = 300,
+    height = 300,
+    showDebugOutlines = true,
+}: RenderProps) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     useEffect(() => {
@@ -149,13 +157,13 @@ const Render = ({ items, width = 300, height = 300 }: RenderProps) => {
                             it.spriteSize * it.scaler,
                         );
 
-                        if (it.collider?.debugDraw) {
+                        if (showDebugOutlines && it.collider?.debugDraw) {
                             const scale = it.scaler;
 
                             const cx = dx + it.collider.offset.x * scale;
                             const cy = dy + it.collider.offset.y * scale;
 
-                            context.strokeStyle = "red";
+                            context.strokeStyle = DEBUG_OUTLINE_COLOR;
                             context.lineWidth = 1;
                             context.strokeRect(
                                 cx,
@@ -179,15 +187,21 @@ const Render = ({ items, width = 300, height = 300 }: RenderProps) => {
             cancelled = true;
             if (raf) cancelAnimationFrame(raf);
         };
-    }, [items, width, height]);
+    }, [items, width, height, showDebugOutlines]);
 
     return (
-        <canvas
-            ref={canvasRef}
-            width={width}
-            height={height}
-            style={{ outline: "3px solid red", imageRendering: "pixelated" }}
-        />
+        <div
+            className={
+                showDebugOutlines ? "render-frame is-debug" : "render-frame"
+            }
+        >
+            <canvas
+                ref={canvasRef}
+                width={width}
+                height={height}
+                className="render-canvas"
+            />
+        </div>
     );
 };
 

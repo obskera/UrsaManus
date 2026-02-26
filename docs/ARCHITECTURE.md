@@ -39,9 +39,18 @@ flowchart LR
 
 ### UI composition (`App.tsx`)
 
-- Configures world size and world bounds.
-- Mounts `ScreenController` and child controls.
-- Pulls entities from `dataBus.getState().entitiesById` and passes them to `Render`.
+- Selects active game mode (`side-scroller` / `top-down`) via local state.
+- Syncs active mode to URL query (`?mode=...`) for shareable demos.
+- Mounts matching prebuilt canvas + controls presets for the active mode.
+
+### Game mode presets (`src/components/gameModes/`)
+
+- `SideScrollerCanvas`
+    - Configures world + gravity side-scroller tuning.
+    - Mounts render canvas and effects overlays.
+- `TopDownCanvas`
+    - Configures world + disables player gravity/physics.
+    - Mounts render canvas and effects overlays.
 
 ### Input controls (`src/components/screenController/`)
 
@@ -57,6 +66,10 @@ flowchart LR
     - Currently logs directions (reserved for future actions).
 - `ScreenControl` / `ScreenControlGroup` / `ScreenController`
     - Visual primitives and layout wrappers for controller UI.
+- `SideScrollerControls`
+    - Prebuilt side-scroller control composition.
+- `TopDownControls`
+    - Prebuilt top-down control composition.
 
 ### State and simulation (`DataBus`)
 
