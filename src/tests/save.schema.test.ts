@@ -142,29 +142,29 @@ describe("save schema validation", () => {
         expect(parseSaveGame(invalidCameraClamp)).toBeNull();
     });
 
-        it("rejects malformed animation, camera viewport, and flags", () => {
-            const invalidAnimationFrames = cloneSave();
-            invalidAnimationFrames.state.entitiesById[
-                invalidAnimationFrames.state.playerId
-            ].animations = [
-                {
-                    spriteSheet: "sheet.png",
-                    name: "idle",
-                    frames: [[1, 2, 3]] as unknown as number[][],
-                },
-            ];
-            expect(parseSaveGame(invalidAnimationFrames)).toBeNull();
+    it("rejects malformed animation, camera viewport, and flags", () => {
+        const invalidAnimationFrames = cloneSave();
+        invalidAnimationFrames.state.entitiesById[
+            invalidAnimationFrames.state.playerId
+        ].animations = [
+            {
+                spriteSheet: "sheet.png",
+                name: "idle",
+                frames: [[1, 2, 3]] as unknown as number[][],
+            },
+        ];
+        expect(parseSaveGame(invalidAnimationFrames)).toBeNull();
 
-            const invalidViewport = cloneSave();
-            invalidViewport.state.camera.viewport = {
-                width: Number.NaN,
-                height: 100,
-            };
-            expect(parseSaveGame(invalidViewport)).toBeNull();
+        const invalidViewport = cloneSave();
+        invalidViewport.state.camera.viewport = {
+            width: Number.NaN,
+            height: 100,
+        };
+        expect(parseSaveGame(invalidViewport)).toBeNull();
 
-            const invalidWorldBoundsEnabled = cloneSave();
-            invalidWorldBoundsEnabled.state.worldBoundsEnabled =
-                "enabled" as unknown as boolean;
-            expect(parseSaveGame(invalidWorldBoundsEnabled)).toBeNull();
-        });
+        const invalidWorldBoundsEnabled = cloneSave();
+        invalidWorldBoundsEnabled.state.worldBoundsEnabled =
+            "enabled" as unknown as boolean;
+        expect(parseSaveGame(invalidWorldBoundsEnabled)).toBeNull();
+    });
 });

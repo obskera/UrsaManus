@@ -48,6 +48,38 @@ Many TypeScript + React developers already have strong app architecture habits. 
 
 This allows a project to start simple, then expand into custom systems without throwing away the original foundation.
 
+## Save/Load Docs
+
+Save/load documentation is split into quick-reference and implementation guides:
+
+- [docs/save/CHEATSHEET.md](docs/save/CHEATSHEET.md) — one-page API and shortcut reference
+- [docs/save/README.md](docs/save/README.md) — workflows, examples, and error-handling snippets
+- [src/services/save/README.md](src/services/save/README.md) — module-level contributor notes
+
+### Save Quick Start
+
+```ts
+import { quickLoad, quickSave } from "@/services/save";
+
+const restored = quickLoad();
+if (!restored) {
+    // continue with default DataBus state
+}
+
+// later, after a meaningful state change:
+quickSave();
+```
+
+## Where to Start
+
+Use this quick docs map when onboarding or jumping into a subsystem:
+
+- [README.md](README.md) — project overview and quick starts
+- [docs/USAGE.md](docs/USAGE.md) — practical usage patterns and copy/paste examples
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system responsibilities and lifecycle flow
+- [docs/save/README.md](docs/save/README.md) — save/load workflows and integration snippets
+- [docs/save/CHEATSHEET.md](docs/save/CHEATSHEET.md) — one-page save/load API reference
+
 ## Current Direction
 
 Current direction is principle-led rather than milestone-led.

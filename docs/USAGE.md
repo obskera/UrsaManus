@@ -4,6 +4,13 @@ This guide explains how to use the main engine modules in the current codebase.
 
 For system-level flow and responsibilities, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
+### Documentation Map
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — system flow and module responsibilities
+- [save/README.md](save/README.md) — save/load workflows and implementation snippets
+- [save/CHEATSHEET.md](save/CHEATSHEET.md) — quick save/load API and shortcut reference
+- [../src/services/save/README.md](../src/services/save/README.md) — contributor notes for save internals
+
 ---
 
 ## 1) Project Structure
@@ -1446,6 +1453,12 @@ Current examples:
 
 ## 11) Save File Import/Export
 
+Reference docs:
+
+- Full guide: [save/README.md](save/README.md)
+- One-page quick ref: [save/CHEATSHEET.md](save/CHEATSHEET.md)
+- Module internals: [../src/services/save/README.md](../src/services/save/README.md)
+
 ### Quick save (localStorage)
 
 Quick save APIs are available in `src/services/save/bus.ts`:
@@ -1467,6 +1480,33 @@ Dev shortcuts (when dev mode is enabled):
 - `Alt + Shift + I` — Import Save File
 
 Save file APIs live in `src/services/save/file.ts` and use the versioned `SaveGameV1` schema from `src/services/save/schema.ts`.
+
+### Startup restore snippet
+
+```ts
+import { quickLoad } from "@/services/save";
+
+const didRestore = quickLoad();
+if (!didRestore) {
+    // keep default state
+}
+```
+
+### Throttled autosave snippet
+
+```ts
+import { createQuickSaveScheduler } from "@/services/save";
+
+const scheduler = createQuickSaveScheduler({ waitMs: 700 });
+
+function onStateChanged() {
+    scheduler.notifyChange();
+}
+
+function cleanup() {
+    scheduler.dispose();
+}
+```
 
 ### Export
 
@@ -1491,6 +1531,31 @@ Supported import error codes:
 - `invalid-json`
 - `invalid-save-format`
 - `rehydrate-failed`
+
+### Import error copy map snippet
+
+```ts
+import type { SaveFileErrorCode } from "@/services/save/file";
+
+const saveErrorCopy: Record<SaveFileErrorCode, string> = {
+    "download-not-supported": "Export is not supported in this environment.",
+    "file-read-failed": "Could not read that save file.",
+    "empty-file": "The selected save file is empty.",
+    "invalid-json": "The selected file is not valid JSON.",
+    "invalid-save-format": "Unsupported save version or schema.",
+    "rehydrate-failed":
+        "Save could not be applied to the current runtime state.",
+};
+```
+
+### Save shortcut cheat sheet
+
+| Action      | Shortcut          |
+| ----------- | ----------------- |
+| Quick Save  | `Alt + Shift + S` |
+| Quick Load  | `Alt + Shift + L` |
+| Export Save | `Alt + Shift + E` |
+| Import Save | `Alt + Shift + I` |
 
 The import/export format is intentionally tied to `version` in schema so future migrations can be added without breaking existing save files.
 

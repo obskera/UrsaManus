@@ -1,11 +1,4 @@
-import {
-    afterEach,
-    beforeEach,
-    describe,
-    expect,
-    it,
-    vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { dataBus, type GameState } from "@/services/DataBus";
 import {
     QUICK_SAVE_STORAGE_KEY,

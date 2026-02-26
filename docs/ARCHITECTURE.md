@@ -97,6 +97,15 @@ flowchart LR
     - Exports save snapshots as downloadable `.json` files.
     - Imports user-provided `.json` files with structured error reporting.
 
+### Save docs index
+
+- [docs/save/CHEATSHEET.md](save/CHEATSHEET.md)
+    - Fast API/shortcut/error-code reference for day-to-day use.
+- [docs/save/README.md](save/README.md)
+    - End-to-end save/load workflows with copy/paste snippets.
+- [src/services/save/README.md](../src/services/save/README.md)
+    - Module-level contributor notes for save internals.
+
 ### Physics (`src/logic/physics/`)
 
 - `createPhysicsBody`

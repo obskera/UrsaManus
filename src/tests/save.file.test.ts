@@ -230,9 +230,9 @@ describe("save file service", () => {
 
         vi.resetModules();
         vi.doMock("@/services/save/state", async () => {
-            const actual = await vi.importActual<typeof import("@/services/save/state")>(
-                "@/services/save/state",
-            );
+            const actual = await vi.importActual<
+                typeof import("@/services/save/state")
+            >("@/services/save/state");
 
             return {
                 ...actual,
@@ -240,9 +240,8 @@ describe("save file service", () => {
             };
         });
 
-        const { importSaveFile: importWithMockedRehydrate } = await import(
-            "@/services/save/file"
-        );
+        const { importSaveFile: importWithMockedRehydrate } =
+            await import("@/services/save/file");
 
         const file = new File([JSON.stringify(save)], "valid.json", {
             type: "application/json",
