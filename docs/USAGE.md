@@ -37,6 +37,19 @@ Run lint:
 
 `npm run lint`
 
+### Template Post-Clone Checklist
+
+If you started from this repository as a template, complete this once before feature work:
+
+- [ ] Update `package.json` metadata (`name`, `version`)
+- [ ] Replace README project identity and summary
+- [ ] Review `docs/ARCHITECTURE.md` assumptions against your project scope
+- [ ] Run and pass local gates:
+    - `npm run lint`
+    - `npm run test:run`
+    - `npm run test:coverage:strict`
+- [ ] Confirm CI passes in GitHub Actions after first push
+
 ---
 
 ## 3) Rendering Sprites (`Render`)

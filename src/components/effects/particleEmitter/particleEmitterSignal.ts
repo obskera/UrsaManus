@@ -215,6 +215,7 @@ export function startTorchFlameEmitter(
         smokeAmount,
         ...rest
     } = options;
+    void _ignoredInterval;
 
     const emitTick = () => {
         const resolvedLocation =

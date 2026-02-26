@@ -427,6 +427,40 @@ Open Vitest UI:
 
 `npm run test:ui`
 
+## Template Quick Start
+
+This repository is set up to be used as a starter template.
+
+After creating a new repository from this template:
+
+1. Rename project metadata:
+    - update `package.json` (`name`, `version`, and any project-specific fields)
+2. Replace identity text:
+    - update this `README.md`
+    - review `docs/` for naming or project-specific assumptions
+3. Validate quality gates locally:
+    - `npm run lint`
+    - `npm run test:run`
+    - `npm run test:coverage:strict`
+4. Push to your default branch and confirm GitHub Actions CI passes.
+
+### Template Setup Checklist
+
+- [ ] Project name and metadata updated
+- [ ] README intro + goals updated
+- [ ] Docs reviewed (`docs/USAGE.md`, `docs/ARCHITECTURE.md`, `docs/CONTRIBUTING.md`)
+- [ ] Lint/tests/strict coverage all pass
+- [ ] First CI run is green on GitHub
+
+## CI (GitHub Actions)
+
+CI runs on push and pull request using `.github/workflows/ci.yml`:
+
+- `npm ci`
+- `npm run lint`
+- `npm run test:run`
+- `npm run test:coverage:strict`
+
 ## License
 
 All Rights Reserved.

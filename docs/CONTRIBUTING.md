@@ -17,6 +17,8 @@ This project is built as a small, extensible TypeScript/React engine core. Contr
 4. Run coverage when adding behavior:
     - `npm run test:coverage`
 
+If this repository was used as a template for a new project, first update project identity docs (`README.md` and relevant `docs/*`) before opening feature PRs.
+
 ---
 
 ## 2) Development Expectations
@@ -160,8 +162,10 @@ Before opening a PR:
 - [ ] Lint passes (`npm run lint`)
 - [ ] Tests pass (`npm run test:run`)
 - [ ] Coverage still healthy (`npm run test:coverage` when relevant)
+- [ ] Strict coverage gate still passes (`npm run test:coverage:strict`) when behavior changed
 - [ ] Docs updated for behavioral/API changes
 - [ ] Change is scoped to the stated objective
+- [ ] GitHub Actions CI (`.github/workflows/ci.yml`) is green
 
 ---
 
