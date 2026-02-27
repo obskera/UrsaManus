@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import SoundManager from "@/components/gameModes/SoundManager";
-import { AudioBus } from "@/services/AudioBus";
+import { AudioBus } from "@/services/audioBus";
 
 describe("SoundManager", () => {
     const originalAudioContext = window.AudioContext;

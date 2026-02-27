@@ -120,11 +120,19 @@ export async function loadSpriteSheetImages(
 }
 
 export class SpriteBatch {
+    private readonly items: SpriteBatchItem[];
+    private readonly imagesByUrl: Map<string, HTMLImageElement>;
+    private readonly animationStartMs: number;
+
     constructor(
-        private readonly items: SpriteBatchItem[],
-        private readonly imagesByUrl: Map<string, HTMLImageElement>,
-        private readonly animationStartMs: number,
-    ) {}
+        items: SpriteBatchItem[],
+        imagesByUrl: Map<string, HTMLImageElement>,
+        animationStartMs: number,
+    ) {
+        this.items = items;
+        this.imagesByUrl = imagesByUrl;
+        this.animationStartMs = animationStartMs;
+    }
 
     draw({
         ctx,

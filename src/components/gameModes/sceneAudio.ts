@@ -1,4 +1,4 @@
-import type { AudioCueDefinition } from "@/services/AudioBus";
+import type { AudioCueDefinition } from "@/services/audioBus";
 
 export const GAME_MODE_AUDIO_CUES: Record<string, AudioCueDefinition> = {
     "scene:side-scroller:music": {

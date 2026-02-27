@@ -7,7 +7,7 @@ import {
     type PlayAudioCueRequest,
     type ToneCueDefinition,
     type ToneWaveform,
-} from "@/services/AudioBus";
+} from "@/services/audioBus";
 
 export type SoundManagerProps = {
     bus?: AudioBus;
@@ -96,99 +96,108 @@ const SoundManager = ({ bus = audioBus, cues }: SoundManagerProps) => {
         playbackByCue.delete(cueId);
     }, []);
 
-    const playToneCue = useCallback((
-        cueId: string,
-        cue: ToneCueDefinition,
-        request: PlayAudioCueRequest,
-    ) => {
-        if (isMutedForChannel(bus, request.channel)) return;
+    const playToneCue = useCallback(
+        (
+            cueId: string,
+            cue: ToneCueDefinition,
+            request: PlayAudioCueRequest,
+        ) => {
+            if (isMutedForChannel(bus, request.channel)) return;
 
-        const context = getContext();
-        if (!context) return;
+            const context = getContext();
+            if (!context) return;
 
-        const state = bus.getState();
-        if (request.restartIfPlaying) {
-            stopPlayback(cueId);
-        } else if (playbackByCueRef.current.has(cueId)) {
-            return;
-        }
-
-        if (context.state === "suspended") {
-            void context.resume();
-        }
-
-        const oscillator = context.createOscillator();
-        const gainNode = context.createGain();
-
-        oscillator.type = toOscillatorType(cue.waveform ?? "sine");
-        oscillator.frequency.value = cue.frequencyHz;
-
-        const cueGain = cue.gain ?? 1;
-        const outputGain = Math.min(
-            1,
-            Math.max(0, state.masterVolume * request.volume * cueGain),
-        );
-        gainNode.gain.value = outputGain;
-
-        oscillator.connect(gainNode);
-        gainNode.connect(context.destination);
-
-        oscillator.onended = () => {
-            const active = playbackByCueRef.current.get(cueId);
-            if (active?.kind === "tone" && active.oscillator === oscillator) {
-                playbackByCueRef.current.delete(cueId);
+            const state = bus.getState();
+            if (request.restartIfPlaying) {
+                stopPlayback(cueId);
+            } else if (playbackByCueRef.current.has(cueId)) {
+                return;
             }
-        };
 
-        oscillator.start();
+            if (context.state === "suspended") {
+                void context.resume();
+            }
 
-        if (request.loop) {
-            playbackByCueRef.current.set(cueId, {
-                kind: "tone",
-                channel: request.channel,
-                oscillator,
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+
+            oscillator.type = toOscillatorType(cue.waveform ?? "sine");
+            oscillator.frequency.value = cue.frequencyHz;
+
+            const cueGain = cue.gain ?? 1;
+            const outputGain = Math.min(
+                1,
+                Math.max(0, state.masterVolume * request.volume * cueGain),
+            );
+            gainNode.gain.value = outputGain;
+
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+
+            oscillator.onended = () => {
+                const active = playbackByCueRef.current.get(cueId);
+                if (
+                    active?.kind === "tone" &&
+                    active.oscillator === oscillator
+                ) {
+                    playbackByCueRef.current.delete(cueId);
+                }
+            };
+
+            oscillator.start();
+
+            if (request.loop) {
+                playbackByCueRef.current.set(cueId, {
+                    kind: "tone",
+                    channel: request.channel,
+                    oscillator,
+                });
+                return;
+            }
+
+            oscillator.stop(context.currentTime + cue.durationMs / 1000);
+        },
+        [bus, getContext, stopPlayback],
+    );
+
+    const playFileCue = useCallback(
+        (
+            cueId: string,
+            cue: FileCueDefinition,
+            request: PlayAudioCueRequest,
+        ) => {
+            if (isMutedForChannel(bus, request.channel)) return;
+
+            const state = bus.getState();
+            if (request.restartIfPlaying) {
+                stopPlayback(cueId);
+            } else if (playbackByCueRef.current.has(cueId)) {
+                return;
+            }
+
+            const cueGain = cue.gain ?? 1;
+            const outputGain = Math.min(
+                1,
+                Math.max(0, state.masterVolume * request.volume * cueGain),
+            );
+            const audio = new Audio(cue.src);
+            audio.loop = request.loop;
+            audio.volume = outputGain;
+
+            void audio.play().catch(() => {
+                return;
             });
-            return;
-        }
 
-        oscillator.stop(context.currentTime + cue.durationMs / 1000);
-    }, [bus, getContext, stopPlayback]);
-
-    const playFileCue = useCallback((
-        cueId: string,
-        cue: FileCueDefinition,
-        request: PlayAudioCueRequest,
-    ) => {
-        if (isMutedForChannel(bus, request.channel)) return;
-
-        const state = bus.getState();
-        if (request.restartIfPlaying) {
-            stopPlayback(cueId);
-        } else if (playbackByCueRef.current.has(cueId)) {
-            return;
-        }
-
-        const cueGain = cue.gain ?? 1;
-        const outputGain = Math.min(
-            1,
-            Math.max(0, state.masterVolume * request.volume * cueGain),
-        );
-        const audio = new Audio(cue.src);
-        audio.loop = request.loop;
-        audio.volume = outputGain;
-
-        void audio.play().catch(() => {
-            return;
-        });
-
-        if (request.loop) {
-            playbackByCueRef.current.set(cueId, {
-                kind: "file",
-                channel: request.channel,
-                audio,
-            });
-        }
-    }, [bus, stopPlayback]);
+            if (request.loop) {
+                playbackByCueRef.current.set(cueId, {
+                    kind: "file",
+                    channel: request.channel,
+                    audio,
+                });
+            }
+        },
+        [bus, stopPlayback],
+    );
 
     useEffect(() => {
         if (cues) {

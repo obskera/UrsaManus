@@ -32,7 +32,7 @@ import {
 import { setupDevEffectHotkeys } from "./components/effects/dev";
 import { GAME_VIEW_CONFIG } from "@/config/gameViewConfig";
 import { dataBus } from "./services/DataBus";
-import { audioBus } from "@/services/AudioBus";
+import { audioBus } from "@/services/audioBus";
 import {
     createQuickSaveScheduler,
     exportSaveFile,

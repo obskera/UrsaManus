@@ -1854,10 +1854,7 @@ Contract summary:
 - Signal trigger APIs stay unchanged (`playScreenTransition`, `emitParticles`).
 
 ```ts
-import {
-    EffectGraph,
-    type CanvasEffectPass,
-} from "@/components/effects";
+import { EffectGraph, type CanvasEffectPass } from "@/components/effects";
 
 const graph = new EffectGraph();
 

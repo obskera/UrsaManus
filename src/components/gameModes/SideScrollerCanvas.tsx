@@ -2,7 +2,7 @@ import { type RefObject, useEffect } from "react";
 import Render from "@/components/Render/Render";
 import type { CameraMode } from "@/config/gameViewConfig";
 import { dataBus } from "@/services/DataBus";
-import { audioBus } from "@/services/AudioBus";
+import { audioBus } from "@/services/audioBus";
 import SoundManager from "./SoundManager";
 import { GAME_MODE_AUDIO_CUES } from "./sceneAudio";
 

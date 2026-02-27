@@ -46,7 +46,7 @@ vi.mock("@/services/DataBus", () => {
     };
 });
 
-vi.mock("@/services/AudioBus", () => {
+vi.mock("@/services/audioBus", () => {
     return {
         audioBus: {
             ...audioBusMocks,

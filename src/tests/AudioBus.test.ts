@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { AudioBus } from "@/services/AudioBus";
+import { AudioBus } from "@/services/audioBus";
 
 describe("AudioBus", () => {
     it("registers cues and emits play requests", () => {
