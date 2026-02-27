@@ -219,15 +219,21 @@ Default movement keys:
 
 UrsaManus includes signal-driven transition and particle effects.
 
-1. Mount the overlay above your canvas render:
+1. Render with runtime effects enabled (default):
 
 ```tsx
 <div className="GameScreen">
-    <Render items={entities} width={400} height={300} />
-    <ParticleEmitterOverlay width={400} height={300} />
-    <ScreenTransitionOverlay width={400} height={300} />
+    <Render
+        items={entities}
+        width={400}
+        height={300}
+        includeEffects
+        enableTransitionEffects
+    />
 </div>
 ```
+
+If you are using `SideScrollerCanvas` / `TopDownCanvas`, runtime effects are already wired for you.
 
 2. Trigger transitions from anywhere:
 

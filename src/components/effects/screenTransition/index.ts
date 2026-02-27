@@ -1,4 +1,3 @@
-export { default as ScreenTransitionOverlay } from "./ScreenTransitionOverlay";
 export {
     playBlackFade,
     playDirectionalPushTransition,
@@ -20,3 +19,12 @@ export {
     getTransitionWaveIndex,
     useScreenTransition,
 } from "./useScreenTransition";
+export {
+    createScreenTransitionCanvasPass,
+    type ScreenTransitionCanvasPassController,
+} from "./createScreenTransitionCanvasPass";
+export {
+    TransitionCoordinator,
+    type ActiveTransition,
+    type TransitionPhase,
+} from "./TransitionCoordinator";

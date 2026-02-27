@@ -1,6 +1,7 @@
 // src/logic/collision/worldBoundsFactory.ts
 import { generateId, type Entity } from "@/logic/entity/Entity";
 import { createRectangleCollider, CollisionLayer } from "@/logic/collision";
+import spriteSheetUrl from "@/assets/spriteSheet.png";
 
 type WorldBounds = {
     left: Entity;
@@ -21,7 +22,7 @@ export const createWorldBounds = (
         animations: [],
         currentAnimation: "idle",
         updateState: () => {},
-        spriteImageSheet: "/spriteSheet.png",
+        spriteImageSheet: spriteSheetUrl,
         spriteSize: 16,
         spriteSheetTileWidth: 49,
         spriteSheetTileHeight: 22,
@@ -49,7 +50,7 @@ export const createWorldBounds = (
         animations: [],
         currentAnimation: "idle",
         updateState: () => {},
-        spriteImageSheet: "/spriteSheet.png",
+        spriteImageSheet: spriteSheetUrl,
         spriteSize: 16,
         spriteSheetTileWidth: 49,
         spriteSheetTileHeight: 22,
@@ -77,7 +78,7 @@ export const createWorldBounds = (
         animations: [],
         currentAnimation: "idle",
         updateState: () => {},
-        spriteImageSheet: "/spriteSheet.png",
+        spriteImageSheet: spriteSheetUrl,
         spriteSize: 16,
         spriteSheetTileWidth: 49,
         spriteSheetTileHeight: 22,
@@ -105,7 +106,7 @@ export const createWorldBounds = (
         animations: [],
         currentAnimation: "idle",
         updateState: () => {},
-        spriteImageSheet: "/spriteSheet.png",
+        spriteImageSheet: spriteSheetUrl,
         spriteSize: 16,
         spriteSheetTileWidth: 49,
         spriteSheetTileHeight: 22,

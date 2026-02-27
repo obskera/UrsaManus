@@ -4,11 +4,20 @@ import { EMIT_PARTICLES_SIGNAL } from "./particleEmitterSignal";
 import { spawnParticles, updateParticles } from "./particleEmitterMath";
 import type { EmitParticlesPayload, Particle } from "./types";
 
-export function useParticleEmitter(width: number, height: number) {
+export function useParticleEmitter(
+    width: number,
+    height: number,
+    enabled = true,
+) {
     const particlesRef = useRef<Particle[]>([]);
     const idRef = useRef(1);
 
     useEffect(() => {
+        if (!enabled) {
+            particlesRef.current = [];
+            return;
+        }
+
         const unsubscribe = signalBus.on<EmitParticlesPayload>(
             EMIT_PARTICLES_SIGNAL,
             (payload) => {
@@ -22,9 +31,14 @@ export function useParticleEmitter(width: number, height: number) {
         );
 
         return unsubscribe;
-    }, []);
+    }, [enabled]);
 
     useEffect(() => {
+        if (!enabled) {
+            particlesRef.current = [];
+            return;
+        }
+
         let raf = 0;
         let lastTick = performance.now();
 
@@ -51,7 +65,7 @@ export function useParticleEmitter(width: number, height: number) {
         return () => {
             if (raf) cancelAnimationFrame(raf);
         };
-    }, [height, width]);
+    }, [enabled, height, width]);
 
     return { particlesRef };
 }

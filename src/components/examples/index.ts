@@ -22,6 +22,10 @@ export { default as PlatformerHUDPresetExample } from "./PlatformerHUDPresetExam
 export type { PlatformerHUDPresetExampleProps } from "./PlatformerHUDPresetExample";
 export { default as TopDownHUDPresetExample } from "./TopDownHUDPresetExample";
 export type { TopDownHUDPresetExampleProps } from "./TopDownHUDPresetExample";
+export { default as TopDownMiniGameExample } from "./TopDownMiniGameExample";
+export type { TopDownMiniGameExampleProps } from "./TopDownMiniGameExample";
+export { default as SideScrollerMiniGameExample } from "./SideScrollerMiniGameExample";
+export type { SideScrollerMiniGameExampleProps } from "./SideScrollerMiniGameExample";
 export { default as MainMenuExample } from "./MainMenuExample";
 export type { MainMenuExampleProps } from "./MainMenuExample";
 export { default as PauseMenuExample } from "./PauseMenuExample";

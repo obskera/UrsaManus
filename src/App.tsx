@@ -23,6 +23,8 @@ import {
     VirtualActionButtonExample,
     VirtualDPadExample,
     TopDownHUDPresetExample,
+    TopDownMiniGameExample,
+    SideScrollerMiniGameExample,
     MainMenuExample,
     PauseMenuExample,
     GameOverScreenExample,
@@ -30,6 +32,7 @@ import {
 import { setupDevEffectHotkeys } from "./components/effects/dev";
 import { GAME_VIEW_CONFIG } from "@/config/gameViewConfig";
 import { dataBus } from "./services/DataBus";
+import { audioBus } from "@/services/AudioBus";
 import {
     createQuickSaveScheduler,
     exportSaveFile,
@@ -43,6 +46,9 @@ type GameMode = "side-scroller" | "top-down";
 type DevSaveStatusTone = "neutral" | "success" | "error";
 
 const GAME_MODE_QUERY_KEY = "mode";
+const AUDIO_MUTE_STORAGE_KEY = "ursa:audio:masterMuted:v1";
+const AUDIO_MUSIC_MUTE_STORAGE_KEY = "ursa:audio:musicMuted:v1";
+const AUDIO_SFX_MUTE_STORAGE_KEY = "ursa:audio:sfxMuted:v1";
 
 function normalizeGameMode(value: string | null): GameMode | null {
     if (value === "side-scroller" || value === "top-down") {
@@ -59,6 +65,67 @@ export default function App() {
     const [showDebugOutlines, setShowDebugOutlines] = useState(isDevMode);
     const [showDevControls, setShowDevControls] = useState(false);
     const [showExamplesTab, setShowExamplesTab] = useState(false);
+    const [canvasPresetRevision, setCanvasPresetRevision] = useState(0);
+    const [isAudioMuted, setIsAudioMuted] = useState(() => {
+        const fallback = audioBus.getState().masterMuted;
+
+        try {
+            const storedValue = window.localStorage.getItem(
+                AUDIO_MUTE_STORAGE_KEY,
+            );
+            if (storedValue === null) {
+                audioBus.setMasterMuted(fallback);
+                return fallback;
+            }
+
+            const parsed = storedValue === "1" || storedValue === "true";
+            audioBus.setMasterMuted(parsed);
+            return parsed;
+        } catch {
+            audioBus.setMasterMuted(fallback);
+            return fallback;
+        }
+    });
+    const [isMusicMuted, setIsMusicMuted] = useState(() => {
+        const fallback = audioBus.getState().channelMuted.music;
+
+        try {
+            const storedValue = window.localStorage.getItem(
+                AUDIO_MUSIC_MUTE_STORAGE_KEY,
+            );
+            if (storedValue === null) {
+                audioBus.setChannelMuted("music", fallback);
+                return fallback;
+            }
+
+            const parsed = storedValue === "1" || storedValue === "true";
+            audioBus.setChannelMuted("music", parsed);
+            return parsed;
+        } catch {
+            audioBus.setChannelMuted("music", fallback);
+            return fallback;
+        }
+    });
+    const [isSfxMuted, setIsSfxMuted] = useState(() => {
+        const fallback = audioBus.getState().channelMuted.sfx;
+
+        try {
+            const storedValue = window.localStorage.getItem(
+                AUDIO_SFX_MUTE_STORAGE_KEY,
+            );
+            if (storedValue === null) {
+                audioBus.setChannelMuted("sfx", fallback);
+                return fallback;
+            }
+
+            const parsed = storedValue === "1" || storedValue === "true";
+            audioBus.setChannelMuted("sfx", parsed);
+            return parsed;
+        } catch {
+            audioBus.setChannelMuted("sfx", fallback);
+            return fallback;
+        }
+    });
     const [devSaveStatus, setDevSaveStatus] = useState<{
         tone: DevSaveStatusTone;
         message: string;
@@ -131,6 +198,60 @@ export default function App() {
         publishDevSaveStatus(result.message, "error");
     }, [publishDevSaveStatus]);
 
+    const toggleAudioMuted = useCallback(() => {
+        setIsAudioMuted((current) => {
+            const next = !current;
+            audioBus.setMasterMuted(next);
+
+            try {
+                window.localStorage.setItem(
+                    AUDIO_MUTE_STORAGE_KEY,
+                    next ? "1" : "0",
+                );
+            } catch {
+                return next;
+            }
+
+            return next;
+        });
+    }, []);
+
+    const toggleMusicMuted = useCallback(() => {
+        setIsMusicMuted((current) => {
+            const next = !current;
+            audioBus.setChannelMuted("music", next);
+
+            try {
+                window.localStorage.setItem(
+                    AUDIO_MUSIC_MUTE_STORAGE_KEY,
+                    next ? "1" : "0",
+                );
+            } catch {
+                return next;
+            }
+
+            return next;
+        });
+    }, []);
+
+    const toggleSfxMuted = useCallback(() => {
+        setIsSfxMuted((current) => {
+            const next = !current;
+            audioBus.setChannelMuted("sfx", next);
+
+            try {
+                window.localStorage.setItem(
+                    AUDIO_SFX_MUTE_STORAGE_KEY,
+                    next ? "1" : "0",
+                );
+            } catch {
+                return next;
+            }
+
+            return next;
+        });
+    }, []);
+
     const triggerImportPicker = useCallback(() => {
         saveImportInputRef.current?.click();
     }, []);
@@ -182,6 +303,7 @@ export default function App() {
         const didRestore = quickLoad();
         if (didRestore) {
             queueMicrotask(() => {
+                setCanvasPresetRevision((value) => value + 1);
                 setHasProgress(true);
                 force((n) => n + 1);
             });
@@ -239,6 +361,24 @@ export default function App() {
             if (key === "i") {
                 event.preventDefault();
                 triggerImportPicker();
+                return;
+            }
+
+            if (key === "m") {
+                event.preventDefault();
+                toggleAudioMuted();
+                return;
+            }
+
+            if (key === "n") {
+                event.preventDefault();
+                toggleMusicMuted();
+                return;
+            }
+
+            if (key === "b") {
+                event.preventDefault();
+                toggleSfxMuted();
             }
         };
 
@@ -251,6 +391,9 @@ export default function App() {
         runExportSaveAction,
         runQuickLoadAction,
         runQuickSaveAction,
+        toggleAudioMuted,
+        toggleMusicMuted,
+        toggleSfxMuted,
         triggerImportPicker,
     ]);
 
@@ -305,6 +448,11 @@ export default function App() {
     }, []);
 
     const handleMove = useCallback(() => {
+        audioBus.play("player:step", {
+            channel: "sfx",
+            volume: 0.55,
+            restartIfPlaying: false,
+        });
         setHasProgress(true);
         quickSaveSchedulerRef.current.notifyChange();
         force((n) => n + 1);
@@ -323,6 +471,7 @@ export default function App() {
     const canvas =
         gameMode === "side-scroller" ? (
             <SideScrollerCanvas
+                key={`side-scroller-${canvasPresetRevision}`}
                 width={width}
                 height={height}
                 worldWidth={GAME_VIEW_CONFIG.world.width}
@@ -336,6 +485,7 @@ export default function App() {
             />
         ) : (
             <TopDownCanvas
+                key={`top-down-${canvasPresetRevision}`}
                 width={width}
                 height={height}
                 worldWidth={GAME_VIEW_CONFIG.world.width}
@@ -358,6 +508,16 @@ export default function App() {
 
     const modeLabel =
         gameMode === "side-scroller" ? "Side Scroller" : "Top Down";
+
+    const audioStatusLabel = isAudioMuted
+        ? "Muted"
+        : isMusicMuted && isSfxMuted
+          ? "Music/SFX off"
+          : isMusicMuted
+            ? "Music off"
+            : isSfxMuted
+              ? "SFX off"
+              : "On";
 
     return (
         <div className="GameContainer">
@@ -400,6 +560,57 @@ export default function App() {
                             onClick={switchToTopDown}
                         >
                             Top Down
+                        </button>
+                    </div>
+                    <div
+                        className="DevToolsGroup"
+                        role="group"
+                        aria-label="Audio controls"
+                    >
+                        <button
+                            type="button"
+                            className={
+                                isAudioMuted
+                                    ? "DebugToggle DebugToggle--active"
+                                    : "DebugToggle"
+                            }
+                            aria-pressed={isAudioMuted}
+                            onClick={(event) => {
+                                toggleAudioMuted();
+                                event.currentTarget.blur();
+                            }}
+                        >
+                            {isAudioMuted ? "Unmute audio" : "Mute audio"}
+                        </button>
+                        <button
+                            type="button"
+                            className={
+                                isMusicMuted
+                                    ? "DebugToggle DebugToggle--active"
+                                    : "DebugToggle"
+                            }
+                            aria-pressed={isMusicMuted}
+                            onClick={(event) => {
+                                toggleMusicMuted();
+                                event.currentTarget.blur();
+                            }}
+                        >
+                            {isMusicMuted ? "Unmute music" : "Mute music"}
+                        </button>
+                        <button
+                            type="button"
+                            className={
+                                isSfxMuted
+                                    ? "DebugToggle DebugToggle--active"
+                                    : "DebugToggle"
+                            }
+                            aria-pressed={isSfxMuted}
+                            onClick={(event) => {
+                                toggleSfxMuted();
+                                event.currentTarget.blur();
+                            }}
+                        >
+                            {isSfxMuted ? "Unmute SFX" : "Mute SFX"}
                         </button>
                     </div>
                     {isDevMode ? (
@@ -531,6 +742,9 @@ export default function App() {
                                 {devSaveStatus.message}
                             </p>
                         ) : null}
+                        <p className="DevSaveStatus DevSaveStatus--neutral">
+                            Audio status: {audioStatusLabel}
+                        </p>
                         <ul className="DevControlsList">
                             <li>
                                 <span className="DevKey">Alt + Shift + S</span>
@@ -547,6 +761,18 @@ export default function App() {
                             <li>
                                 <span className="DevKey">Alt + Shift + I</span>
                                 Import save file
+                            </li>
+                            <li>
+                                <span className="DevKey">Alt + Shift + M</span>
+                                Toggle audio mute
+                            </li>
+                            <li>
+                                <span className="DevKey">Alt + Shift + N</span>
+                                Toggle music mute
+                            </li>
+                            <li>
+                                <span className="DevKey">Alt + Shift + B</span>
+                                Toggle SFX mute
                             </li>
                             <li>
                                 <span className="DevKey">T</span>
@@ -601,6 +827,8 @@ export default function App() {
                             <QuickHUDLayoutExample title="QuickHUDLayout preview" />
                             <PlatformerHUDPresetExample title="PlatformerHUDPreset preview" />
                             <TopDownHUDPresetExample title="TopDownHUDPreset preview" />
+                            <TopDownMiniGameExample title="Top-down mini game MVP" />
+                            <SideScrollerMiniGameExample title="Sidescroller mini game MVP" />
                             <MainMenuExample title="MainMenu preview" />
                             <PauseMenuExample title="PauseMenu preview" />
                             <GameOverScreenExample title="GameOverScreen preview" />
@@ -617,6 +845,9 @@ export default function App() {
                         </span>
                         <span className="CanvasMetaPill">
                             Resolution: {width}×{height}
+                        </span>
+                        <span className="CanvasMetaPill">
+                            Audio: {audioStatusLabel}
                         </span>
                         {isDevMode ? (
                             <>

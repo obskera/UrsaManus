@@ -1,4 +1,3 @@
-export { default as ParticleEmitterOverlay } from "./ParticleEmitterOverlay";
 export {
     emitBurningFlameParticles,
     emitDebrisParticles,
@@ -15,6 +14,10 @@ export {
 } from "./particleEmitterSignal";
 export { createParticle } from "./particleFactory";
 export { spawnParticles, updateParticles } from "./particleEmitterMath";
+export {
+    createParticleEmitterCanvasPass,
+    type ParticleEmitterCanvasPassController,
+} from "./createParticleEmitterCanvasPass";
 export type {
     Particle,
     ParticleDirection,

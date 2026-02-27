@@ -1064,6 +1064,8 @@ In the default app (`src/App.tsx`), both component demos are grouped under one e
     - `QuickHUDLayoutExample` (`src/components/examples/QuickHUDLayoutExample.tsx`)
     - `PlatformerHUDPresetExample` (`src/components/examples/PlatformerHUDPresetExample.tsx`)
     - `TopDownHUDPresetExample` (`src/components/examples/TopDownHUDPresetExample.tsx`)
+    - `TopDownMiniGameExample` (`src/components/examples/TopDownMiniGameExample.tsx`)
+    - `SideScrollerMiniGameExample` (`src/components/examples/SideScrollerMiniGameExample.tsx`)
 
 ---
 
@@ -1107,6 +1109,7 @@ Use these for faster setup without manually wiring mode-specific `DataBus` confi
 
 - `SideScrollerCanvas` — enables gravity + side-scroller movement tuning
 - `TopDownCanvas` — disables player gravity/physics for top-down movement
+- `SoundManager` — scene-level audio prefab that listens to `AudioBus`
 
 Both presets now support separating world size from canvas size:
 
@@ -1138,6 +1141,58 @@ import { SideScrollerCanvas, TopDownCanvas } from "@/components/gameModes";
     showDebugOutlines={import.meta.env.DEV}
 />;
 ```
+
+### AudioBus + SoundManager prefab
+
+Use `AudioBus` to emit audio cues from gameplay/UI code, then mount one
+`SoundManager` in the scene to resolve and play those cues.
+
+```tsx
+import { SideScrollerCanvas, SoundManager } from "@/components/gameModes";
+import { audioBus } from "@/services/AudioBus";
+
+const cues = {
+    "scene:music": {
+        kind: "tone",
+        frequencyHz: 196,
+        durationMs: 400,
+        gain: 0.08,
+        waveform: "triangle",
+    },
+    "ui:confirm": {
+        kind: "tone",
+        frequencyHz: 720,
+        durationMs: 70,
+        gain: 0.05,
+        waveform: "square",
+    },
+} as const;
+
+export function SceneWithAudio() {
+    return (
+        <>
+            <SoundManager cues={cues} />
+            <SideScrollerCanvas width={400} height={300} />
+            <button
+                onClick={() => {
+                    audioBus.play("ui:confirm", { channel: "ui" });
+                }}
+            >
+                Confirm
+            </button>
+        </>
+    );
+}
+```
+
+Audio control helpers:
+
+- `audioBus.play(cueId, options)`
+- `audioBus.stop(cueId?)`
+- `audioBus.stopChannel(channel)`
+- `audioBus.setMasterMuted(boolean)`
+- `audioBus.setChannelMuted(channel, boolean)`
+- `audioBus.setMasterVolume(0..1)`
 
 ### Global app-level world/camera config
 
@@ -1781,9 +1836,54 @@ export function useKeyBindings(actions: InputActions, enabled: boolean = true) {
 
 ## 6) Screen Transition Effects (`components/effects`)
 
-The transition system is signal-driven.
+### Canvas effects plugin contract (advanced)
 
-- `ScreenTransitionOverlay` renders the pixel transition above the game canvas.
+The current runtime path uses `EffectGraph` internally. `CanvasEffectsStage` remains available as a compatibility adapter over the same pass contract:
+
+- `EffectGraph`
+- `CanvasEffectsStage`
+- `CanvasEffectPass`
+- `CanvasEffectFrame`
+- `CanvasEffectLayer`
+- `CANVAS_EFFECT_LAYER_ORDER`
+
+Contract summary:
+
+- Each pass declares `id`, `layer`, `isActive`, `update(deltaMs)`, and `draw(frame)`.
+- Stage ordering is deterministic by layer (`particles` -> `transition`) and then pass id.
+- Signal trigger APIs stay unchanged (`playScreenTransition`, `emitParticles`).
+
+```ts
+import {
+    EffectGraph,
+    type CanvasEffectPass,
+} from "@/components/effects";
+
+const graph = new EffectGraph();
+
+const pass: CanvasEffectPass = {
+    id: "example-pass",
+    layer: "particles",
+    isActive: () => true,
+    update: (deltaMs) => {
+        void deltaMs;
+    },
+    draw: ({ ctx, width, height }) => {
+        void ctx;
+        void width;
+        void height;
+    },
+};
+
+graph.upsertPlugin(pass);
+```
+
+Current runtime behavior note: effects and transitions are runtime-owned in `Render` (no mode-level pass hooks or overlay shims).
+
+The transition system is signal-driven and runs through the `Render` runtime effects stage.
+
+- `createScreenTransitionCanvasPass` owns transition update/draw lifecycle.
+- `TransitionCoordinator` guarantees phase timing and callback ordering.
 - `playScreenTransition(payload)` emits a transition signal with full control.
 - `playBlackFade(options)` is a preset helper for black transitions.
 - Variant helpers: `playVenetianBlindsTransition`, `playMosaicDissolveTransition`, `playIrisTransition`, `playDirectionalPushTransition`.
@@ -1791,17 +1891,20 @@ The transition system is signal-driven.
 
 ### Required app wiring
 
-Mount `ScreenTransitionOverlay` in the same positioned container as `Render`.
+Use `Render` with runtime effects enabled (default behavior).
 
 ```tsx
-<div className="GameScreen">
-    <Render
-        items={Object.values(dataBus.getState().entitiesById)}
-        width={400}
-        height={300}
-    />
-    <ScreenTransitionOverlay width={400} height={300} />
-</div>
+return (
+    <div className="GameScreen">
+        <Render
+            items={Object.values(dataBus.getState().entitiesById)}
+            width={400}
+            height={300}
+            includeEffects
+            enableTransitionEffects
+        />
+    </div>
+);
 ```
 
 ### Trigger a transition
@@ -1902,7 +2005,6 @@ playBlackFade({
 ### Notes
 
 - Transition signal: `effects:screen-transition:play`
-- Overlay is visual-only (`pointer-events: none`), so gameplay input still routes normally.
 - Development hotkeys now live in `src/components/effects/dev/devEffectHotkeys.ts`.
 - New effects can start from `src/components/effects/_template/`.
 
@@ -1938,25 +2040,26 @@ Contributor workflow notes for these controls are documented in [CONTRIBUTING.md
 
 ## 7) Particle Effects (`components/effects`)
 
-The particle emitter is also signal-driven and renders on an overlay canvas.
+The particle emitter is signal-driven and renders through the `Render` runtime effects stage.
 
-- `ParticleEmitterOverlay` draws and updates active particles.
+- `createParticleEmitterCanvasPass` owns particle spawn/update/draw lifecycle.
 - `emitParticles(payload)` emits particle bursts through `SignalBus`.
 
 ### Required app wiring
 
-Mount `ParticleEmitterOverlay` in the same positioned container as `Render`.
+Use `Render` with runtime effects enabled (default behavior).
 
 ```tsx
-<div className="GameScreen">
-    <Render
-        items={Object.values(dataBus.getState().entitiesById)}
-        width={400}
-        height={300}
-    />
-    <ParticleEmitterOverlay width={400} height={300} />
-    <ScreenTransitionOverlay width={400} height={300} />
-</div>
+return (
+    <div className="GameScreen">
+        <Render
+            items={Object.values(dataBus.getState().entitiesById)}
+            width={400}
+            height={300}
+            includeEffects
+        />
+    </div>
+);
 ```
 
 ### Emit particles from anywhere
@@ -2218,6 +2321,9 @@ Dev shortcuts (when dev mode is enabled):
 - `Alt + Shift + L` — Quick Load
 - `Alt + Shift + E` — Export Save File
 - `Alt + Shift + I` — Import Save File
+- `Alt + Shift + M` — Toggle Audio Mute
+- `Alt + Shift + N` — Toggle Music Mute
+- `Alt + Shift + B` — Toggle SFX Mute
 
 Save file APIs live in `src/services/save/file.ts` and use the versioned `SaveGameV1` schema from `src/services/save/schema.ts`.
 
@@ -2296,6 +2402,9 @@ const saveErrorCopy: Record<SaveFileErrorCode, string> = {
 | Quick Load  | `Alt + Shift + L` |
 | Export Save | `Alt + Shift + E` |
 | Import Save | `Alt + Shift + I` |
+| Audio Mute  | `Alt + Shift + M` |
+| Music Mute  | `Alt + Shift + N` |
+| SFX Mute    | `Alt + Shift + B` |
 
 The import/export format is intentionally tied to `version` in schema so future migrations can be added without breaking existing save files.
 

@@ -194,6 +194,7 @@ function makeActiveTransition(
 export function useScreenTransition(
     width: number,
     height: number,
+    enabled = true,
 ): ScreenTransitionState {
     const [activeTransition, setActiveTransition] =
         useState<ActiveTransition | null>(null);
@@ -201,6 +202,10 @@ export function useScreenTransition(
     const [phase, setPhase] = useState<"cover" | "reveal">("cover");
 
     useEffect(() => {
+        if (!enabled) {
+            return;
+        }
+
         const unsubscribe = signalBus.on<PlayScreenTransitionPayload>(
             PLAY_SCREEN_TRANSITION_SIGNAL,
             (payload) => {
@@ -211,9 +216,13 @@ export function useScreenTransition(
         );
 
         return unsubscribe;
-    }, []);
+    }, [enabled]);
 
     useEffect(() => {
+        if (!enabled) {
+            return;
+        }
+
         if (!activeTransition) return;
 
         let raf = 0;
@@ -252,7 +261,7 @@ export function useScreenTransition(
         return () => {
             if (raf) cancelAnimationFrame(raf);
         };
-    }, [activeTransition, phase]);
+    }, [activeTransition, enabled, phase]);
 
     const cells = useMemo(() => {
         if (!activeTransition) return [];
@@ -399,7 +408,7 @@ export function useScreenTransition(
         return computedCells;
     }, [activeTransition, height, phase, phaseElapsedMs, width]);
 
-    if (!activeTransition) {
+    if (!enabled || !activeTransition) {
         return {
             active: false,
             color: "transparent",

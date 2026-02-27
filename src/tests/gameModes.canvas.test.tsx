@@ -25,6 +25,19 @@ const dataBusMocks = vi.hoisted(() => {
     };
 });
 
+const audioBusMocks = vi.hoisted(() => {
+    return {
+        play: vi.fn(),
+        stop: vi.fn(),
+    };
+});
+
+const renderMocks = vi.hoisted(() => {
+    return {
+        render: vi.fn(() => null),
+    };
+});
+
 vi.mock("@/services/DataBus", () => {
     return {
         dataBus: {
@@ -33,16 +46,23 @@ vi.mock("@/services/DataBus", () => {
     };
 });
 
-vi.mock("@/components/Render/Render", () => {
+vi.mock("@/services/AudioBus", () => {
+    return {
+        audioBus: {
+            ...audioBusMocks,
+        },
+    };
+});
+
+vi.mock("@/components/gameModes/SoundManager", () => {
     return {
         default: () => null,
     };
 });
 
-vi.mock("@/components/effects", () => {
+vi.mock("@/components/Render/Render", () => {
     return {
-        ParticleEmitterOverlay: () => null,
-        ScreenTransitionOverlay: () => null,
+        default: renderMocks.render,
     };
 });
 
@@ -59,6 +79,17 @@ describe("game mode canvas presets", () => {
         expect(dataBusMocks.setCameraFollowPlayer).toHaveBeenCalledWith(true);
         expect(dataBusMocks.enablePlayerGravity).toHaveBeenCalled();
         expect(dataBusMocks.setPlayerMovementConfig).toHaveBeenCalled();
+        expect(audioBusMocks.play).toHaveBeenCalledWith(
+            "scene:side-scroller:music",
+            expect.objectContaining({ channel: "music", loop: true }),
+        );
+        expect(renderMocks.render).toHaveBeenCalledWith(
+            expect.objectContaining({
+                includeEffects: true,
+                enableTransitionEffects: true,
+            }),
+            undefined,
+        );
     });
 
     it("configures top down mode without gravity", () => {
@@ -69,5 +100,34 @@ describe("game mode canvas presets", () => {
         expect(dataBusMocks.setCameraFollowPlayer).toHaveBeenCalledWith(true);
         expect(dataBusMocks.disablePlayerPhysics).toHaveBeenCalled();
         expect(dataBusMocks.setPlayerMoveInput).toHaveBeenCalledWith(0);
+        expect(audioBusMocks.play).toHaveBeenCalledWith(
+            "scene:top-down:music",
+            expect.objectContaining({ channel: "music", loop: true }),
+        );
+        expect(renderMocks.render).toHaveBeenCalledWith(
+            expect.objectContaining({
+                includeEffects: true,
+                enableTransitionEffects: true,
+            }),
+            undefined,
+        );
+    });
+
+    it("passes includeEffects=false to Render when disabled", () => {
+        render(
+            <SideScrollerCanvas
+                width={320}
+                height={240}
+                includeEffects={false}
+            />,
+        );
+
+        expect(renderMocks.render).toHaveBeenCalledWith(
+            expect.objectContaining({
+                includeEffects: false,
+                enableTransitionEffects: true,
+            }),
+            undefined,
+        );
     });
 });

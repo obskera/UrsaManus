@@ -1,11 +1,11 @@
 export {
-    ScreenTransitionOverlay,
     playBlackFade,
     playDirectionalPushTransition,
     playIrisTransition,
     playMosaicDissolveTransition,
     playScreenTransition,
     playVenetianBlindsTransition,
+    createScreenTransitionCanvasPass,
     PLAY_SCREEN_TRANSITION_SIGNAL,
     type BlackFadeOptions,
     type ColoredTransitionOptions,
@@ -15,9 +15,9 @@ export {
     type ScreenTransitionVariant,
     type TransitionCorner,
     type VenetianOrientation,
+    type ScreenTransitionCanvasPassController,
 } from "./screenTransition";
 export {
-    ParticleEmitterOverlay,
     emitBurningFlameParticles,
     emitDebrisParticles,
     emitMagicShimmerParticles,
@@ -29,6 +29,7 @@ export {
     stopTorchFlameEmitter,
     EMIT_PARTICLES_SIGNAL,
     createParticle,
+    createParticleEmitterCanvasPass,
     spawnParticles,
     updateParticles,
     type Particle,
@@ -39,8 +40,19 @@ export {
     type TorchFlameEmitterOptions,
     type ParticleSeed,
     type ParticlePresetOptions,
+    type ParticleEmitterCanvasPassController,
 } from "./particleEmitter";
 export {
     setupDevEffectHotkeys,
     type SetupDevEffectHotkeysOptions,
 } from "./dev";
+export {
+    CanvasEffectsStage,
+    EffectGraph,
+    useCanvasEffectsStage,
+    CANVAS_EFFECT_LAYER_ORDER,
+    type CanvasEffectFrame,
+    type CanvasEffectLayer,
+    type CanvasEffectPass,
+    type EffectGraphPlugin,
+} from "./canvas";

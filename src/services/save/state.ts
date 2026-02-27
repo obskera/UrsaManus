@@ -1,5 +1,6 @@
 import { dataBus, type GameState } from "@/services/DataBus";
 import type { Entity } from "@/logic/entity/Entity";
+import spriteSheetUrl from "@/assets/spriteSheet.png";
 import {
     SAVE_GAME_VERSION,
     migrateSaveGame,
@@ -10,6 +11,57 @@ import {
 
 type SaveTarget = {
     setState: (updater: (prev: GameState) => GameState) => void;
+};
+
+function sanitizeCharacterSpriteTiles(
+    frames: number[][],
+    tileWidth: number,
+    tileHeight: number,
+): number[][] {
+    const sanitized = frames.filter(
+        (frame) =>
+            Array.isArray(frame) &&
+            frame.length === 2 &&
+            Number.isFinite(frame[0]) &&
+            Number.isFinite(frame[1]) &&
+            frame[0] >= 0 &&
+            frame[1] >= 0 &&
+            frame[0] < tileWidth &&
+            frame[1] < tileHeight,
+    );
+
+    if (sanitized.length > 0) {
+        return sanitized.map((frame) => [frame[0], frame[1]]);
+    }
+
+    return [[0, 0]];
+}
+
+const normalizeSpriteImageSheet = (path: string): string => {
+    const normalizedPath = path.trim();
+
+    if (normalizedPath.length === 0) {
+        return path;
+    }
+
+    const lowerPath = normalizedPath.toLowerCase();
+    if (
+        lowerPath === "/spritesheet.png" ||
+        lowerPath === "spritesheet.png" ||
+        lowerPath.endsWith("/spritesheet.png")
+    ) {
+        return spriteSheetUrl;
+    }
+
+    const spriteSheetFilename = lowerPath.split("/").pop() ?? "";
+    if (
+        spriteSheetFilename.startsWith("spritesheet") &&
+        spriteSheetFilename.endsWith(".png")
+    ) {
+        return spriteSheetUrl;
+    }
+
+    return path;
 };
 
 const cloneSaveEntityToGameEntity = (saved: SaveEntityV1): Entity => {
@@ -24,13 +76,15 @@ const cloneSaveEntityToGameEntity = (saved: SaveEntityV1): Entity => {
         })),
         currentAnimation: saved.currentAnimation,
         updateState: () => {},
-        spriteImageSheet: saved.spriteImageSheet,
+        spriteImageSheet: normalizeSpriteImageSheet(saved.spriteImageSheet),
         spriteSize: saved.spriteSize,
         spriteSheetTileWidth: saved.spriteSheetTileWidth,
         spriteSheetTileHeight: saved.spriteSheetTileHeight,
-        characterSpriteTiles: saved.characterSpriteTiles.map((frame) => [
-            ...frame,
-        ]),
+        characterSpriteTiles: sanitizeCharacterSpriteTiles(
+            saved.characterSpriteTiles,
+            saved.spriteSheetTileWidth,
+            saved.spriteSheetTileHeight,
+        ),
         scaler: saved.scaler,
         position: {
             x: saved.position.x,

@@ -14,8 +14,8 @@ flowchart LR
     D[Dev Keys: T/P/F] --> DE[setupDevEffectHotkeys]
     E[Game/Event Layer] --> SB[SignalBus]
     DE --> SB
-    SB --> STO[ScreenTransitionOverlay]
-    SB --> PEO[ParticleEmitterOverlay]
+    SB --> STP[ScreenTransitionCanvasPass]
+    SB --> PTP[ParticleEmitterCanvasPass]
 
     AK --> DB[DataBus]
     OSC --> DB
@@ -29,8 +29,8 @@ flowchart LR
     PHYS --> DB
     APP --> RENDER[Render component]
     RENDER --> CANVAS[Canvas frame draw]
-    PEO --> CANVAS
-    STO --> CANVAS
+    STP --> CANVAS
+    PTP --> CANVAS
 ```
 
 ---
@@ -50,10 +50,17 @@ flowchart LR
 
 - `SideScrollerCanvas`
     - Configures world + gravity side-scroller tuning.
-    - Mounts render canvas and effects overlays.
+    - Starts/stops side-scroller scene music through `AudioBus`.
+    - Passes scene/camera/entity inputs to `Render`.
+    - Enables runtime effects via `includeEffects` and transition effects via `enableTransitionEffects`.
 - `TopDownCanvas`
     - Configures world + disables player gravity/physics.
-    - Mounts render canvas and effects overlays.
+    - Starts/stops top-down scene music through `AudioBus`.
+    - Passes scene/camera/entity inputs to `Render`.
+    - Enables runtime effects via `includeEffects` and transition effects via `enableTransitionEffects`.
+- `SoundManager`
+    - Registers scene cue maps and subscribes to `AudioBus` events.
+    - Resolves cue playback (tone/file) and channel-level stop/mute behavior.
 
 ### Input controls (`src/components/screenController/`)
 
@@ -97,6 +104,13 @@ flowchart LR
     - Exports save snapshots as downloadable `.json` files.
     - Imports user-provided `.json` files with structured error reporting.
 
+### Audio services (`src/services/`)
+
+- `AudioBus`
+    - Registers cue definitions used by scenes/UI.
+    - Emits typed play/stop/state audio events.
+    - Stores global audio state (`enabled`, master volume/mute, per-channel mute).
+
 ### Save docs index
 
 - [docs/save/CHEATSHEET.md](save/CHEATSHEET.md)
@@ -117,22 +131,27 @@ flowchart LR
 
 ### Rendering (`Render`)
 
-- Loads/caches sprite sheets.
-- Animates frame selection from tile sequences.
-- Draws entities to canvas each RAF tick.
+- Delegates RAF and plugin scheduling to `RenderRuntime`.
+- Delegates sprite draw/culling/frame resolution to `SpriteBatch`.
+- Draws entities and runtime-owned effects in a single deterministic frame pipeline.
+- Uses `includeEffects` and `enableTransitionEffects` to gate runtime effect plugins.
 - Optionally draws collider debug rectangles (via `showDebugOutlines`).
 
 ### Effects (`src/components/effects/`)
 
-- `ScreenTransitionOverlay`
-    - Subscribes to transition play signals through `useScreenTransition`.
-    - Draws pixelated transition cells over the canvas container.
+- `EffectGraph`
+    - Defines and executes ordered effect plugins with deterministic scheduling.
+- `CanvasEffectsStage`
+    - Compatibility adapter over `EffectGraph` for transitional usage.
+- `createScreenTransitionCanvasPass` + `TransitionCoordinator`
+    - Subscribes to transition play signals and normalizes payload into coordinator state.
+    - Owns transition lifecycle and callback timing (`onCovered`, `onComplete`) in runtime effects stage.
 - `screenTransitionSignal`
     - Defines the transition payload contract.
     - Emits the `effects:screen-transition:play` signal.
-- `ParticleEmitterOverlay`
-    - Subscribes to particle emit signals through `useParticleEmitter`.
-    - Updates and draws particles in an overlay canvas.
+- `createParticleEmitterCanvasPass`
+    - Subscribes to particle emit signals and owns particle lifecycle in runtime effects stage.
+    - Draws particles in the same render frame/camera context as world draw.
 - `particleEmitterSignal`
     - Defines particle burst payload contract.
     - Emits the `effects:particles:emit` signal.
@@ -171,7 +190,7 @@ flowchart LR
 ### Transition lifecycle (signal path)
 
 1. Any module emits `effects:screen-transition:play` using `playScreenTransition` or `playBlackFade`.
-2. `ScreenTransitionOverlay` receives the payload and starts cover animation.
+2. Transition canvas pass receives payload and starts cover animation.
 3. `onCovered` runs at full cover (safe point for scene/world swap).
 4. Reveal phase runs.
 5. `onComplete` runs after transition ends.
@@ -179,10 +198,12 @@ flowchart LR
 ### Particle lifecycle (signal path)
 
 1. Any module emits `effects:particles:emit` using `emitParticles`.
-2. `ParticleEmitterOverlay` receives spawn payload and creates particle instances.
-3. RAF updates apply velocity, drag, gravity, and life decay.
-4. Particle overlay draws active particles over the game canvas.
+2. Particle canvas pass receives spawn payload and creates particle instances.
+3. Pass updates apply velocity, drag, gravity, and life decay.
+4. Runtime effects stage draws active particles in the `Render` frame.
 5. Expired/out-of-bounds particles are removed from the simulation.
+
+Migration status note: transition and particle trigger APIs remain signal-based while runtime/effects internals are fully plugin-driven.
 
 ### Dev preview lifecycle (development only)
 

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { dataBus, type GameState } from "@/services/DataBus";
+import spriteSheetUrl from "@/assets/spriteSheet.png";
 import {
     SAVE_GAME_VERSION,
     parseSaveGame,
@@ -236,5 +237,31 @@ describe("save state foundation", () => {
             [3, 4],
         ]);
         expect(rehydratedPlayer.physicsBody?.velocity).toEqual({ x: 2, y: -3 });
+    });
+
+    it("sanitizes invalid characterSpriteTiles on rehydrate", () => {
+        const save = serializeGameState(dataBus.getState());
+        const player = save.state.entitiesById[save.state.playerId];
+
+        player.characterSpriteTiles = [[999, 999], [500, 500]];
+
+        const didRehydrate = rehydrateGameState(save);
+        expect(didRehydrate).toBe(true);
+
+        const rehydratedPlayer = dataBus.getState().entitiesById[save.state.playerId];
+        expect(rehydratedPlayer.characterSpriteTiles).toEqual([[0, 0]]);
+    });
+
+    it("normalizes legacy hashed sprite sheet paths on rehydrate", () => {
+        const save = serializeGameState(dataBus.getState());
+        const player = save.state.entitiesById[save.state.playerId];
+
+        player.spriteImageSheet = "/assets/spriteSheet-legacyHash123.png";
+
+        const didRehydrate = rehydrateGameState(save);
+        expect(didRehydrate).toBe(true);
+
+        const rehydratedPlayer = dataBus.getState().entitiesById[save.state.playerId];
+        expect(rehydratedPlayer.spriteImageSheet).toBe(spriteSheetUrl);
     });
 });

@@ -1,4 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import type { CanvasEffectsStage } from "@/components/effects/canvas";
+import {
+    createParticleEmitterCanvasPass,
+    createScreenTransitionCanvasPass,
+} from "@/components/effects";
+import {
+    RenderRuntime,
+    SpriteBatch,
+    getTilePixelPosition,
+    loadSpriteSheetImages,
+} from "@/components/renderRuntime";
 import "./Render.css";
 export interface RenderableItem {
     spriteImageSheet: string;
@@ -25,56 +36,18 @@ export interface RenderProps {
     cameraX?: number;
     cameraY?: number;
     showDebugOutlines?: boolean;
+    includeEffects?: boolean;
+    enableTransitionEffects?: boolean;
+    effectsStage?: CanvasEffectsStage;
 }
 
-type TilePosition = { x: number; y: number };
-
-export function getTilePixelPosition(
-    tileX: number,
-    tileY: number,
-    tileSize: number,
-    sheetWidthInTiles: number,
-    sheetHeightInTiles: number,
-): TilePosition {
-    if (
-        tileX < 0 ||
-        tileY < 0 ||
-        tileX >= sheetWidthInTiles ||
-        tileY >= sheetHeightInTiles
-    ) {
-        throw new Error("Tile position out of bounds");
-    }
-
-    return {
-        x: tileX * tileSize,
-        y: tileY * tileSize,
-    };
-}
-
-const imageCache = new Map<string, Promise<HTMLImageElement>>();
-
-function loadImage(src: string) {
-    const existing = imageCache.get(src);
-    if (existing) return existing;
-
-    const p = new Promise<HTMLImageElement>((resolve, reject) => {
-        const img = new Image();
-
-        img.onload = () => resolve(img);
-
-        img.onerror = () => {
-            imageCache.delete(src);
-            reject(new Error(`Failed to load image: ${src}`));
-        };
-
-        img.src = src;
-    });
-
-    imageCache.set(src, p);
-    return p;
-}
+export { getTilePixelPosition };
 
 const DEBUG_OUTLINE_COLOR = "#60a5fa";
+const RENDER_V2_EFFECTS =
+    (import.meta.env.VITE_RENDER_V2_EFFECTS ?? "true") !== "false";
+const RENDER_V2_TRANSITIONS =
+    (import.meta.env.VITE_RENDER_V2_TRANSITIONS ?? "true") === "true";
 
 const Render = ({
     items,
@@ -83,8 +56,12 @@ const Render = ({
     cameraX = 0,
     cameraY = 0,
     showDebugOutlines = true,
+    includeEffects = true,
+    enableTransitionEffects = true,
+    effectsStage,
 }: RenderProps) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const runtime = useMemo(() => new RenderRuntime(), []);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -97,103 +74,158 @@ const Render = ({
         context.imageSmoothingEnabled = false;
 
         let cancelled = false;
-        let raf = 0;
-
         (async () => {
             try {
-                const uniqueSheetUrls = Array.from(
-                    new Set(items.map((it) => it.spriteImageSheet)),
-                );
-
-                const loaded = await Promise.all(
-                    uniqueSheetUrls.map((src) => loadImage(src)),
-                );
+                const { imagesByUrl, failedUrls } =
+                    await loadSpriteSheetImages(items);
                 if (cancelled) return;
 
-                const imagesByUrl = new Map<string, HTMLImageElement>();
-                for (let i = 0; i < uniqueSheetUrls.length; i++) {
-                    imagesByUrl.set(uniqueSheetUrls[i], loaded[i]);
+                for (let i = 0; i < failedUrls.length; i++) {
+                    console.error(
+                        new Error(
+                            `Skipping sprite sheet due to load failure: ${failedUrls[i]}`,
+                        ),
+                    );
                 }
 
-                const start = performance.now();
+                const animationStartMs = performance.now();
+                const spriteBatch = new SpriteBatch(
+                    items,
+                    imagesByUrl,
+                    animationStartMs,
+                );
 
-                const tick = (now: number) => {
-                    // istanbul ignore next - cancellation timing is environment-specific
-                    if (cancelled) return;
+                runtime.clear();
 
-                    context.clearRect(0, 0, width, height);
+                runtime.upsertPlugin({
+                    id: "render-clear",
+                    phase: "preUpdate",
+                    priority: 0,
+                    isActive: () => true,
+                    update: () => {},
+                    draw: () => {
+                        context.clearRect(0, 0, width, height);
+                    },
+                });
 
-                    /* istanbul ignore next - complex canvas loop covered by integration tests */
-                    for (let i = 0; i < items.length; i++) {
-                        const it = items[i];
-                        const img = imagesByUrl.get(it.spriteImageSheet);
-                        if (!img) continue;
+                runtime.upsertPlugin({
+                    id: "render-world",
+                    phase: "drawWorld",
+                    priority: 0,
+                    isActive: () => true,
+                    update: () => {},
+                    draw: (frame) => {
+                        spriteBatch.draw({
+                            ctx: context,
+                            nowMs: frame.nowMs,
+                            width,
+                            height,
+                            cameraX,
+                            cameraY,
+                            showDebugOutlines,
+                            debugOutlineColor: DEBUG_OUTLINE_COLOR,
+                        });
+                    },
+                });
 
-                        const tiles = it.characterSpriteTiles;
-                        if (!tiles || tiles.length === 0) continue;
+                const runtimeEffectsEnabled =
+                    includeEffects && RENDER_V2_EFFECTS;
 
-                        const fps = it.fps ?? 8;
-                        const frame =
-                            Math.floor(((now - start) / 1000) * fps) %
-                            tiles.length;
+                if (runtimeEffectsEnabled) {
+                    const particleController = createParticleEmitterCanvasPass({
+                        width,
+                        height,
+                        passId: "runtime-particles",
+                    });
 
-                        const tile = tiles[frame];
-                        const tilePos = getTilePixelPosition(
-                            tile[0],
-                            tile[1],
-                            it.spriteSize,
-                            it.spriteSheetTileWidth,
-                            it.spriteSheetTileHeight,
-                        );
+                    runtime.upsertPlugin({
+                        id: "render-runtime-particles",
+                        phase: "drawEffectsScreen",
+                        priority: 0,
+                        isActive: () => particleController.pass.isActive(),
+                        update: (frame) => {
+                            particleController.pass.update(frame.deltaMs);
+                        },
+                        draw: (frame) => {
+                            particleController.pass.draw({
+                                ctx: context,
+                                width,
+                                height,
+                                deltaMs: frame.deltaMs,
+                            });
+                        },
+                        reset: () => {
+                            particleController.pass.reset?.();
+                        },
+                        dispose: () => {
+                            particleController.dispose();
+                        },
+                    });
 
-                        const drawWidth = it.spriteSize * it.scaler;
-                        const drawHeight = it.spriteSize * it.scaler;
-                        const worldX = it.position.x;
-                        const worldY = it.position.y;
-                        const isOutsideViewport =
-                            worldX + drawWidth < cameraX ||
-                            worldX > cameraX + width ||
-                            worldY + drawHeight < cameraY ||
-                            worldY > cameraY + height;
+                    if (enableTransitionEffects && RENDER_V2_TRANSITIONS) {
+                        const transitionController =
+                            createScreenTransitionCanvasPass({
+                                width,
+                                height,
+                                passId: "runtime-transition",
+                            });
 
-                        if (isOutsideViewport) continue;
-
-                        const dx = worldX - cameraX;
-                        const dy = worldY - cameraY;
-
-                        context.drawImage(
-                            img,
-                            tilePos.x,
-                            tilePos.y,
-                            it.spriteSize,
-                            it.spriteSize,
-                            dx,
-                            dy,
-                            drawWidth,
-                            drawHeight,
-                        );
-
-                        if (showDebugOutlines && it.collider?.debugDraw) {
-                            const scale = it.scaler;
-
-                            const cx = dx + it.collider.offset.x * scale;
-                            const cy = dy + it.collider.offset.y * scale;
-
-                            context.strokeStyle = DEBUG_OUTLINE_COLOR;
-                            context.lineWidth = 1;
-                            context.strokeRect(
-                                cx,
-                                cy,
-                                it.collider.size.width * scale,
-                                it.collider.size.height * scale,
-                            );
-                        }
+                        runtime.upsertPlugin({
+                            id: "render-runtime-transition",
+                            phase: "drawEffectsScreen",
+                            priority: 1,
+                            isActive: () =>
+                                transitionController.pass.isActive(),
+                            update: (frame) => {
+                                transitionController.pass.update(frame.deltaMs);
+                            },
+                            draw: (frame) => {
+                                transitionController.pass.draw({
+                                    ctx: context,
+                                    width,
+                                    height,
+                                    deltaMs: frame.deltaMs,
+                                });
+                            },
+                            reset: () => {
+                                transitionController.pass.reset?.();
+                            },
+                            dispose: () => {
+                                transitionController.dispose();
+                            },
+                        });
                     }
+                } else if (effectsStage) {
+                    runtime.upsertPlugin({
+                        id: "render-effects",
+                        phase: "drawEffectsScreen",
+                        priority: 0,
+                        isActive: () => true,
+                        update: () => {},
+                        draw: (frame) => {
+                            context.save();
+                            effectsStage.updateAndDraw({
+                                ctx: context,
+                                width,
+                                height,
+                                deltaMs: frame.deltaMs,
+                            });
+                            context.restore();
+                        },
+                    });
+                }
 
-                    raf = requestAnimationFrame(tick);
-                };
-
-                raf = requestAnimationFrame(tick);
+                runtime.start((nowMs, deltaMs) => {
+                    return {
+                        nowMs,
+                        deltaMs,
+                        width,
+                        height,
+                        cameraX,
+                        cameraY,
+                        ctx: context,
+                    };
+                });
             } catch (err) {
                 console.error(err);
             }
@@ -201,9 +233,21 @@ const Render = ({
 
         return () => {
             cancelled = true;
-            if (raf) cancelAnimationFrame(raf);
+            runtime.stop();
+            runtime.clear();
         };
-    }, [items, width, height, cameraX, cameraY, showDebugOutlines]);
+    }, [
+        items,
+        width,
+        height,
+        cameraX,
+        cameraY,
+        showDebugOutlines,
+        includeEffects,
+        enableTransitionEffects,
+        effectsStage,
+        runtime,
+    ]);
 
     return (
         <div

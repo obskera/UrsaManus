@@ -1,11 +1,10 @@
 import { type RefObject, useEffect } from "react";
 import Render from "@/components/Render/Render";
-import {
-    ParticleEmitterOverlay,
-    ScreenTransitionOverlay,
-} from "@/components/effects";
 import type { CameraMode } from "@/config/gameViewConfig";
 import { dataBus } from "@/services/DataBus";
+import { audioBus } from "@/services/AudioBus";
+import SoundManager from "./SoundManager";
+import { GAME_MODE_AUDIO_CUES } from "./sceneAudio";
 
 export type TopDownCanvasProps = {
     width?: number;
@@ -48,6 +47,17 @@ const TopDownCanvas = ({
         dataBus.setPlayerCanPassWorldBounds(false);
         dataBus.disablePlayerPhysics();
         dataBus.setPlayerMoveInput(0);
+
+        audioBus.play("scene:top-down:music", {
+            channel: "music",
+            loop: true,
+            restartIfPlaying: true,
+            volume: 0.55,
+        });
+
+        return () => {
+            audioBus.stop("scene:top-down:music");
+        };
     }, [
         cameraClampToWorld,
         cameraMode,
@@ -63,6 +73,7 @@ const TopDownCanvas = ({
 
     return (
         <div className="GameScreen" ref={containerRef}>
+            <SoundManager cues={GAME_MODE_AUDIO_CUES} />
             <Render
                 items={Object.values(state.entitiesById)}
                 width={width}
@@ -70,13 +81,9 @@ const TopDownCanvas = ({
                 cameraX={state.camera.x}
                 cameraY={state.camera.y}
                 showDebugOutlines={showDebugOutlines}
+                includeEffects={includeEffects}
+                enableTransitionEffects
             />
-            {includeEffects ? (
-                <>
-                    <ParticleEmitterOverlay width={width} height={height} />
-                    <ScreenTransitionOverlay width={width} height={height} />
-                </>
-            ) : null}
         </div>
     );
 };

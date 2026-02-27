@@ -525,4 +525,58 @@ describe("Render coverage tests", () => {
         expect(errSpy).toHaveBeenCalled();
         errSpy.mockRestore();
     });
+
+    it("continues rendering valid entities when one entity has invalid tile frame", async () => {
+        class MockImageInvalidTile {
+            onload: (() => void) | null = null;
+            onerror: ((error?: unknown) => void) | null = null;
+            _src = "";
+            set src(val: string) {
+                this._src = val;
+                if (this.onload)
+                    Promise.resolve().then(() => this.onload && this.onload());
+            }
+            get src() {
+                return this._src;
+            }
+        }
+
+        testGlobals.Image = MockImageInvalidTile;
+
+        const items = [
+            {
+                spriteImageSheet: "sheet.png",
+                spriteSize: 8,
+                spriteSheetTileWidth: 2,
+                spriteSheetTileHeight: 2,
+                characterSpriteTiles: [[99, 99]],
+                scaler: 1,
+                position: { x: 0, y: 0 },
+            },
+            {
+                spriteImageSheet: "sheet.png",
+                spriteSize: 8,
+                spriteSheetTileWidth: 2,
+                spriteSheetTileHeight: 2,
+                characterSpriteTiles: [[0, 0]],
+                scaler: 1,
+                position: { x: 12, y: 12 },
+            },
+        ];
+
+        const { container, unmount } = render(
+            <Render items={items} width={64} height={64} />,
+        );
+        const canvas = container.querySelector("canvas") as HTMLCanvasElement;
+        expect(canvas).toBeTruthy();
+
+        await Promise.resolve();
+        await new Promise((r) => setTimeout(r, 0));
+
+        const ctx = getMockContext(canvas);
+        if (!ctx) throw new Error("Expected mocked canvas context");
+        await waitFor(() => expect(ctx.drawImage).toHaveBeenCalled());
+
+        unmount();
+    });
 });

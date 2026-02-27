@@ -12,6 +12,7 @@ import {
     type GravityConfig,
     type PhysicsBodyOverrides,
 } from "@/logic/physics";
+import spriteSheetUrl from "@/assets/spriteSheet.png";
 
 export type CameraMode = "follow-player" | "manual";
 
@@ -79,7 +80,7 @@ class DataBus {
             animations: [],
             currentAnimation: "idle",
             updateState: () => {},
-            spriteImageSheet: "/spriteSheet.png",
+            spriteImageSheet: spriteSheetUrl,
             spriteSize: 16,
             spriteSheetTileWidth: 49,
             spriteSheetTileHeight: 22,
@@ -104,7 +105,7 @@ class DataBus {
             animations: [],
             currentAnimation: "idle",
             updateState: () => {},
-            spriteImageSheet: "/spriteSheet.png",
+            spriteImageSheet: spriteSheetUrl,
             spriteSize: 16,
             spriteSheetTileWidth: 49,
             spriteSheetTileHeight: 22,

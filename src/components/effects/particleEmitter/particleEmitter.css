@@ -1,9 +1,0 @@
-.particle-emitter-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    z-index: 1;
-    image-rendering: pixelated;
-}
