@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { signalBus } from "@/services/SignalBus";
+import { signalBus } from "@/services/signalBus";
 import {
     TEMPLATE_EFFECT_SIGNAL,
     type PlayTemplateEffectPayload,

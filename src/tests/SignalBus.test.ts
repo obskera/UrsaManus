@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { signalBus } from "@/services/SignalBus";
+import { signalBus } from "@/services/signalBus";
 
 describe("SignalBus", () => {
     it("registers handlers and emits payloads", () => {

@@ -1,6 +1,6 @@
 import { act, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { signalBus } from "@/services/SignalBus";
+import { signalBus } from "@/services/signalBus";
 import ScreenTransitionOverlay from "@/components/effects/screenTransition/ScreenTransitionOverlay";
 import { playScreenTransition } from "@/components/effects/screenTransition";
 

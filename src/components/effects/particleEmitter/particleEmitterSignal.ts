@@ -1,4 +1,4 @@
-import { signalBus } from "@/services/SignalBus";
+import { signalBus } from "@/services/signalBus";
 import type { EmitParticlesPayload, ParticlePresetOptions } from "./types";
 
 export const EMIT_PARTICLES_SIGNAL = "effects:particles:emit";

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { signalBus } from "@/services/SignalBus";
+import { signalBus } from "@/services/signalBus";
 import {
     PLAY_SCREEN_TRANSITION_SIGNAL,
     type IrisOrigin,

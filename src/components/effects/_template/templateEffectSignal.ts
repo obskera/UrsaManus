@@ -1,4 +1,4 @@
-import { signalBus } from "@/services/SignalBus";
+import { signalBus } from "@/services/signalBus";
 
 export type PlayTemplateEffectPayload = {
     durationMs?: number;

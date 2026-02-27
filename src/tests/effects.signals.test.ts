@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { signalBus } from "@/services/SignalBus";
+import { signalBus } from "@/services/signalBus";
 import {
     EMIT_PARTICLES_SIGNAL,
     PLAY_SCREEN_TRANSITION_SIGNAL,

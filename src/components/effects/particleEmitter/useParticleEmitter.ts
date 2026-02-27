@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { signalBus } from "@/services/SignalBus";
+import { signalBus } from "@/services/signalBus";
 import { EMIT_PARTICLES_SIGNAL } from "./particleEmitterSignal";
 import { spawnParticles, updateParticles } from "./particleEmitterMath";
 import type { EmitParticlesPayload, Particle } from "./types";

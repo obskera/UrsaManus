@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { signalBus } from "@/services/SignalBus";
+import { signalBus } from "@/services/signalBus";
 import { emitParticles } from "@/components/effects/particleEmitter";
 import { useParticleEmitter } from "@/components/effects/particleEmitter/useParticleEmitter";
 
