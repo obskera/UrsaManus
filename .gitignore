@@ -24,5 +24,3 @@ coverage/
 *.sln
 *.sw?
 
-# Local planning docs
-docs/TODO.md
