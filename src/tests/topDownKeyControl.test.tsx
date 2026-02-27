@@ -128,4 +128,20 @@ describe("TopDownKeyControl", () => {
         frame?.(performance.now() + 16);
         expect(dataBusMocks.movePlayerBy).not.toHaveBeenCalled();
     });
+
+    it("keeps a stable key listener while key state changes", () => {
+        const addSpy = vi.spyOn(window, "addEventListener");
+        render(<TopDownKeyControl />);
+
+        fireEvent.keyDown(window, { key: "ArrowRight" });
+        fireEvent.keyUp(window, { key: "ArrowRight" });
+        fireEvent.keyDown(window, { key: "ArrowLeft" });
+        fireEvent.keyUp(window, { key: "ArrowLeft" });
+
+        const keydownBindings = addSpy.mock.calls.filter(
+            ([type]) => type === "keydown",
+        );
+
+        expect(keydownBindings).toHaveLength(1);
+    });
 });

@@ -23,6 +23,9 @@ import {
     VirtualActionButtonExample,
     VirtualDPadExample,
     TopDownHUDPresetExample,
+    MainMenuExample,
+    PauseMenuExample,
+    GameOverScreenExample,
 } from "./components/examples";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
 import { GAME_VIEW_CONFIG } from "@/config/gameViewConfig";
@@ -598,6 +601,9 @@ export default function App() {
                             <QuickHUDLayoutExample title="QuickHUDLayout preview" />
                             <PlatformerHUDPresetExample title="PlatformerHUDPreset preview" />
                             <TopDownHUDPresetExample title="TopDownHUDPreset preview" />
+                            <MainMenuExample title="MainMenu preview" />
+                            <PauseMenuExample title="PauseMenu preview" />
+                            <GameOverScreenExample title="GameOverScreen preview" />
                         </div>
                     </aside>
                 ) : null}

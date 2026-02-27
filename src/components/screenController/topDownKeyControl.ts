@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { dataBus } from "@/services/DataBus";
 import type { ScreenControllerChildProps } from "./screenController";
 
@@ -15,7 +15,7 @@ const TopDownKeyControl = ({
     speedPxPerSec = 220,
     allowDiagonal = true,
 }: TopDownKeyControlProps) => {
-    const [inputState, setInputState] = useState({
+    const inputStateRef = useRef({
         left: false,
         right: false,
         up: false,
@@ -37,7 +37,7 @@ const TopDownKeyControl = ({
             const deltaMs = now - lastTime;
             lastTime = now;
 
-            const { left, right, up, down } = inputState;
+            const { left, right, up, down } = inputStateRef.current;
             const dxInput = (right ? 1 : 0) + (left ? -1 : 0);
             const dyInput = (down ? 1 : 0) + (up ? -1 : 0);
 
@@ -67,17 +67,28 @@ const TopDownKeyControl = ({
 
         const onKeyDown = (event: KeyboardEvent) => {
             const key = event.key.toLowerCase();
+            const target = event.target as HTMLElement | null;
+            if (
+                target &&
+                (target.tagName === "INPUT" ||
+                    target.tagName === "TEXTAREA" ||
+                    target.tagName === "SELECT" ||
+                    target.isContentEditable)
+            ) {
+                return;
+            }
+
             if (isLeft(key) || isRight(key) || isUp(key) || isDown(key)) {
                 event.preventDefault();
             }
 
             if (isLeft(key) || isRight(key) || isUp(key) || isDown(key)) {
-                setInputState((prev) => ({
-                    left: prev.left || isLeft(key),
-                    right: prev.right || isRight(key),
-                    up: prev.up || isUp(key),
-                    down: prev.down || isDown(key),
-                }));
+                inputStateRef.current = {
+                    left: inputStateRef.current.left || isLeft(key),
+                    right: inputStateRef.current.right || isRight(key),
+                    up: inputStateRef.current.up || isUp(key),
+                    down: inputStateRef.current.down || isDown(key),
+                };
             }
         };
 
@@ -85,12 +96,12 @@ const TopDownKeyControl = ({
             const key = event.key.toLowerCase();
 
             if (isLeft(key) || isRight(key) || isUp(key) || isDown(key)) {
-                setInputState((prev) => ({
-                    left: isLeft(key) ? false : prev.left,
-                    right: isRight(key) ? false : prev.right,
-                    up: isUp(key) ? false : prev.up,
-                    down: isDown(key) ? false : prev.down,
-                }));
+                inputStateRef.current = {
+                    left: isLeft(key) ? false : inputStateRef.current.left,
+                    right: isRight(key) ? false : inputStateRef.current.right,
+                    up: isUp(key) ? false : inputStateRef.current.up,
+                    down: isDown(key) ? false : inputStateRef.current.down,
+                };
             }
         };
 
@@ -103,16 +114,16 @@ const TopDownKeyControl = ({
             window.removeEventListener("keydown", onKeyDown);
             window.removeEventListener("keyup", onKeyUp);
         };
-    }, [allowDiagonal, enabled, inputState, onMove, speedPxPerSec]);
+    }, [allowDiagonal, enabled, onMove, speedPxPerSec]);
 
     useEffect(() => {
         const resetState = () => {
-            setInputState({
+            inputStateRef.current = {
                 left: false,
                 right: false,
                 up: false,
                 down: false,
-            });
+            };
         };
 
         const onWindowBlur = () => {

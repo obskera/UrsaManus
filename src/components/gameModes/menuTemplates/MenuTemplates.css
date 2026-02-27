@@ -1,0 +1,21 @@
+.um-menu-template {
+    width: min(28rem, 100%);
+}
+
+.um-menu-template__header {
+    display: grid;
+    gap: var(--um-space-1);
+}
+
+.um-menu-template__eyebrow {
+    margin: 0;
+}
+
+.um-menu-template__actions {
+    display: grid;
+    gap: var(--um-space-2);
+}
+
+.um-menu-template__actions .um-button {
+    justify-content: flex-start;
+}

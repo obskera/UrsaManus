@@ -22,3 +22,9 @@ export { default as PlatformerHUDPresetExample } from "./PlatformerHUDPresetExam
 export type { PlatformerHUDPresetExampleProps } from "./PlatformerHUDPresetExample";
 export { default as TopDownHUDPresetExample } from "./TopDownHUDPresetExample";
 export type { TopDownHUDPresetExampleProps } from "./TopDownHUDPresetExample";
+export { default as MainMenuExample } from "./MainMenuExample";
+export type { MainMenuExampleProps } from "./MainMenuExample";
+export { default as PauseMenuExample } from "./PauseMenuExample";
+export type { PauseMenuExampleProps } from "./PauseMenuExample";
+export { default as GameOverScreenExample } from "./GameOverScreenExample";
+export type { GameOverScreenExampleProps } from "./GameOverScreenExample";
