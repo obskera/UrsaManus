@@ -579,4 +579,69 @@ describe("Render coverage tests", () => {
 
         unmount();
     });
+
+    it("keeps runtime active across rerenders and only cancels RAF on unmount", async () => {
+        class MockImageRerender {
+            onload: (() => void) | null = null;
+            onerror: ((error?: unknown) => void) | null = null;
+            _src = "";
+            set src(val: string) {
+                this._src = val;
+                if (this.onload)
+                    Promise.resolve().then(() => this.onload && this.onload());
+            }
+            get src() {
+                return this._src;
+            }
+        }
+
+        testGlobals.Image = MockImageRerender;
+
+        const cancelSpy = vi.spyOn(testGlobals, "cancelAnimationFrame");
+
+        const firstItems = [
+            {
+                spriteImageSheet: "sheet.png",
+                spriteSize: 8,
+                spriteSheetTileWidth: 2,
+                spriteSheetTileHeight: 2,
+                characterSpriteTiles: [[0, 0]],
+                scaler: 1,
+                position: { x: 0, y: 0 },
+            },
+        ];
+
+        const nextItems = [
+            {
+                spriteImageSheet: "sheet.png",
+                spriteSize: 8,
+                spriteSheetTileWidth: 2,
+                spriteSheetTileHeight: 2,
+                characterSpriteTiles: [[0, 0]],
+                scaler: 1,
+                position: { x: 10, y: 10 },
+            },
+        ];
+
+        const { rerender, unmount } = render(
+            <Render items={firstItems} width={64} height={64} cameraX={0} />,
+        );
+
+        await Promise.resolve();
+        await new Promise((r) => setTimeout(r, 0));
+
+        rerender(
+            <Render items={nextItems} width={64} height={64} cameraX={4} />,
+        );
+
+        await Promise.resolve();
+        await new Promise((r) => setTimeout(r, 0));
+
+        expect(cancelSpy).not.toHaveBeenCalled();
+
+        unmount();
+
+        expect(cancelSpy).toHaveBeenCalled();
+        cancelSpy.mockRestore();
+    });
 });
