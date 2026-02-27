@@ -11,47 +11,38 @@ const COOLDOWN_MS = 2600;
 const HUDSlotExample = ({ title = "HUDSlot preview" }: HUDSlotExampleProps) => {
     const [ammo, setAmmo] = useState(30);
     const [cooldownEndsAt, setCooldownEndsAt] = useState(0);
-    const [cooldownRemainingMs, setCooldownRemainingMs] = useState(0);
     const [abilityCooldownEndsAt, setAbilityCooldownEndsAt] = useState(0);
-    const [abilityCooldownRemainingMs, setAbilityCooldownRemainingMs] =
-        useState(0);
+    const [nowMs, setNowMs] = useState(() => Date.now());
     const [abilityActivations, setAbilityActivations] = useState(0);
 
     useEffect(() => {
-        if (cooldownEndsAt <= 0) {
-            setCooldownRemainingMs(0);
-            return;
-        }
+        if (cooldownEndsAt <= 0) return;
 
-        const update = () => {
-            setCooldownRemainingMs(Math.max(0, cooldownEndsAt - Date.now()));
-        };
-
-        update();
-        const timer = window.setInterval(update, 80);
+        const timer = window.setInterval(() => {
+            setNowMs(Date.now());
+        }, 80);
         return () => {
             window.clearInterval(timer);
         };
     }, [cooldownEndsAt]);
 
     useEffect(() => {
-        if (abilityCooldownEndsAt <= 0) {
-            setAbilityCooldownRemainingMs(0);
-            return;
-        }
+        if (abilityCooldownEndsAt <= 0) return;
 
-        const update = () => {
-            setAbilityCooldownRemainingMs(
-                Math.max(0, abilityCooldownEndsAt - Date.now()),
-            );
-        };
-
-        update();
-        const timer = window.setInterval(update, 80);
+        const timer = window.setInterval(() => {
+            setNowMs(Date.now());
+        }, 80);
         return () => {
             window.clearInterval(timer);
         };
     }, [abilityCooldownEndsAt]);
+
+    const cooldownRemainingMs =
+        cooldownEndsAt > 0 ? Math.max(0, cooldownEndsAt - nowMs) : 0;
+    const abilityCooldownRemainingMs =
+        abilityCooldownEndsAt > 0
+            ? Math.max(0, abilityCooldownEndsAt - nowMs)
+            : 0;
 
     return (
         <section className="um-container um-stack" aria-label={title}>

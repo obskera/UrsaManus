@@ -1,6 +1,7 @@
 import type {
     GravityConfig,
     PhysicsBody,
+    PhysicsBodyOverrides,
     PhysicsEntityLike,
     PhysicsStepResult,
 } from "./types";
@@ -12,18 +13,19 @@ export const DEFAULT_GRAVITY_CONFIG: GravityConfig = {
 };
 
 export function createPhysicsBody(
-    overrides: Partial<PhysicsBody> = {},
+    overrides: PhysicsBodyOverrides = {},
 ): PhysicsBody {
+    const { velocity: velocityOverrides, ...restOverrides } = overrides;
+
     return {
         enabled: true,
         affectedByGravity: true,
         gravityScale: 1,
-        velocity: { x: 0, y: 0 },
         dragX: 0,
-        ...overrides,
+        ...restOverrides,
         velocity: {
-            x: overrides.velocity?.x ?? 0,
-            y: overrides.velocity?.y ?? 0,
+            x: velocityOverrides?.x ?? 0,
+            y: velocityOverrides?.y ?? 0,
         },
     };
 }

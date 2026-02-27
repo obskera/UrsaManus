@@ -59,10 +59,9 @@ describe("TopDownKeyControl", () => {
         const frame = frameCallbacks[frameCallbacks.length - 1];
         frame?.(performance.now() + 16);
 
-        const [dx, dy] = dataBusMocks.movePlayerBy.mock.calls.at(-1) as [
-            number,
-            number,
-        ];
+        const lastCall = dataBusMocks.movePlayerBy.mock.calls.at(-1);
+        expect(lastCall).toBeDefined();
+        const [dx, dy] = lastCall as unknown as [number, number];
         expect(dx).toBeGreaterThan(0);
         expect(dy).toBe(0);
     });
@@ -76,10 +75,9 @@ describe("TopDownKeyControl", () => {
         const frame = frameCallbacks[frameCallbacks.length - 1];
         frame?.(performance.now() + 16);
 
-        const [dx, dy] = dataBusMocks.movePlayerBy.mock.calls.at(-1) as [
-            number,
-            number,
-        ];
+        const lastCall = dataBusMocks.movePlayerBy.mock.calls.at(-1);
+        expect(lastCall).toBeDefined();
+        const [dx, dy] = lastCall as unknown as [number, number];
         expect(dx).toBeLessThan(0);
         expect(dy).toBeLessThan(0);
         expect(Math.abs(dx)).toBeGreaterThan(0);

@@ -7,7 +7,7 @@ export interface RenderableItem {
     spriteSheetTileHeight: number;
     characterSpriteTiles: number[][];
     scaler: number;
-    position: { x: number; y: number };
+    position: { x: number; y: number; z?: number };
     fps?: number;
 
     collider?: {

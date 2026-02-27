@@ -10,7 +10,7 @@ import {
     DEFAULT_GRAVITY_CONFIG,
     stepEntityPhysics,
     type GravityConfig,
-    type PhysicsBody,
+    type PhysicsBodyOverrides,
 } from "@/logic/physics";
 
 export type CameraMode = "follow-player" | "manual";
@@ -416,11 +416,11 @@ class DataBus {
         };
     }
 
-    public enablePlayerPhysics(bodyOverrides: Partial<PhysicsBody> = {}) {
+    public enablePlayerPhysics(bodyOverrides: PhysicsBodyOverrides = {}) {
         this.enableEntityPhysics(this.state.playerId, bodyOverrides);
     }
 
-    public enablePlayerGravity(bodyOverrides: Partial<PhysicsBody> = {}) {
+    public enablePlayerGravity(bodyOverrides: PhysicsBodyOverrides = {}) {
         this.enableEntityPhysics(this.state.playerId, {
             affectedByGravity: true,
             ...bodyOverrides,
@@ -446,7 +446,7 @@ class DataBus {
 
     public enableEntityPhysics(
         entityId: string,
-        bodyOverrides: Partial<PhysicsBody> = {},
+        bodyOverrides: PhysicsBodyOverrides = {},
     ) {
         const entity = this.state.entitiesById[entityId];
         if (!entity) return;

@@ -13,27 +13,23 @@ const TopDownHUDPresetExample = ({
     const [objectivesDone, setObjectivesDone] = useState(2);
     const [stance, setStance] = useState<"Stealth" | "Assault">("Stealth");
     const [interactCooldownEndsAt, setInteractCooldownEndsAt] = useState(0);
-    const [interactCooldownRemainingMs, setInteractCooldownRemainingMs] =
-        useState(0);
+    const [nowMs, setNowMs] = useState(() => Date.now());
 
     useEffect(() => {
-        if (interactCooldownEndsAt <= 0) {
-            setInteractCooldownRemainingMs(0);
-            return;
-        }
+        if (interactCooldownEndsAt <= 0) return;
 
-        const update = () => {
-            setInteractCooldownRemainingMs(
-                Math.max(0, interactCooldownEndsAt - Date.now()),
-            );
-        };
-
-        update();
-        const timer = window.setInterval(update, 80);
+        const timer = window.setInterval(() => {
+            setNowMs(Date.now());
+        }, 80);
         return () => {
             window.clearInterval(timer);
         };
     }, [interactCooldownEndsAt]);
+
+    const interactCooldownRemainingMs =
+        interactCooldownEndsAt > 0
+            ? Math.max(0, interactCooldownEndsAt - nowMs)
+            : 0;
 
     return (
         <section className="um-container um-stack" aria-label={title}>

@@ -84,10 +84,10 @@ const HUDAnchor = ({
         .filter(Boolean)
         .join(" ");
 
-    const style = {
+    const style: CSSProperties & Record<`--${string}`, string> = {
         "--um-hud-anchor-offset-x": `${state.offsetX}px`,
         "--um-hud-anchor-offset-y": `${state.offsetY}px`,
-    } satisfies CSSProperties;
+    };
 
     return (
         <div

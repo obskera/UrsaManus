@@ -13,26 +13,21 @@ const PlatformerHUDPresetExample = ({
     const [coins, setCoins] = useState(12);
     const [lives, setLives] = useState(3);
     const [jumpCooldownEndsAt, setJumpCooldownEndsAt] = useState(0);
-    const [jumpCooldownRemainingMs, setJumpCooldownRemainingMs] = useState(0);
+    const [nowMs, setNowMs] = useState(() => Date.now());
 
     useEffect(() => {
-        if (jumpCooldownEndsAt <= 0) {
-            setJumpCooldownRemainingMs(0);
-            return;
-        }
+        if (jumpCooldownEndsAt <= 0) return;
 
-        const update = () => {
-            setJumpCooldownRemainingMs(
-                Math.max(0, jumpCooldownEndsAt - Date.now()),
-            );
-        };
-
-        update();
-        const timer = window.setInterval(update, 80);
+        const timer = window.setInterval(() => {
+            setNowMs(Date.now());
+        }, 80);
         return () => {
             window.clearInterval(timer);
         };
     }, [jumpCooldownEndsAt]);
+
+    const jumpCooldownRemainingMs =
+        jumpCooldownEndsAt > 0 ? Math.max(0, jumpCooldownEndsAt - nowMs) : 0;
 
     return (
         <section className="um-container um-stack" aria-label={title}>

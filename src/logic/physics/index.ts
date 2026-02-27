@@ -7,6 +7,7 @@ export {
 export type {
     GravityConfig,
     PhysicsBody,
+    PhysicsBodyOverrides,
     PhysicsEntityLike,
     PhysicsStepResult,
     PhysicsVector,

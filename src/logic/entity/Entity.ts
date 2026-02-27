@@ -1,11 +1,11 @@
 import type { RenderableItem } from "@/components/Render/Render";
-import type { RectangleCollider } from "./collision";
+import type { RectangleCollider } from "@/logic/collision";
 import type { PhysicsBody } from "@/logic/physics";
 
 export type Position = {
     x: number;
     y: number;
-    z: number;
+    z?: number;
 };
 
 export type SpriteAnimation = {
@@ -35,6 +35,7 @@ export type Entity = RenderableItem & {
 
     collider?: RectangleCollider;
     physicsBody?: PhysicsBody;
+    position: Position;
 };
 //for reference:
 // export interface RenderableItem {

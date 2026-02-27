@@ -12,25 +12,21 @@ const ActionButtonExample = ({
 }: ActionButtonExampleProps) => {
     const [cooldownEndsAt, setCooldownEndsAt] = useState(0);
     const [pressCount, setPressCount] = useState(0);
-    const [cooldownRemainingMs, setCooldownRemainingMs] = useState(0);
+    const [nowMs, setNowMs] = useState(() => Date.now());
 
     useEffect(() => {
-        if (cooldownEndsAt <= 0) {
-            setCooldownRemainingMs(0);
-            return;
-        }
+        if (cooldownEndsAt <= 0) return;
 
-        const updateRemaining = () => {
-            const remaining = Math.max(0, cooldownEndsAt - Date.now());
-            setCooldownRemainingMs(remaining);
-        };
-
-        updateRemaining();
-        const timer = window.setInterval(updateRemaining, 80);
+        const timer = window.setInterval(() => {
+            setNowMs(Date.now());
+        }, 80);
         return () => {
             window.clearInterval(timer);
         };
     }, [cooldownEndsAt]);
+
+    const cooldownRemainingMs =
+        cooldownEndsAt > 0 ? Math.max(0, cooldownEndsAt - nowMs) : 0;
 
     return (
         <section className="um-container um-stack" aria-label={title}>

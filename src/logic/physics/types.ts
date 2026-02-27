@@ -12,6 +12,10 @@ export type PhysicsBody = {
     maxVelocityY?: number;
 };
 
+export type PhysicsBodyOverrides = Omit<Partial<PhysicsBody>, "velocity"> & {
+    velocity?: Partial<PhysicsVector>;
+};
+
 export type GravityConfig = {
     gravityPxPerSec2: number;
     terminalVelocityPxPerSec: number;
