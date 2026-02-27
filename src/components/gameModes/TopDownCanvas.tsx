@@ -18,6 +18,7 @@ export type TopDownCanvasProps = {
     containerRef?: RefObject<HTMLDivElement | null>;
     includeEffects?: boolean;
     showDebugOutlines?: boolean;
+    tapMarker?: { x: number; y: number } | null;
 };
 
 const TopDownCanvas = ({
@@ -32,6 +33,7 @@ const TopDownCanvas = ({
     containerRef,
     includeEffects = true,
     showDebugOutlines = import.meta.env.DEV,
+    tapMarker,
 }: TopDownCanvasProps) => {
     useEffect(() => {
         dataBus.setWorldSize(worldWidth, worldHeight);
@@ -84,6 +86,16 @@ const TopDownCanvas = ({
                 includeEffects={includeEffects}
                 enableTransitionEffects
             />
+            {tapMarker ? (
+                <span
+                    aria-hidden="true"
+                    className="CanvasTapMarker"
+                    style={{
+                        left: `${tapMarker.x}px`,
+                        top: `${tapMarker.y}px`,
+                    }}
+                />
+            ) : null}
         </div>
     );
 };

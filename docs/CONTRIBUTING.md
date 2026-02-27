@@ -179,8 +179,10 @@ Contributor rules for input mapping:
 
 - prefer action names over key names in logic (`north` not `w`),
 - keep key/button wiring thin and declarative,
+- keep gamepad mapping init-configurable (axis/button/deadzone) so products can remap from settings,
 - avoid duplicating movement logic in multiple control components,
-- update `docs/USAGE.md` copy/paste snippets when input contracts change.
+- update `docs/USAGE.md` copy/paste snippets when input contracts change,
+- update the input cheat sheet (`docs/input/CHEATSHEET.md`) for any binding API changes.
 
 ---
 
@@ -219,7 +221,60 @@ Before opening a PR:
 
 ---
 
-## 10) Design Intent Reminder
+## 10) AI Vibecoding Guide (Prompting + Extension Rules)
+
+Use this section when pairing with AI tools so generated changes stay aligned with UrsaManus architecture.
+
+For concrete prompt quality examples, see:
+
+- [docs/AI_SETUP.md — Bad prompt vs good prompt examples](AI_SETUP.md#bad-prompt-vs-good-prompt-examples)
+
+### AI prompt baseline (copy/paste)
+
+```txt
+You are editing an existing TypeScript/React codebase.
+
+Goals:
+- Make minimal, scoped changes.
+- Reuse existing helpers/components before adding new abstractions.
+- Keep gameplay semantics action-based (north/south/east/west/interact).
+- Keep mappings init-configurable (keys/gamepad/pointer).
+
+Required checks:
+1) Update tests for behavior changes.
+2) Update docs/USAGE.md and docs/input/CHEATSHEET.md for API changes.
+3) Do not add unrelated refactors.
+
+Architecture constraints:
+- components/ = UI/render/input wiring
+- logic/ = reusable pure systems
+- services/ = stateful orchestration
+```
+
+### What AI should use first
+
+- Input actions: `createPlayerInputActions`
+- Keyboard mapping: `useActionKeyBindings`
+- Gamepad mapping: `useGamepadInput`
+- Pointer tap tracking: `usePointerTapTracking`
+- Multi-control reuse: `createInputComponentAdapters`
+
+### Extension checklist for AI-generated changes
+
+- Add new behavior behind existing extension seams (hooks/adapters/prefabs) before introducing new primitives.
+- Keep APIs typed and explicit; avoid shape drift in payload contracts.
+- Prefer additive options (`enabled`, `mapping`, `deadzone`, callbacks) over hardcoded logic.
+- If adding a prefab/component, include an example entry and focused tests.
+- If changing device mappings, include at least one copy/paste snippet for init-time remap.
+
+### AI anti-patterns to avoid
+
+- Duplicating movement/interaction logic across input devices.
+- Embedding key/button literals into gameplay logic.
+- Shipping docs updates without tests (or tests without docs) for public API changes.
+- Expanding scope beyond the requested feature.
+
+## 11) Design Intent Reminder
 
 UrsaManus is intentionally a **small core engine** that can be **extended indefinitely**.
 

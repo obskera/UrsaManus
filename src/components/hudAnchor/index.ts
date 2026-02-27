@@ -1,4 +1,5 @@
 export { default as HUDAnchor } from "./HUDAnchor";
+export { default as AbilityBar } from "./AbilityBar";
 export { default as PlatformerHUDPreset } from "./PlatformerHUDPreset";
 export { default as QuickHUDLayout } from "./QuickHUDLayout";
 export { default as TopDownHUDPreset } from "./TopDownHUDPreset";
@@ -8,6 +9,7 @@ export type {
     HUDAnchorPosition,
     HUDAnchorRenderState,
 } from "./HUDAnchor";
+export type { AbilityBarProps, AbilityBarItem } from "./AbilityBar";
 export type { QuickHUDLayoutProps } from "./QuickHUDLayout";
 export type { PlatformerHUDPresetProps } from "./PlatformerHUDPreset";
 export type { TopDownHUDPresetProps } from "./TopDownHUDPreset";

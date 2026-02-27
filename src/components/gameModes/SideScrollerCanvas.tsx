@@ -18,6 +18,7 @@ export type SideScrollerCanvasProps = {
     containerRef?: RefObject<HTMLDivElement | null>;
     includeEffects?: boolean;
     showDebugOutlines?: boolean;
+    tapMarker?: { x: number; y: number } | null;
 };
 
 const SideScrollerCanvas = ({
@@ -32,6 +33,7 @@ const SideScrollerCanvas = ({
     containerRef,
     includeEffects = true,
     showDebugOutlines = import.meta.env.DEV,
+    tapMarker,
 }: SideScrollerCanvasProps) => {
     useEffect(() => {
         dataBus.setWorldSize(worldWidth, worldHeight);
@@ -100,6 +102,16 @@ const SideScrollerCanvas = ({
                 includeEffects={includeEffects}
                 enableTransitionEffects
             />
+            {tapMarker ? (
+                <span
+                    aria-hidden="true"
+                    className="CanvasTapMarker"
+                    style={{
+                        left: `${tapMarker.x}px`,
+                        top: `${tapMarker.y}px`,
+                    }}
+                />
+            ) : null}
         </div>
     );
 };

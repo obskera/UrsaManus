@@ -1,10 +1,13 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
     CompassDirectionControl,
+    PointerTapDebugReadout,
     ScreenControlGroup,
     ScreenController,
     createPlayerInputActions,
+    usePointerTapTracking,
     useActionKeyBindings,
+    type PointerTapPayload,
 } from "@/components/screenController";
 
 export type DefaultInputStyleExampleProps = {
@@ -20,6 +23,9 @@ const DefaultInputStyleExample = ({
     onInteract,
     title = "Default Input + Style Example",
 }: DefaultInputStyleExampleProps) => {
+    const renderAreaRef = useRef<HTMLDivElement | null>(null);
+    const [lastTap, setLastTap] = useState<PointerTapPayload | null>(null);
+
     const actions = useMemo(
         () =>
             createPlayerInputActions({
@@ -28,6 +34,20 @@ const DefaultInputStyleExample = ({
             }),
         [onChanged, onInteract],
     );
+
+    const handleTap = useCallback((payload: PointerTapPayload) => {
+        setLastTap(payload);
+    }, []);
+
+    const getRenderArea = useCallback(() => {
+        return renderAreaRef.current;
+    }, []);
+
+    usePointerTapTracking({
+        enabled,
+        getTarget: getRenderArea,
+        onTap: handleTap,
+    });
 
     useActionKeyBindings(actions, {
         enabled,
@@ -66,15 +86,24 @@ const DefaultInputStyleExample = ({
                 />
             </div>
 
-            <ScreenController className="snes-layout">
-                <ScreenControlGroup className="face-button-group">
-                    <CompassDirectionControl
-                        mode="player-actions"
-                        onMove={onChanged}
-                        onInteract={onInteract}
-                    />
-                </ScreenControlGroup>
-            </ScreenController>
+            <div
+                ref={renderAreaRef}
+                className="um-panel um-stack"
+                aria-label="Pointer tracking area"
+                style={{ minHeight: "8rem", position: "relative" }}
+            >
+                <ScreenController className="snes-layout">
+                    <ScreenControlGroup className="face-button-group">
+                        <CompassDirectionControl
+                            mode="player-actions"
+                            onMove={onChanged}
+                            onInteract={onInteract}
+                        />
+                    </ScreenControlGroup>
+                </ScreenController>
+            </div>
+
+            <PointerTapDebugReadout payload={lastTap} className="um-capsule" />
 
             <ul className="um-list">
                 <li className="um-list-item">
@@ -86,6 +115,10 @@ const DefaultInputStyleExample = ({
                 <li className="um-list-item">
                     On-screen: `CompassDirectionControl` in `player-actions`
                     mode
+                </li>
+                <li className="um-list-item">
+                    Pointer hook tracks click/tap position and inside/outside
+                    target bounds
                 </li>
             </ul>
         </section>

@@ -16,6 +16,10 @@ export {
     toInputDirection,
 } from "./inputMappingAdapters";
 export { useActionKeyBindings } from "./useActionKeyBindings";
+export { useGamepadInput } from "./useGamepadInput";
+export { usePointerTapTracking } from "./usePointerTapTracking";
+export { POINTER_TAP_SIGNAL } from "./pointerTapSignal";
+export { default as PointerTapDebugReadout } from "./PointerTapDebugReadout";
 export {
     getFocusableElements,
     handleArrowFocusNavigation,
@@ -46,6 +50,17 @@ export type {
     InputKeyMap,
     UseActionKeyBindingsOptions,
 } from "./useActionKeyBindings";
+export type {
+    GamepadAxisBinding,
+    GamepadAxisDirection,
+    GamepadAxisMap,
+    GamepadButtonMap,
+    GamepadInputMap,
+    UseGamepadInputOptions,
+} from "./useGamepadInput";
+export type { UsePointerTapTrackingOptions } from "./usePointerTapTracking";
+export type { PointerTapPayload } from "./pointerTapSignal";
+export type { PointerTapDebugReadoutProps } from "./PointerTapDebugReadout";
 export type {
     FocusNavigationOrientation,
     HandleArrowFocusNavigationOptions,

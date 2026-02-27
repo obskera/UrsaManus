@@ -7,6 +7,9 @@ For system-level flow and responsibilities, see [ARCHITECTURE.md](ARCHITECTURE.m
 ### Documentation Map
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — system flow and module responsibilities
+- [AI_SETUP.md](AI_SETUP.md) — AI bootstrap/configuration guide for repo-based project setup
+- [input/CHEATSHEET.md](input/CHEATSHEET.md) — quick keyboard/pointer/gamepad input mapping reference
+- [worldgen/CHEATSHEET.md](worldgen/CHEATSHEET.md) — deterministic worldgen + spawn payload quick reference
 - [save/README.md](save/README.md) — save/load workflows and implementation snippets
 - [save/CHEATSHEET.md](save/CHEATSHEET.md) — quick save/load API and shortcut reference
 - [../src/services/save/README.md](../src/services/save/README.md) — contributor notes for save internals
@@ -25,8 +28,10 @@ Quick links for reusable, copy/paste-friendly UI building blocks:
 - [CooldownIndicator UI primitive](#cooldownindicator-ui-primitive)
 - [HUDSlot UI primitive](#hudslot-ui-primitive)
 - [HUDAnchor UI primitive](#hudanchor-ui-primitive)
+- [AbilityBar prefab](#abilitybar-prefab)
 - [HUD preset composition helper](#hud-preset-composition-helper)
 - [LifeGauge full example component](../src/components/examples/LifeGaugeExample.tsx)
+- [AbilityBar full example component](../src/components/examples/AbilityBarExample.tsx)
 
 ---
 
@@ -363,6 +368,7 @@ UrsaManus now includes helper utilities in `@/components/screenController` so yo
 
 - `createPlayerInputActions(options)`
 - `useActionKeyBindings(actions, options)`
+- `useGamepadInput(actions, options)`
 - `CompassActionControl`
 
 Copy/paste starter:
@@ -392,6 +398,80 @@ function InputModule({ onChanged }: { onChanged?: () => void }) {
 ```
 
 Tip: treat `actions` as your semantic gameplay contract (`north/south/east/west/interact`) and keep device bindings (`WASD`, arrows, on-screen buttons) thin.
+
+#### Gamepad mapping helper (init-time remap)
+
+Use `useGamepadInput` when you want to map a standard controller into the same action contract at startup.
+
+```tsx
+import {
+    createPlayerInputActions,
+    useActionKeyBindings,
+    useGamepadInput,
+} from "@/components/screenController";
+
+function InputWithGamepad({ onChanged }: { onChanged?: () => void }) {
+    const actions = createPlayerInputActions({ onChanged });
+
+    useActionKeyBindings(actions);
+
+    useGamepadInput(actions, {
+        deadzone: 0.24,
+        mapping: {
+            axis: {
+                north: { axis: 1, direction: "negative" },
+                south: { axis: 1, direction: "positive" },
+                west: { axis: 0, direction: "negative" },
+                east: { axis: 0, direction: "positive" },
+            },
+            button: {
+                interact: 0,
+            },
+        },
+        onConnected: (pad) => {
+            console.log("Gamepad connected", pad.id);
+        },
+        onDisconnected: (pad) => {
+            console.log("Gamepad disconnected", pad.id);
+        },
+    });
+
+    return null;
+}
+```
+
+Use this API when you want remapping to be easy for users at app init time (e.g., from persisted settings or per-platform defaults).
+
+#### Pointer click/tap tracking helper
+
+Use `usePointerTapTracking` to capture click/tap coordinates and whether the pointer is inside or outside a target render area.
+
+```tsx
+import { useCallback, useRef } from "react";
+import {
+    POINTER_TAP_SIGNAL,
+    usePointerTapTracking,
+    type PointerTapPayload,
+} from "@/components/screenController";
+
+function PointerModule() {
+    const areaRef = useRef<HTMLDivElement | null>(null);
+
+    const onTap = useCallback((payload: PointerTapPayload) => {
+        console.log(payload.clientX, payload.clientY, payload.insideTarget);
+    }, []);
+
+    usePointerTapTracking({
+        enabled: true,
+        getTarget: () => areaRef.current,
+        onTap,
+    });
+
+    return <div ref={areaRef}>Render area</div>;
+}
+```
+
+Signal emitted on each tap: `POINTER_TAP_SIGNAL` (`input:pointer:tap`).
 
 ### Full reference component (end-to-end)
 
@@ -991,6 +1071,49 @@ import { TopDownHUDPreset } from "@/components/hudAnchor";
     interactCooldownTotalMs={1000}
     onInteract={() => {
         // trigger interaction
+    }}
+/>;
+```
+
+### AbilityBar prefab
+
+Use `AbilityBar` from `@/components/hudAnchor` for a compact action row that preserves `ActionButton` cooldown and disabled behavior.
+
+#### Default usage
+
+```tsx
+import { AbilityBar } from "@/components/hudAnchor";
+
+<AbilityBar />;
+```
+
+#### With custom abilities
+
+```tsx
+import { AbilityBar } from "@/components/hudAnchor";
+
+<AbilityBar
+    abilities={[
+        {
+            id: "dash",
+            label: "Dash",
+            cooldownRemainingMs: 450,
+            cooldownTotalMs: 700,
+            onTrigger: () => {
+                // trigger dash ability
+            },
+        },
+        {
+            id: "blink",
+            label: "Blink",
+            disabled: false,
+            onTrigger: () => {
+                // trigger blink ability
+            },
+        },
+    ]}
+    onAbilityTrigger={(abilityId) => {
+        console.log("ability fired", abilityId);
     }}
 />;
 ```
@@ -1600,6 +1723,234 @@ Import from `src/logic/physics` when you want physics behavior outside `DataBus`
 - `stepEntityPhysics(entityLike, deltaMs, config?)`
 - `DEFAULT_GRAVITY_CONFIG`
 
+### Reusable world generation module
+
+Import from `src/logic/worldgen` when you want deterministic tile scaffolding based on a seed:
+
+- `generateSeededTileMap(options)`
+- `generateSeededRoomMap(options)`
+- `generateSpawnAnchors(options)`
+- `tileToWorldPosition(tileX, tileY, options)`
+- `spawnAnchorToWorld(anchor, options)`
+- `spawnAnchorsToWorld(anchors, options)`
+- `createWorldgenScenario(options)`
+- `createDataBusSpawnPayloads(options)`
+- `createDataBusSpawnPayloadRecord(options)`
+- `createWorldgenEntities(options)`
+- `applyWorldgenEntitiesToState(state, worldgen, options)`
+- `createApplyWorldgenEntitiesUpdater(worldgen, options)`
+
+Copy/paste starter:
+
+```ts
+import { generateSeededTileMap } from "@/logic/worldgen";
+
+const map = generateSeededTileMap({
+    width: 24,
+    height: 16,
+    seed: "mvp-overworld-01",
+    fillProbability: 0.32,
+    borderSolid: true,
+});
+
+console.log(map.tiles[0][0]); // solid border tile
+console.log(map.solidCount, map.emptyCount);
+```
+
+Use the same `seed + config` combination to get the same output every run.
+
+Sprite-tile-friendly room map starter:
+
+```ts
+import { generateSeededRoomMap } from "@/logic/worldgen";
+
+const roomMap = generateSeededRoomMap({
+    width: 48,
+    height: 32,
+    seed: "dungeon-a1",
+    roomCount: 10,
+    roomMinSize: 4,
+    roomMaxSize: 9,
+    wallTileValue: 101,
+    roomFloorTileValue: 201,
+    corridorTileValue: 202,
+    borderSolid: true,
+});
+
+console.log(roomMap.rooms.length);
+console.log(roomMap.tiles[0][0]);
+```
+
+Using tile IDs directly makes it easier to map generated layouts to sprite-sheet tile indices later.
+
+Spawn-anchor starter (player/enemy/item/objective):
+
+```ts
+import { generateSeededRoomMap, generateSpawnAnchors } from "@/logic/worldgen";
+
+const roomMap = generateSeededRoomMap({
+    width: 48,
+    height: 32,
+    seed: "dungeon-a1",
+    roomCount: 10,
+});
+
+const anchors = generateSpawnAnchors({
+    rooms: roomMap.rooms,
+    seed: "dungeon-a1",
+    enemyCount: 4,
+    itemCount: 3,
+    tileIds: {
+        playerStart: 601,
+        objective: 602,
+        enemy: 603,
+        item: 604,
+    },
+});
+
+console.log(anchors.playerStart, anchors.objective);
+console.log(anchors.enemySpawns.length, anchors.itemSpawns.length);
+```
+
+Anchors include room index + center point so they can be translated into world-space or sprite-tile marker layers.
+
+Tile-to-world conversion starter:
+
+```ts
+import { generateSpawnAnchors, spawnAnchorToWorld } from "@/logic/worldgen";
+
+const anchors = generateSpawnAnchors({
+    rooms: roomMap.rooms,
+    seed: "dungeon-a1",
+});
+
+const playerWorldAnchor = spawnAnchorToWorld(anchors.playerStart, {
+    tileWidth: 16,
+    tileHeight: 16,
+    originX: 0,
+    originY: 0,
+    anchor: "center",
+});
+
+console.log(playerWorldAnchor.worldX, playerWorldAnchor.worldY);
+```
+
+Use `anchor: "center"` when placing entities by pivot, or `"top-left"` for tile-aligned placement.
+
+Batch conversion (all spawn anchors in one call):
+
+```ts
+import { generateSpawnAnchors, spawnAnchorsToWorld } from "@/logic/worldgen";
+
+const anchors = generateSpawnAnchors({
+    rooms: roomMap.rooms,
+    seed: "dungeon-a1",
+    enemyCount: 4,
+    itemCount: 3,
+});
+
+const worldAnchors = spawnAnchorsToWorld(anchors, {
+    tileWidth: 16,
+    tileHeight: 16,
+    anchor: "center",
+});
+
+console.log(worldAnchors.playerStart.worldX, worldAnchors.playerStart.worldY);
+console.log(worldAnchors.enemySpawns.length, worldAnchors.itemSpawns.length);
+```
+
+One-call scenario composition (map + anchors + world anchors):
+
+```ts
+import { createWorldgenScenario } from "@/logic/worldgen";
+
+const scenario = createWorldgenScenario({
+    map: {
+        width: 48,
+        height: 32,
+        seed: "scenario-a1",
+        roomCount: 10,
+    },
+    spawns: {
+        enemyCount: 4,
+        itemCount: 3,
+    },
+    world: {
+        tileWidth: 16,
+        tileHeight: 16,
+        anchor: "center",
+    },
+});
+
+console.log(scenario.map.rooms.length);
+console.log(scenario.anchors.playerStart);
+console.log(scenario.worldAnchors.playerStart.worldX);
+```
+
+DataBus-ready spawn payload starter:
+
+```ts
+import {
+    createDataBusSpawnPayloadRecord,
+    createWorldgenScenario,
+} from "@/logic/worldgen";
+
+const scenario = createWorldgenScenario({
+    map: { width: 48, height: 32, seed: "scenario-a1" },
+});
+
+const spawnById = createDataBusSpawnPayloadRecord({
+    anchors: scenario.worldAnchors,
+    idPrefix: "run1",
+});
+
+console.log(Object.keys(spawnById));
+```
+
+Worldgen payload -> Entity bridge starter:
+
+```ts
+import {
+    createDataBusSpawnPayloads,
+    createWorldgenEntities,
+    createWorldgenScenario,
+} from "@/logic/worldgen";
+
+const scenario = createWorldgenScenario({
+    map: { width: 48, height: 32, seed: "scenario-a1" },
+});
+
+const payloads = createDataBusSpawnPayloads({
+    anchors: scenario.worldAnchors,
+    idPrefix: "run1",
+    namePrefix: "run1",
+});
+
+const worldgenEntities = createWorldgenEntities({ payloads });
+
+console.log(worldgenEntities.playerId);
+console.log(Object.keys(worldgenEntities.entitiesById));
+```
+
+DataBus apply helper starter (`merge`/`replace`):
+
+```ts
+import {
+    createApplyWorldgenEntitiesUpdater,
+    createWorldgenEntities,
+} from "@/logic/worldgen";
+import { dataBus } from "@/services/DataBus";
+
+const worldgenEntities = createWorldgenEntities({ payloads });
+
+dataBus.setState(
+    createApplyWorldgenEntitiesUpdater(worldgenEntities, {
+        mode: "merge", // or "replace"
+        syncCameraFollowTarget: true,
+    }),
+);
+```
+
 ---
 
 ## 5) Screen Controls System
@@ -1617,6 +1968,7 @@ All screen controls are under `src/components/screenController/` and re-exported
 - `CompassActionControl` — compass control that directly consumes a provided action map
 - `createPlayerInputActions` — reusable gameplay action map factory
 - `useActionKeyBindings` — reusable keyboard-to-action binding hook
+- `useGamepadInput` — reusable gamepad-to-action binding hook with init-time axis/button mapping
 - `getFocusableElements` / `handleArrowFocusNavigation` — lightweight focus + arrow-key navigation helpers
 - `createInputComponentAdapters` — adapter factory for reusing one action map across multiple input components
 

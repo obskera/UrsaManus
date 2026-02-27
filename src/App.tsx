@@ -9,10 +9,13 @@ import {
 import {
     SideScrollerControls,
     TopDownControls,
+    usePointerTapTracking,
+    type PointerTapPayload,
 } from "./components/screenController";
 import { SideScrollerCanvas, TopDownCanvas } from "./components/gameModes";
 import {
     ActionButtonExample,
+    AbilityBarExample,
     CooldownIndicatorExample,
     HUDAnchorExample,
     HUDSlotExample,
@@ -45,6 +48,11 @@ import "./App.css";
 type GameMode = "side-scroller" | "top-down";
 type DevSaveStatusTone = "neutral" | "success" | "error";
 
+type CanvasTapMarker = {
+    x: number;
+    y: number;
+};
+
 const GAME_MODE_QUERY_KEY = "mode";
 const AUDIO_MUTE_STORAGE_KEY = "ursa:audio:masterMuted:v1";
 const AUDIO_MUSIC_MUTE_STORAGE_KEY = "ursa:audio:musicMuted:v1";
@@ -66,6 +74,8 @@ export default function App() {
     const [showDevControls, setShowDevControls] = useState(false);
     const [showExamplesTab, setShowExamplesTab] = useState(false);
     const [canvasPresetRevision, setCanvasPresetRevision] = useState(0);
+    const [canvasTapMarker, setCanvasTapMarker] =
+        useState<CanvasTapMarker | null>(null);
     const [isAudioMuted, setIsAudioMuted] = useState(() => {
         const fallback = audioBus.getState().masterMuted;
 
@@ -458,6 +468,45 @@ export default function App() {
         force((n) => n + 1);
     }, []);
 
+    const handleCanvasTap = useCallback((payload: PointerTapPayload) => {
+        if (!payload.insideTarget) {
+            return;
+        }
+
+        const gameScreen = gameScreenRef.current;
+        const canvasElement = gameScreen?.querySelector("canvas");
+
+        if (!gameScreen || !canvasElement) {
+            return;
+        }
+
+        const gameScreenRect = gameScreen.getBoundingClientRect();
+        const canvasRect = canvasElement.getBoundingClientRect();
+        const markerX = canvasRect.left - gameScreenRect.left + payload.localX;
+        const markerY = canvasRect.top - gameScreenRect.top + payload.localY;
+
+        setCanvasTapMarker({
+            x: markerX,
+            y: markerY,
+        });
+
+        audioBus.play("ui:tap:beep", {
+            channel: "ui",
+            restartIfPlaying: true,
+            volume: 0.9,
+        });
+    }, []);
+
+    const getCanvasElement = useCallback(() => {
+        return gameScreenRef.current?.querySelector("canvas") ?? null;
+    }, []);
+
+    usePointerTapTracking({
+        enabled: true,
+        getTarget: getCanvasElement,
+        onTap: handleCanvasTap,
+    });
+
     const switchToSideScroller = () => {
         dataBus.setPlayerMoveInput(0);
         setGameMode("side-scroller");
@@ -482,6 +531,7 @@ export default function App() {
                 manualCameraStartY={GAME_VIEW_CONFIG.camera.manualStart.y}
                 containerRef={gameScreenRef}
                 showDebugOutlines={showDebugOutlines}
+                tapMarker={canvasTapMarker}
             />
         ) : (
             <TopDownCanvas
@@ -496,6 +546,7 @@ export default function App() {
                 manualCameraStartY={GAME_VIEW_CONFIG.camera.manualStart.y}
                 containerRef={gameScreenRef}
                 showDebugOutlines={showDebugOutlines}
+                tapMarker={canvasTapMarker}
             />
         );
 
@@ -822,6 +873,7 @@ export default function App() {
                             <VirtualActionButtonExample title="VirtualActionButton preview" />
                             <VirtualDPadExample title="VirtualDPad preview" />
                             <CooldownIndicatorExample title="CooldownIndicator preview" />
+                            <AbilityBarExample title="AbilityBar preview" />
                             <HUDSlotExample title="HUDSlot preview" />
                             <HUDAnchorExample title="HUDAnchor preview" />
                             <QuickHUDLayoutExample title="QuickHUDLayout preview" />

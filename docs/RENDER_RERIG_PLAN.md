@@ -154,7 +154,7 @@ Exit criteria:
 ### Latest parity checkpoint
 
 - 2026-02-27: `npm run test:run` passed.
-- Result: 66 test files, 282 tests passed.
+- Result: 69 test files, 289 tests passed.
 
 ## Risk controls
 

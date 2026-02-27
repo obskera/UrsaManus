@@ -22,4 +22,9 @@ export const GAME_MODE_AUDIO_CUES: Record<string, AudioCueDefinition> = {
         gain: 0.05,
         waveform: "square",
     },
+    "ui:tap:beep": {
+        kind: "file",
+        src: "/beep%201.wav",
+        gain: 0.5,
+    },
 };

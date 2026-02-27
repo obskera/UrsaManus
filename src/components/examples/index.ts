@@ -12,6 +12,8 @@ export { default as VirtualActionButtonExample } from "./VirtualActionButtonExam
 export type { VirtualActionButtonExampleProps } from "./VirtualActionButtonExample";
 export { default as CooldownIndicatorExample } from "./CooldownIndicatorExample";
 export type { CooldownIndicatorExampleProps } from "./CooldownIndicatorExample";
+export { default as AbilityBarExample } from "./AbilityBarExample";
+export type { AbilityBarExampleProps } from "./AbilityBarExample";
 export { default as HUDSlotExample } from "./HUDSlotExample";
 export type { HUDSlotExampleProps } from "./HUDSlotExample";
 export { default as HUDAnchorExample } from "./HUDAnchorExample";

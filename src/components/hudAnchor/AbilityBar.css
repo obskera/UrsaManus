@@ -1,0 +1,9 @@
+.um-ability-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.um-ability-bar__button {
+    min-width: 4.75rem;
+}
