@@ -14,6 +14,12 @@ const TopDownOnScreenControl = ({
     speedPxPerSec = 220,
     allowDiagonal = true,
 }: TopDownOnScreenControlProps) => {
+    const [inputState, setInputState] = useState({
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+    });
     const inputStateRef = useRef({
         left: false,
         right: false,
@@ -23,6 +29,10 @@ const TopDownOnScreenControl = ({
     const [heldDirection, setHeldDirection] = useState<
         "north" | "south" | "east" | "west" | null
     >(null);
+
+    useEffect(() => {
+        inputStateRef.current = inputState;
+    }, [inputState]);
 
     useEffect(() => {
         let rafId = 0;
@@ -69,12 +79,12 @@ const TopDownOnScreenControl = ({
 
     useEffect(() => {
         const resetState = () => {
-            inputStateRef.current = {
+            setInputState({
                 left: false,
                 right: false,
                 up: false,
                 down: false,
-            };
+            });
             setHeldDirection(null);
         };
 
@@ -101,32 +111,34 @@ const TopDownOnScreenControl = ({
         direction: "left" | "right" | "up" | "down",
         pressed: boolean,
     ) => {
-        inputStateRef.current = {
-            ...inputStateRef.current,
-            [direction]: pressed,
-        };
+        setInputState((current) => {
+            const nextState = {
+                ...current,
+                [direction]: pressed,
+            };
 
-        if (pressed) {
-            const nextHeld =
-                direction === "left"
-                    ? "west"
-                    : direction === "right"
-                      ? "east"
-                      : direction === "up"
-                        ? "north"
-                        : "south";
-            setHeldDirection(nextHeld);
-            return;
-        }
+            if (pressed) {
+                const nextHeld =
+                    direction === "left"
+                        ? "west"
+                        : direction === "right"
+                          ? "east"
+                          : direction === "up"
+                            ? "north"
+                            : "south";
+                setHeldDirection(nextHeld);
+                return nextState;
+            }
 
-        const nextState = inputStateRef.current;
+            const { left, right, up, down } = nextState;
+            if (left) setHeldDirection("west");
+            else if (right) setHeldDirection("east");
+            else if (up) setHeldDirection("north");
+            else if (down) setHeldDirection("south");
+            else setHeldDirection(null);
 
-        const { left, right, up, down } = nextState;
-        if (left) setHeldDirection("west");
-        else if (right) setHeldDirection("east");
-        else if (up) setHeldDirection("north");
-        else if (down) setHeldDirection("south");
-        else setHeldDirection(null);
+            return nextState;
+        });
     };
 
     return createElement(
