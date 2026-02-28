@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { dataBus } from "@/services/DataBus";
 import type { GameState } from "@/services/DataBus";
+import type { Entity } from "@/logic/entity/Entity";
 import { CollisionLayer } from "@/logic/collision";
 import {
     STATUS_EFFECT_TICK_SIGNAL,
@@ -502,7 +503,7 @@ describe("DataBus physics integration", () => {
     });
 
     it("applies patrol profile to enemy archetype", () => {
-        const enemyId = "enemy-patrol" as unknown as GameState["playerId"];
+        const enemyId = "enemy-patrol" as Entity["id"];
         const player = dataBus.getPlayer();
 
         dataBus.setState((prev) => ({
@@ -544,7 +545,7 @@ describe("DataBus physics integration", () => {
     });
 
     it("switches enemy archetype to flee when player is nearby", () => {
-        const enemyId = "enemy-flee" as unknown as GameState["playerId"];
+        const enemyId = "enemy-flee" as Entity["id"];
         const player = dataBus.getPlayer();
 
         dataBus.setState((prev) => ({
@@ -583,7 +584,7 @@ describe("DataBus physics integration", () => {
     });
 
     it("supports idle NPC profile and clear profile API", () => {
-        const enemyId = "enemy-idle" as unknown as GameState["playerId"];
+        const enemyId = "enemy-idle" as Entity["id"];
         const player = dataBus.getPlayer();
 
         dataBus.setState((prev) => ({
@@ -619,7 +620,7 @@ describe("DataBus physics integration", () => {
     });
 
     it("supports idle-roam archetype with deterministic roaming motion", () => {
-        const enemyId = "enemy-roam" as unknown as GameState["playerId"];
+        const enemyId = "enemy-roam" as Entity["id"];
         const player = dataBus.getPlayer();
 
         dataBus.setState((prev) => ({
@@ -662,7 +663,7 @@ describe("DataBus physics integration", () => {
     });
 
     it("supports waypoint patrol archetype", () => {
-        const enemyId = "enemy-waypoint" as unknown as GameState["playerId"];
+        const enemyId = "enemy-waypoint" as Entity["id"];
         const player = dataBus.getPlayer();
 
         dataBus.setState((prev) => ({
@@ -704,7 +705,7 @@ describe("DataBus physics integration", () => {
     });
 
     it("supports chase archetype with distance gating", () => {
-        const enemyId = "enemy-chase" as unknown as GameState["playerId"];
+        const enemyId = "enemy-chase" as Entity["id"];
         const player = dataBus.getPlayer();
 
         dataBus.setState((prev) => ({
@@ -758,7 +759,7 @@ describe("DataBus physics integration", () => {
     });
 
     it("supports manual boss phase state assignment", () => {
-        const bossId = "enemy-boss" as unknown as GameState["playerId"];
+        const bossId = "enemy-boss" as Entity["id"];
         const player = dataBus.getPlayer();
 
         dataBus.setState((prev) => ({

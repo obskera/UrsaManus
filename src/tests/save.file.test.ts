@@ -182,6 +182,18 @@ describe("save file service", () => {
         }
     });
 
+    it("returns payload-too-large when file exceeds configured size limit", async () => {
+        const file = new File(['{"version":1}'], "too-large.json", {
+            type: "application/json",
+        });
+
+        const result = await importSaveFile(file, { maxBytes: 5 });
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+            expect(result.code).toBe("payload-too-large");
+        }
+    });
+
     it("returns empty-file error for blank file", async () => {
         const file = new File(["    "], "empty.json", {
             type: "application/json",
@@ -207,6 +219,24 @@ describe("save file service", () => {
         expect(result.ok).toBe(false);
         if (!result.ok) {
             expect(result.code).toBe("invalid-save-format");
+        }
+    });
+
+    it("returns unsafe-payload for blocked prototype-style keys", async () => {
+        const file = new File(
+            [
+                '{"version":1,"savedAt":"2026-02-28T00:00:00.000Z","state":{},"__proto__":{"polluted":true}}',
+            ],
+            "unsafe.json",
+            {
+                type: "application/json",
+            },
+        );
+
+        const result = await importSaveFile(file);
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+            expect(result.code).toBe("unsafe-payload");
         }
     });
 

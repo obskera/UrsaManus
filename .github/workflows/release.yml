@@ -1,0 +1,146 @@
+name: Release Pipeline
+
+on:
+    push:
+        tags:
+            - "v*.*.*"
+    workflow_dispatch:
+        inputs:
+            release_tag:
+                description: "Existing release tag to promote (example: v1.2.3)"
+                required: true
+                type: string
+            promote_to:
+                description: "Promotion target"
+                required: true
+                default: "production"
+                type: choice
+                options:
+                    - staging
+                    - production
+
+permissions:
+    contents: write
+
+jobs:
+    build-and-verify:
+        runs-on: ubuntu-latest
+
+        outputs:
+            release_tag: ${{ steps.release-meta.outputs.release_tag }}
+            release_version: ${{ steps.release-meta.outputs.release_version }}
+
+        steps:
+            - name: Resolve release metadata
+              id: release-meta
+              shell: bash
+              run: |
+                  if [[ "${{ github.event_name }}" == "push" ]]; then
+                      release_tag="${{ github.ref_name }}"
+                  else
+                      release_tag="${{ inputs.release_tag }}"
+                  fi
+
+                  if [[ ! "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
+                      echo "Invalid semantic release tag: $release_tag"
+                      exit 1
+                  fi
+
+                  release_version="${release_tag#v}"
+                  echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+                  echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+
+            - name: Checkout release ref
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ steps.release-meta.outputs.release_tag }}
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Generate release notes + changelog section
+              run: npm run release:changelog -- --version "${{ steps.release-meta.outputs.release_version }}" --to HEAD --notes release-notes.md
+
+            - name: Run release verification gates
+                            run: npm run release:verify
+
+                        - name: Verify artifact version manifest
+                            run: npm run release:verify:artifacts -- --version "${{ steps.release-meta.outputs.release_version }}"
+
+            - name: Upload dist artifact bundle
+              uses: actions/upload-artifact@v4
+              with:
+                  name: release-dist-${{ steps.release-meta.outputs.release_tag }}
+                  path: |
+                                            dist/**
+
+            - name: Upload release notes
+              uses: actions/upload-artifact@v4
+              with:
+                  name: release-notes-${{ steps.release-meta.outputs.release_tag }}
+                  path: release-notes.md
+
+    promote-staging:
+        needs: build-and-verify
+        runs-on: ubuntu-latest
+        environment: release-staging
+
+        steps:
+            - name: Download dist artifact bundle
+              uses: actions/download-artifact@v4
+              with:
+                  name: release-dist-${{ needs.build-and-verify.outputs.release_tag }}
+                  path: dist
+
+            - name: Validate staged artifact manifest
+              shell: bash
+              run: |
+                  if [[ ! -f dist/release-manifest.json ]]; then
+                      echo "Missing release-manifest.json in staged artifacts"
+                      exit 1
+                  fi
+                  if [[ ! -f dist/SHA256SUMS.txt ]]; then
+                      echo "Missing SHA256SUMS.txt in staged artifacts"
+                      exit 1
+                  fi
+                  echo "Staging promotion gate passed for ${{ needs.build-and-verify.outputs.release_tag }}"
+
+    promote-production:
+        needs: [build-and-verify, promote-staging]
+        runs-on: ubuntu-latest
+        environment: release-production
+        if: ${{ github.event_name == 'push' || inputs.promote_to == 'production' }}
+
+        steps:
+            - name: Checkout release ref
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ needs.build-and-verify.outputs.release_tag }}
+
+            - name: Download dist artifact bundle
+              uses: actions/download-artifact@v4
+              with:
+                  name: release-dist-${{ needs.build-and-verify.outputs.release_tag }}
+                  path: dist
+
+            - name: Download release notes
+              uses: actions/download-artifact@v4
+              with:
+                  name: release-notes-${{ needs.build-and-verify.outputs.release_tag }}
+                  path: .
+
+            - name: Publish GitHub release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ needs.build-and-verify.outputs.release_tag }}
+                  name: ${{ needs.build-and-verify.outputs.release_tag }}
+                  body_path: release-notes.md
+                  files: |
+                      dist/**
+                  generate_release_notes: false

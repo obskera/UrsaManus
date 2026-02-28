@@ -243,12 +243,16 @@ describe("save state foundation", () => {
         const save = serializeGameState(dataBus.getState());
         const player = save.state.entitiesById[save.state.playerId];
 
-        player.characterSpriteTiles = [[999, 999], [500, 500]];
+        player.characterSpriteTiles = [
+            [999, 999],
+            [500, 500],
+        ];
 
         const didRehydrate = rehydrateGameState(save);
         expect(didRehydrate).toBe(true);
 
-        const rehydratedPlayer = dataBus.getState().entitiesById[save.state.playerId];
+        const rehydratedPlayer =
+            dataBus.getState().entitiesById[save.state.playerId];
         expect(rehydratedPlayer.characterSpriteTiles).toEqual([[0, 0]]);
     });
 
@@ -261,7 +265,36 @@ describe("save state foundation", () => {
         const didRehydrate = rehydrateGameState(save);
         expect(didRehydrate).toBe(true);
 
-        const rehydratedPlayer = dataBus.getState().entitiesById[save.state.playerId];
+        const rehydratedPlayer =
+            dataBus.getState().entitiesById[save.state.playerId];
         expect(rehydratedPlayer.spriteImageSheet).toBe(spriteSheetUrl);
+    });
+
+    it("rehydrates legacy v0 save payloads through migration", () => {
+        const save = serializeGameState(dataBus.getState());
+        const legacy = {
+            version: 0,
+            savedAt: save.savedAt,
+            state: {
+                entitiesById: save.state.entitiesById,
+                playerId: save.state.playerId,
+                worldSize: save.state.worldSize,
+                camera: {
+                    x: save.state.camera.x,
+                    y: save.state.camera.y,
+                    viewport: save.state.camera.viewport,
+                    mode: "follow-player" as const,
+                },
+            },
+        };
+
+        const didRehydrate = rehydrateGameState(legacy);
+        expect(didRehydrate).toBe(true);
+
+        const next = dataBus.getState();
+        expect(next.camera.clampToWorld).toBe(true);
+        expect(next.camera.followTargetId).toBe(next.playerId);
+        expect(next.worldBoundsEnabled).toBe(false);
+        expect(next.worldBoundsIds).toEqual([]);
     });
 });

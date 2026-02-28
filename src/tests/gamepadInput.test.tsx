@@ -67,8 +67,8 @@ describe("useGamepadInput", () => {
             interact: vi.fn(),
         };
 
-        const gamepad = buildGamepad({ axes: [0.1, -0.1] });
-        const getGamepads = () => [gamepad];
+        let axes: [number, number] = [0.1, -0.1];
+        const getGamepads = () => [buildGamepad({ axes })];
 
         render(
             <GamepadProbe
@@ -83,7 +83,7 @@ describe("useGamepadInput", () => {
         expect(actions.north).not.toHaveBeenCalled();
         expect(actions.east).not.toHaveBeenCalled();
 
-        gamepad.axes = [0.5, -0.6];
+        axes = [0.5, -0.6];
         vi.advanceTimersByTime(10);
 
         expect(actions.north).toHaveBeenCalled();

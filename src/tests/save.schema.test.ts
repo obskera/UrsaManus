@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { dataBus } from "@/services/DataBus";
 import {
+    migrateSaveGame,
     parseSaveGame,
+    preflightSaveGameMigration,
     SAVE_GAME_VERSION,
     serializeGameState,
 } from "@/services/save";
@@ -28,6 +30,69 @@ describe("save schema validation", () => {
         const save = cloneSave();
         save.version = (SAVE_GAME_VERSION + 1) as typeof save.version;
         expect(parseSaveGame(save)).toBeNull();
+        expect(migrateSaveGame(save)).toBeNull();
+    });
+
+    it("migrates legacy v0 payloads into v1 shape", () => {
+        const current = cloneSave();
+        const legacy = {
+            version: 0,
+            savedAt: current.savedAt,
+            state: {
+                entitiesById: current.state.entitiesById,
+                playerId: current.state.playerId,
+                worldSize: current.state.worldSize,
+                camera: {
+                    x: current.state.camera.x,
+                    y: current.state.camera.y,
+                    viewport: current.state.camera.viewport,
+                    mode: current.state.camera.mode,
+                },
+            },
+        };
+
+        expect(parseSaveGame(legacy)).toBeNull();
+
+        const migrated = migrateSaveGame(legacy);
+        expect(migrated).not.toBeNull();
+        expect(migrated?.version).toBe(SAVE_GAME_VERSION);
+        expect(migrated?.state.camera.clampToWorld).toBe(true);
+        expect(migrated?.state.worldBoundsEnabled).toBe(false);
+        expect(migrated?.state.worldBoundsIds).toEqual([]);
+    });
+
+    it("preflights migration paths and reports unsupported versions", () => {
+        const current = cloneSave();
+        const preflightCurrent = preflightSaveGameMigration(current);
+        expect(preflightCurrent.ok).toBe(true);
+
+        const preflightLegacy = preflightSaveGameMigration({
+            version: 0,
+            savedAt: current.savedAt,
+            state: {
+                entitiesById: current.state.entitiesById,
+                playerId: current.state.playerId,
+                worldSize: current.state.worldSize,
+                camera: {
+                    x: current.state.camera.x,
+                    y: current.state.camera.y,
+                    viewport: current.state.camera.viewport,
+                    mode: current.state.camera.mode,
+                },
+            },
+        });
+        expect(preflightLegacy.ok).toBe(true);
+
+        const preflightFuture = preflightSaveGameMigration({
+            ...current,
+            version: 99,
+        });
+        expect(preflightFuture.ok).toBe(false);
+        if (preflightFuture.ok) {
+            return;
+        }
+
+        expect(preflightFuture.code).toBe("unsupported-version");
     });
 
     it("rejects invalid entity type and invalid tile frame shape", () => {

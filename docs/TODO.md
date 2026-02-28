@@ -14,189 +14,15 @@ This file tracks the immediate next systems planned for UrsaManus.
 
 #### P1 additions (high impact)
 
-- Interaction system core.
-    - Add unified interaction contract for world objects/NPCs (`canInteract`, `interact`, `blockedReason`).
-    - Support distance/raycast gating and input hints for keyboard/controller/pointer.
-
 #### P1 quick wins (stability + iteration)
-
-- Deterministic replay system.
-    - Add input/event capture with seed snapshots so gameplay bugs can be replayed exactly.
-    - Support export/import replay payloads for regression reproduction.
-
-- Schema migration framework.
-    - Add versioned migration pipeline for save files and authored JSON assets (dialogue/quests/placements).
-    - Provide preflight validation + fallback behavior for unsupported versions.
-    - Keep this as the core migration/compat layer used by runtime loaders and tooling.
-
-- Content hot-reload pipeline (dev).
-    - Add development watcher/reload flow for authored JSON content without full app restart.
-    - Trigger targeted runtime refresh events for dialogue/quest/map/editor data domains.
-
-- Unified marker/POI registry.
-    - Add shared marker source for map/minimap/objective tracker/interaction prompt systems.
-    - Support typed marker categories, visibility rules, and priority stacking.
-    - Avoid duplicate marker stores by making this the single marker authority.
-
-- Accessibility runtime settings.
-    - Add text scale, hold-vs-toggle controls, reduced flash/shake, and subtitle speed options.
-    - Persist settings and expose a minimal settings UI prefab hook.
-
-- Error telemetry + dev diagnostics.
-    - Add structured runtime error events with context payloads (state phase, subsystem, entity refs).
-    - Provide dev overlay/log hooks for quick triage.
-
-- Performance budgets + alerts.
-    - Add frame-time/entity/effects budget thresholds with development warnings.
-    - Include simple per-subsystem timing summaries for hotspot detection.
-
-- Prefab contract test harness.
-    - Add reusable test helpers for prefab lifecycle/input/render assertions.
-    - Use shared contract suites to keep new prefab additions consistent.
-
-- Mod/plugin sandbox + capability permissions.
-    - Add extension runtime sandbox boundaries with explicit capability grants (render hooks, data access, signal scope).
-    - Prevent untrusted plugins from mutating restricted engine domains directly.
-
-- Save slot manager + rollback snapshots.
-    - Add multi-slot save profiles with metadata (`slot`, `timestamp`, `playtime`, `version`).
-    - Support rollback snapshot restore flow for quick recovery after bad state transitions.
-
-- Memory lifecycle management.
-    - Add explicit allocate/dispose contracts for textures, audio buffers, emitters, and runtime caches.
-    - Add leak-detection diagnostics for long-session playtests.
-
-- Save/content import security hardening.
-    - Enforce strict payload size limits, safe parsing paths, and schema-first validation for imported files.
-    - Add guards against malformed/malicious content payloads before runtime apply.
-
-- Observability baseline.
-    - Define structured telemetry schema for crashes, perf regressions, and content-validation failures.
-    - Expose baseline dashboards/report outputs for triage and trend tracking.
 
 #### P2 additions (gameplay loop)
 
-- Quest/mission system.
-    - Add objective graph support with state transitions (`pending`, `active`, `completed`, `failed`) and reward hooks.
-    - Emit progress/completion signals for HUD tracker + toast integrations.
-
-- Combat core module.
-    - Add hit/hurt handling (damage events, invulnerability windows, knockback, damage typing).
-    - Keep combat resolution deterministic and decoupled from render concerns.
-
-- Entity state machine system (behavior + animation).
-    - Add per-entity state profiles (`idle`, `moving`, `attacking`, `damaged`, `stunned`, `dead`) with guarded transitions.
-    - Bind behavior decisions and animation clip selection to the same active state source-of-truth.
-    - Support transition priorities/interrupt rules (e.g., `damaged` can interrupt `moving`/`attacking`).
-    - Expose `onEnter`/`onExit` hooks for gameplay side effects and deterministic transition tests.
-    - Define state taxonomy profiles for `player`, `npc`, and `boss` archetypes to keep shared semantics consistent.
-    - Baseline taxonomy example: `player` (`dodge`, `block`), `npc` (`patrol`, `flee`), `boss` (`phase-1`, `phase-2`).
-
-- Equipment + stats aggregation.
-    - Add stat resolution pipeline (`base + gear + buffs/debuffs`) with typed modifiers.
-    - Expose derived stats to combat/movement modules and HUD.
-
-- Map + mini-map system.
-    - Add world map data model (discovery/fog state, markers, points of interest, player position).
-    - Add full-screen map view and HUD mini-map renderer with shared source-of-truth map data.
-    - Support configurable marker layers (objectives, NPCs, checkpoints) and zoom/scale policies.
-    - Integrate with worldgen/level data so authored + generated maps resolve consistently.
-
-- Camera system v2.
-    - Add dead-zone, look-ahead, room bounds, and shake layering for gameplay camera behavior.
-    - Support scripted camera tracks for cutscene/cinematic steps.
-
-- Pathfinding/navigation grid.
-    - Add reusable pathfinding layer (A\*/flow-field friendly) for NPC patrol/chase/navigation queries.
-    - Integrate with collision/world data and expose deterministic query APIs.
-
-- Ability + cooldown effects system.
-    - Add typed active/passive ability definitions with cast conditions, cost hooks, and shared cooldown groups.
-    - Emit ability lifecycle signals for HUD/action button integration.
-
-- Loot/progression economy system.
-    - Add drop tiers/weights, affix hooks, and economy tables for progression balancing.
-    - Support reusable reward bundles for quests/encounters/vendors.
-
-- World streaming/chunk loader.
-    - Add chunk/region load-unload lifecycle for large maps to reduce memory and update overhead.
-    - Keep entity activation deterministic when crossing region boundaries.
-
-- Tutorial/onboarding state machine.
-    - Add step-driven onboarding flow with gating conditions, prompt hooks, and completion persistence.
-    - Support skip/resume behavior and integration with dialogue/textbox systems.
-
-- Multiplayer readiness boundary.
-    - Define deterministic simulation boundaries and state-authority contracts, even for single-player-first architecture.
-    - Identify APIs that must remain replication-safe for future networked expansion.
-
 #### P3 additions (authoring + tooling)
-
-- Visual world/entity placement tool (level authoring UI).
-    - Add editor-mode UI to place, move, and delete entities directly on the canvas with snap/grid options.
-    - Support save/export of authored placements to JSON for level bootstrap usage.
-    - Include lightweight gizmos (select, drag, duplicate) and validation for out-of-bounds placement.
-
-- Content validation CLI (authored JSON).
-    - Add schema validation command for dialogue, quests, loot tables, and level placement files before runtime.
-    - Build on the schema/migration framework so CLI and runtime checks stay consistent.
-    - Surface actionable error paths/messages for fast content iteration.
-
-- Localization/text key pipeline.
-    - Add key-based text lookup service with fallback locale behavior.
-    - Support dialogue/textbox/toast integration using localized key payloads.
-
-- Encounter/content authoring presets.
-    - Add reusable encounter templates (spawn packs, objective bundles, reward bundles) for fast level iteration.
-    - Support import/export of preset files for team reuse.
-
-- CI quality gates for content.
-    - Add CI checks that fail on schema/migration/contract regressions for authored content.
-    - Include fast pre-merge validation for dialogue/quests/placements + prefab contracts.
-
-- Crash-safe recovery flow.
-    - Add startup guard for corrupted persisted state with restore/reset options.
-    - Capture recovery diagnostics to aid bug triage.
-
-- Profiling snapshot tooling.
-    - Add one-click dev snapshots for frame timing, entity counts, and active effects.
-    - Support snapshot diff comparisons to detect performance regressions.
-
-- Balancing simulator tooling.
-    - Add batch simulation runner for combat/economy scenarios from authored config presets.
-    - Output summary metrics/reports to speed up tuning passes.
-
-- Release pipeline + versioning.
-    - Add semantic version/release workflow with changelog generation and build artifact verification.
-    - Define rollback strategy and release promotion gates.
-
-- Asset pipeline tooling.
-    - Add sprite/audio import validation, atlas/pack workflow checks, and missing-asset detection.
-    - Track asset size/compression budgets to prevent runtime bloat.
-
-- Economy/content balancing governance.
-    - Define tuning ownership workflow, benchmark scenarios, and acceptable balance metric thresholds.
-    - Require balance-report signoff for major economy/combat table updates.
-
-- Accessibility QA matrix.
-    - Add repeatable QA checklist for keyboard-only navigation, readability/contrast, reduced motion, and assist timing options.
-    - Integrate matrix checks into release readiness validation.
 
 ### Prefab Backlog (Plug-and-Play)
 
 #### P2 candidates
-
-- TextBox prefab.
-    - Add spawnable canvas text box renderer with coordinate-based placement (`x`, `y`, width, max lines).
-    - Support static text and animated typewriter reveal (character-by-character) with speed controls.
-    - Include configurable text style, border, background, padding, alignment, and optional portrait/icon slot.
-    - Add lifecycle hooks for open/update/close and optional auto-close timers.
-    - Support queueing/stack policy so multiple text boxes can be sequenced deterministically.
-
-- Toasts prefab (UI layer).
-    - Add lightweight toast queue drawn on the screen UI layer (non-world space).
-    - Support timed auto-dismiss, manual dismiss hook, and stacked positioning.
-    - Include configurable variants for basic feedback states (info/success/warn/error).
 
 - Cutscene sequence system.
     - Add timeline/step runner for cutscenes (text box, wait, signal, camera/pan hook, transition hook).
@@ -249,6 +75,280 @@ This file tracks the immediate next systems planned for UrsaManus.
 ## Recently Completed
 
 ### 2026-02-28 (Latest)
+
+- Toasts prefab completion:
+    - added lightweight screen-space toast prefab in `src/components/toasts/Toasts.tsx` with anchored stacked positioning (`top-left`, `top-right`, `bottom-left`, `bottom-right`).
+    - prefab supports deterministic toast list rendering with typed variants (`info`, `success`, `warn`, `error`) and optional per-variant icon/style slots.
+    - lifecycle callback now supports timed auto-dismiss and manual dismiss flows through `onDismiss` with explicit dismiss reasons.
+    - added deterministic queue helper in `src/components/toasts/createToastQueue.ts` with queue operations (`enqueue`, `dequeue`, `remove`, `peek`, `clear`).
+    - added dev example in `src/components/examples/ToastsExample.tsx` and focused coverage in `src/tests/Toasts.test.tsx`, `src/tests/toastQueue.test.ts`, and `src/tests/ToastsExample.test.tsx`.
+
+- TextBox prefab completion:
+    - added spawnable text box prefab in `src/components/textBox/TextBox.tsx` with coordinate placement (`x`, `y`), width, and max-lines clamp behavior.
+    - prefab supports static and typewriter reveal modes, configurable alignment/surface/text slots, and optional portrait/icon rendering.
+    - lifecycle callbacks now support open/update/close and auto-close timer-driven close behavior for deterministic flows.
+    - added deterministic queue helper in `src/components/textBox/createTextBoxQueue.ts` with explicit `queue` (FIFO) and `stack` (LIFO) policies.
+    - added dev example in `src/components/examples/TextBoxExample.tsx` and focused coverage in `src/tests/TextBox.test.tsx`, `src/tests/textBoxQueue.test.ts`, and `src/tests/TextBoxExample.test.tsx`.
+
+- Accessibility QA matrix completion:
+    - added shared accessibility QA matrix validation service in `src/services/accessibilityQaMatrix.ts` for repeatable keyboard-navigation, readability/contrast, reduced-motion, and assist-timing checklist enforcement.
+    - added executable accessibility QA CLI in `scripts/accessibilityQaMatrix.ts` with npm command `npm run accessibility:qa` and optional JSON output (`--json --pretty`).
+    - focused deterministic coverage added in `src/tests/accessibilityQaMatrix.test.ts` for required area/check coverage, failing-status handling, and version contract validation.
+    - npm tooling now includes `npm run test:accessibility:qa` and aggregate gate `npm run quality:accessibility`, and release verification now includes accessibility QA gating.
+
+- Economy/content balancing governance completion:
+    - added shared governance evaluation service in `src/services/balancingGovernance.ts` for tuning ownership, benchmark threshold checks, and major-update signoff enforcement.
+    - governance policy/report parsing now validates authored payload contracts (`version: 1`) before evaluation for deterministic tooling behavior.
+    - added executable governance CLI in `scripts/balanceGovernance.ts` with npm command `npm run balance:governance` and optional policy override via `--policy`.
+    - major update reports now require owner signoff coverage derived from affected domains (`combat`, `economy`) before passing governance checks.
+    - focused deterministic coverage added in `src/tests/balancingGovernance.test.ts`, and npm tooling now includes `npm run test:balancing:governance` and aggregate gate `npm run quality:balance`.
+
+- Asset pipeline tooling completion:
+    - added shared asset validation service in `src/services/assetValidation.ts` for sprite/audio reference checks, atlas/pack workflow validation, and missing-asset detection.
+    - validation now resolves both alias imports (`@/assets/...`) and public URL references (including URL-encoded paths such as `/beep%201.wav`) to runtime asset files.
+    - added executable CLI command in `scripts/assetValidate.ts` with npm command `npm run asset:validate` and configurable byte-budget flags for total/sprite/audio/atlas sizes.
+    - added focused deterministic coverage in `src/tests/assetValidation.test.ts` for missing references, budget enforcement, and atlas workflow mismatch reporting.
+    - npm tooling includes focused test command `npm run test:asset:validation` in `package.json`.
+
+- Release pipeline + versioning completion:
+    - added release automation workflow in `.github/workflows/release.yml` for semantic version tags (`v*.*.*`) and manual promotion dispatch.
+    - release flow now generates structured release notes/changelog sections via `scripts/releaseChangelog.ts` and npm command `npm run release:changelog`.
+    - build artifact verification now validates dist outputs and writes integrity metadata (`SHA256SUMS.txt`, `release-manifest.json`) via `scripts/releaseVerifyArtifacts.ts`.
+    - promotion gates are defined through staged environments (`release-staging`, `release-production`) with staged artifact manifest checks before publication.
+    - rollback path is supported by manual workflow dispatch against a previously known-good release tag (`release_tag`) for controlled re-promotion.
+
+- Balancing simulator tooling completion:
+    - added deterministic balancing simulator service in `src/services/balancingSimulator.ts` for combat and economy scenario preset runs.
+    - batch execution now supports authored preset payload parsing/validation (`version: 1`) and aggregate tuning report output.
+    - added batch CLI runner in `scripts/balancingSimulate.ts` with seed control and optional JSON output for report automation workflows.
+    - added focused deterministic coverage in `src/tests/balancingSimulator.test.ts` for combat/economy summaries plus payload validation behavior.
+    - npm tooling includes `npm run balance:simulate` and `npm run test:balancing:simulator` in `package.json`.
+
+- CI quality gates for content completion:
+    - added dedicated npm gate scripts in `package.json` for domain-specific authored-content validation (`dialogue`, `quest`, `placement`) and focused contract/migration regression tests.
+    - added aggregated content gate command `npm run quality:content` for deterministic pre-merge checks.
+    - CI workflow in `.github/workflows/ci.yml` now includes a dedicated `content-quality-gates` job that fails on content schema/migration/contract regressions.
+    - fast gate path now validates authored content plus prefab contract/migration regression suites before merge.
+
+- Encounter/content authoring presets completion:
+    - added reusable encounter preset service in `src/services/encounterPresets.ts` for spawn packs, objective bundles, reward bundles, and template composition.
+    - template registration now validates bundle references so authored encounter presets remain self-consistent.
+    - preset payload sharing now supports deterministic JSON import/export workflows through `exportPayload(...)` and `importPayload(...)`.
+    - focused deterministic coverage added in `src/tests/encounterPresets.test.ts` for registration, reference checks, lifecycle signals, and round-trip payload handling.
+
+- Localization/text key pipeline completion:
+    - added shared localization service in `src/services/localization.ts` with locale + fallback locale catalogs and token interpolation support.
+    - added prompt key-resolution helper for localized payload routing across `dialogue`, `textbox`, and `toast` channels.
+    - tutorial prompt emission now supports localized prompt message resolution through `createTutorialOnboardingService(...)` resolver hooks.
+    - focused deterministic coverage added in `src/tests/localization.test.ts` for locale fallback behavior and tutorial prompt integration.
+
+- Content validation CLI (authored JSON) completion:
+    - added shared authored-content validation service in `src/services/contentValidation.ts` for `dialogue`, `quest`, `loot`, and `placement` domains.
+    - schema-version preflight/migration checks now run through `createVersionedSchemaMigration(...)` for content payload compatibility handling.
+    - quest/loot/placement validation paths now reuse runtime registration/import contracts (`createQuestMissionService(...)`, `createLootEconomyService(...)`, `createWorldEntityPlacementService(...)`) to keep CLI/runtime behavior aligned.
+    - added executable CLI command in `scripts/contentValidate.ts` with npm script `npm run content:validate` and actionable JSON-path failure output.
+    - focused deterministic coverage added in `src/tests/contentValidation.test.ts`.
+
+- Prefab contract test harness completion:
+    - added reusable prefab contract test harness utility in `src/tests/contracts/prefabContractHarness.tsx`.
+    - shared contract runner now supports render/lifecycle assertions and optional input contract checks via `runPrefabContractSuite(...)`.
+    - representative prefab coverage now validates `Toggle` and `HUDSlot` contract compliance in `src/tests/prefabContractHarness.test.tsx`.
+    - focused deterministic coverage confirms contract helper behavior and integration consistency for future prefab additions.
+
+- Visual world/entity placement tool completion:
+    - added world entity placement authoring service in `src/services/worldEntityPlacement.ts`.
+    - editor-mode placement workflows now support place/move/delete operations with grid snap and world bounds validation.
+    - lightweight gizmo-equivalent runtime controls are available for select, drag (`moveSelected(...)`), and duplicate (`duplicateSelected(...)`) actions.
+    - save/export + import workflows are available through deterministic JSON payload helpers (`exportPayload(...)`, `importPayload(...)`).
+    - focused deterministic coverage added in `src/tests/worldEntityPlacement.test.ts`.
+
+- Multiplayer readiness boundary completion:
+    - added multiplayer boundary contract service in `src/services/multiplayerBoundary.ts`.
+    - deterministic simulation domains can now be declared with explicit state-authority ownership (`server`, `client`, `shared`).
+    - replication-safe API lists are now validated through deterministic boundary evaluation checks.
+    - readiness reporting now summarizes deterministic/non-deterministic contracts and replication-safe API coverage.
+    - focused deterministic coverage added in `src/tests/multiplayerBoundary.test.ts`.
+
+- Tutorial/onboarding state machine completion:
+    - added tutorial onboarding state-machine service in `src/services/tutorialOnboarding.ts`.
+    - step-driven onboarding flow now supports deterministic gate checks, step progression, and lifecycle signals.
+    - runtime supports prompt hook payload emission for dialogue/textbox/toast integrations.
+    - skip/resume semantics and persisted state export/restore are available for completion persistence workflows.
+    - focused deterministic coverage added in `src/tests/tutorialOnboarding.test.ts`.
+
+- World streaming/chunk loader completion:
+    - added world streaming service in `src/services/worldStreaming.ts`.
+    - chunk/region load-unload lifecycle now supports active radius and preload radius policies for deterministic streaming windows.
+    - entity activation/deactivation now resolves deterministically from active chunk coverage, with support for always-active entities.
+    - runtime supports manual forced chunk loading for controlled prewarm/load scenarios.
+    - focused deterministic coverage added in `src/tests/worldStreaming.test.ts`.
+
+- Loot/progression economy system completion:
+    - added loot/progression economy service in `src/services/lootEconomy.ts`.
+    - deterministic weighted drop table rolls now support tier metadata, quantity ranges, and affix pool hooks.
+    - reusable reward bundles now compose static item/currency rewards with referenced drop table rolls.
+    - economy table pricing lookups are available for balancing vendor buy/sell values by item id.
+    - focused deterministic coverage added in `src/tests/lootEconomy.test.ts`.
+
+- Ability + cooldown effects system completion:
+    - added typed ability cooldown/effects service in `src/services/abilityCooldownEffects.ts`.
+    - active/passive ability definitions now support cast conditions, resource cost hooks, and shared cooldown groups.
+    - active ability casts support deterministic effect hook outputs and timed effect expiry lifecycle handling.
+    - service emits cast/cooldown/effect lifecycle signals for HUD/action button/cooldown indicator integration.
+    - focused deterministic coverage added in `src/tests/abilityCooldownEffects.test.ts`.
+
+- Pathfinding/navigation grid completion:
+    - added reusable pathfinding + navigation grid service in `src/services/pathfindingNavigation.ts`.
+    - deterministic tile-grid A\* path queries now support NPC patrol/chase/navigation path resolution.
+    - flow-field generation support is available for crowd/steering-friendly next-step lookups.
+    - world-space to tile-space conversion helpers align path queries with collision/world tile coordinates.
+    - focused deterministic coverage added in `src/tests/pathfindingNavigation.test.ts`.
+
+- Camera system v2 completion:
+    - added camera v2 service in `src/services/cameraV2.ts`.
+    - gameplay follow behavior now supports dead-zone and velocity-based look-ahead smoothing.
+    - configurable room/world bounds and layered shake channels are available for deterministic runtime camera control.
+    - scripted camera tracks now support keyframe interpolation for cutscene/cinematic camera paths.
+    - focused deterministic coverage added in `src/tests/cameraV2.test.ts`.
+
+- Map + mini-map system completion:
+    - added shared map/minimap state service in `src/services/mapMiniMap.ts`.
+    - world map model now tracks discovery/fog state, player position, and map/minimap channel view state.
+    - marker resolution supports configurable layer visibility (including objective/NPC/checkpoint workflows) plus per-channel zoom/scale policies.
+    - minimap marker filtering applies deterministic player-relative radius behavior derived from zoom policy.
+    - focused deterministic coverage added in `src/tests/mapMiniMap.test.ts`.
+
+- Equipment + stats aggregation completion:
+    - added equipment stats aggregation service in `src/services/equipmentStats.ts`.
+    - stat resolution pipeline now supports deterministic `base + gear + effects` composition with typed stat modifiers.
+    - exposes derived stat projections for combat (`damageReduction`, combat-facing totals), movement (`maxSpeedScale`), and HUD consumption via `getResolvedStats(...)` and snapshots.
+    - emits stats lifecycle signals (`stats:equipment:changed`, `stats:equipment:equipped`, `stats:equipment:effect-applied`) for integration hooks.
+    - focused deterministic coverage added in `src/tests/equipmentStats.test.ts`.
+
+- Entity state machine system (behavior + animation) completion:
+    - extended entity behavior state machine profiles in `src/logic/entity/entityStateMachine.ts`.
+    - per-archetype guarded state transitions now cover core states (`idle`, `moving`, `attacking`, `damaged`, `stunned`, `dead`) plus taxonomy states for `player` (`dodge`, `block`), `npc` (`patrol`, `flee`), and `boss` (`phase-1`, `phase-2`).
+    - behavior state and animation clip resolution are now bound to one source-of-truth through `resolveEntityAnimationClip(...)` and profile machine `getAnimationClip()`.
+    - transition priorities/interrupt rules are enforced in profile transitions (including `damaged` interrupt behavior) with `onEnter`/`onExit` hook support.
+    - focused deterministic coverage added in `src/tests/entityStateMachine.test.ts`.
+
+- Combat core module completion:
+    - added combat core service in `src/services/combatCore.ts`.
+    - hit/hurt resolution now supports typed damage (`physical`, `magic`, `true`) with per-target resistance hooks.
+    - invulnerability windows and knockback payload capture are integrated in `applyHit(...)` outcomes.
+    - emits combat lifecycle signals (`combat:hit:applied`, `combat:hit:blocked`, `combat:entity:defeated`) for gameplay/UI integrations.
+    - focused deterministic coverage added in `src/tests/combatCore.test.ts`.
+
+- Quest/mission system completion:
+    - added quest mission service in `src/services/questMissions.ts`.
+    - supports objective graph transitions with deterministic runtime states (`pending`, `active`, `completed`, `failed`).
+    - includes reward hook integration for objective-level and mission-level completion outcomes.
+    - emits mission progress/completion/failure lifecycle signals (`quest:mission:progress`, `quest:mission:completed`, `quest:mission:failed`).
+    - focused deterministic coverage added in `src/tests/questMissions.test.ts`.
+
+- Observability baseline completion:
+    - added observability baseline service in `src/services/observabilityBaseline.ts`.
+    - structured telemetry schema now supports crash, perf-regression, and content-validation failure event categories.
+    - baseline triage/trend reporting is available through `getSnapshot(...)` and `getBaselineReport(...)`.
+    - emits baseline diagnostics signals (`observability:baseline:event-recorded`, `observability:baseline:report`).
+    - focused deterministic coverage added in `src/tests/observabilityBaseline.test.ts`.
+
+- Save/content import security hardening completion:
+    - hardened import path in `src/services/save/file.ts` with strict size and parse guardrails.
+    - import options now support configurable limits (`maxBytes`, `maxJsonNodes`, `maxJsonDepth`).
+    - oversized payloads are rejected before apply (`payload-too-large`).
+    - unsafe/malicious payload shapes are rejected before migration/rehydration (`unsafe-payload`).
+    - focused coverage added for size-limit and unsafe-payload guards in `src/tests/save.file.test.ts`.
+
+- Memory lifecycle management completion:
+    - added memory lifecycle service in `src/services/memoryLifecycle.ts`.
+    - explicit allocate/dispose contracts are available for textures, audio buffers, emitters, runtime caches, and custom resources.
+    - long-session leak diagnostics are available through `scanForLeaks(...)`, `getLeakDiagnostics(...)`, and aggregate memory snapshots.
+    - emits lifecycle diagnostics signals (`memory:lifecycle:allocated`, `memory:lifecycle:disposed`, `memory:lifecycle:leak-detected`, `memory:lifecycle:leak-scan-completed`).
+    - focused deterministic coverage added in `src/tests/memoryLifecycle.test.ts`.
+
+- Save slot manager + rollback snapshots completion:
+    - added save slot manager service in `src/services/save/slots.ts`.
+    - supports multi-slot profile persistence with metadata fields (`slot`, `timestamp`, `playtime`, `version`).
+    - includes rollback snapshot capture on slot overwrite and restore flow via `restoreRollbackSnapshot(...)`.
+    - emits slot lifecycle diagnostics signals for save/load/delete/rollback events.
+    - focused deterministic coverage added in `src/tests/save.slots.test.ts`.
+
+- Mod/plugin sandbox + capability permissions completion:
+    - added plugin sandbox service in `src/services/pluginSandbox.ts`.
+    - plugin manifests now support explicit capability grants for render hooks, data access scopes, and signal emit/subscribe scopes.
+    - runtime plugin API is mediated by sandbox checks (`createRuntime(pluginId)`) to enforce granted boundaries.
+    - protected engine/runtime write domains are denied by default even when plugins request broad write grants.
+    - emits sandbox lifecycle signals (`plugin:sandbox:action`, `plugin:sandbox:denied`) for diagnostics integration.
+    - focused deterministic coverage added in `src/tests/pluginSandbox.test.ts`.
+
+- Profiling snapshot tooling completion:
+    - added profiling snapshot service in `src/services/profilingSnapshots.ts`.
+    - one-click capture supports frame timing, entity counts, active effects, and optional per-subsystem timing payloads.
+    - snapshot comparison APIs (`compareSnapshots(...)`, `compareLatestToPrevious(...)`) provide delta output with threshold-based regression flags.
+    - emits lifecycle signals (`profiling:snapshot:captured`, `profiling:snapshot:compared`) for diagnostics tooling integration.
+    - focused deterministic coverage added in `src/tests/profilingSnapshots.test.ts`.
+
+- Crash-safe recovery flow completion:
+    - added startup recovery service in `src/services/save/recovery.ts`.
+    - startup check pipeline (`inspectStartup()`) now classifies persisted save state and reports structured diagnostics for corrupted payloads.
+    - restore/reset actions are available via `restorePersisted()` and `resetPersisted()` for safe user-facing fallback flows.
+    - emits recovery lifecycle signals (`save:recovery:startup-checked`, `save:recovery:restore-applied`, `save:recovery:reset-applied`, `save:recovery:failed`).
+    - focused deterministic coverage added in `src/tests/save.recovery.test.ts`.
+
+- Performance budgets + alerts completion:
+    - added runtime budget diagnostics service in `src/services/performanceBudgets.ts`.
+    - supports frame/entity/effect thresholds plus per-subsystem timing thresholds with alert emission.
+    - includes report history and subsystem hotspot summaries for quick triage (`getRecentReports(...)`, `getSubsystemSummary(...)`).
+    - exposes lifecycle diagnostics signals (`performance:budget:evaluated`, `performance:budget:alert`) and log hooks.
+    - focused deterministic coverage added in `src/tests/performanceBudgets.test.ts`.
+
+- Error telemetry + dev diagnostics completion:
+    - added structured runtime telemetry service in `src/services/errorTelemetry.ts`.
+    - emits normalized runtime events with context payloads (`severity`, `subsystem`, `statePhase`, `entityRefs`, optional metadata/source).
+    - includes dev diagnostics hooks through `subscribe(...)`, `createLogHook(...)`, and filtered `getSnapshot(...)` queries.
+    - emits lifecycle signals (`error:telemetry:captured`, `error:telemetry:cleared`) for overlay/log integrations.
+    - focused deterministic coverage added in `src/tests/errorTelemetry.test.ts`.
+
+- Accessibility runtime settings completion:
+    - added persisted accessibility settings service in `src/services/accessibilitySettings.ts`.
+    - includes text scale, hold-vs-toggle control mode, reduced flash/shake toggles, and subtitle speed settings.
+    - exposed minimal UI prefab hook `useAccessibilitySettings(...)` in `src/components/screenController/useAccessibilitySettings.ts`.
+    - focused coverage added in `src/tests/accessibilitySettings.test.ts` and `src/tests/useAccessibilitySettings.test.tsx`.
+
+- Unified marker/POI registry completion:
+    - added shared marker authority service in `src/services/markerRegistry.ts`.
+    - supports typed categories, channel visibility rules, context predicates, and priority stacking via stack groups.
+    - resolves markers for map/minimap/objective-tracker/interaction-prompt consumers without duplicate stores.
+    - emits registry change signal (`markers:registry:changed`) for UI/system subscribers.
+    - focused deterministic coverage added in `src/tests/markerRegistry.test.ts`.
+
+- Content hot-reload pipeline completion:
+    - added dev-oriented hot-reload service in `src/services/contentHotReload.ts`.
+    - supports domain-targeted reload handlers for `dialogue`, `quest`, `map`, and `editor` without full app restart.
+    - watcher path routing can resolve file paths into domain reload requests with targeted runtime refresh signals.
+    - emits lifecycle signals for requested/applied/failed reload events and per-domain refresh notifications.
+    - focused coverage added in `src/tests/contentHotReload.test.ts`.
+
+- Schema migration framework completion:
+    - added reusable versioned migration utility in `src/services/schemaMigration.ts` (`createVersionedSchemaMigration(...)`).
+    - utility provides preflight validation plus migration fallback outcomes for unsupported versions.
+    - integrated save schema pipeline in `src/services/save/schema.ts` with legacy `v0 -> v1` migration support and `preflightSaveGameMigration(...)`.
+    - runtime import path now accepts migratable saves through `migrateSaveGame(...)` in `src/services/save/file.ts`.
+    - focused migration coverage added in `src/tests/schemaMigration.test.ts`, plus save migration assertions in `src/tests/save.schema.test.ts` and `src/tests/save.state.test.ts`.
+
+- Deterministic replay system completion:
+    - added deterministic replay capture service in `src/services/replay.ts`.
+    - supports input/event timeline capture with seed snapshots through `createDeterministicReplayRecorder(...)`.
+    - includes import/export helpers (`exportReplayPayload`, `parseReplayPayload`, `validateReplayPayload`) for regression reproduction payloads.
+    - includes deterministic playback cursor utility `createReplayCursor(...)` for time-based event playback.
+    - focused coverage added in `src/tests/replay.test.ts`.
+
+- Interaction system core completion:
+    - added a unified interaction contract in `DataBus` with `setEntityInteractionContract(...)`, `resolveEntityInteraction(...)`, `resolvePlayerInteraction(...)`, and interaction execution helpers.
+    - contract supports `canInteract`, `interact`, and custom `blockedReason` callbacks with deterministic status output.
+    - interaction resolution now includes distance gating, line-of-sight raycast gating, and input-mode hint labels for keyboard/controller/pointer.
+    - focused coverage added in `src/tests/DataBus.interaction.test.ts`.
 
 - Dev-mode state sanitizer/reset completion:
     - expanded development sanitize utility scopes in `src/services/save/sanitize.ts` to support `save-only`, `input-profiles`, and `all`.

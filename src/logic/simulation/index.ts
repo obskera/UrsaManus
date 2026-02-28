@@ -34,3 +34,14 @@ export {
     type StatusEffectTickPolicy,
     type StatusEffectType,
 } from "./statusEffects";
+
+export {
+    DEFAULT_INTERACTION_DISTANCE_PX,
+    getEntityCenter,
+    getEntityDistancePx,
+    hasLineOfSightBetweenEntities,
+    resolveInteractionHintLabel,
+    type InteractionInputHint,
+    type InteractionInputMode,
+    type InteractionRaycastEntity,
+} from "./interaction";

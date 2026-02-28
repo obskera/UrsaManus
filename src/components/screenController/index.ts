@@ -18,6 +18,7 @@ export {
 export { useActionKeyBindings } from "./useActionKeyBindings";
 export { useGamepadInput } from "./useGamepadInput";
 export { usePointerTapTracking } from "./usePointerTapTracking";
+export { useAccessibilitySettings } from "./useAccessibilitySettings";
 export {
     INPUT_PROFILE_STORAGE_KEY,
     clearInputProfilePreset,
@@ -70,6 +71,7 @@ export type {
     UseGamepadInputOptions,
 } from "./useGamepadInput";
 export type { UsePointerTapTrackingOptions } from "./usePointerTapTracking";
+export type { UseAccessibilitySettingsResult } from "./useAccessibilitySettings";
 export type {
     InputProfileBindingsOptions,
     InputProfilePointerOptions,

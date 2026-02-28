@@ -31,6 +31,8 @@ import {
     MainMenuExample,
     PauseMenuExample,
     GameOverScreenExample,
+    TextBoxExample,
+    ToastsExample,
 } from "./components/examples";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
 import { GAME_VIEW_CONFIG } from "@/config/gameViewConfig";
@@ -1535,6 +1537,8 @@ export default function App() {
                             <MainMenuExample title="MainMenu preview" />
                             <PauseMenuExample title="PauseMenu preview" />
                             <GameOverScreenExample title="GameOverScreen preview" />
+                            <TextBoxExample title="TextBox preview" />
+                            <ToastsExample title="Toasts preview" />
                         </div>
                     </aside>
                 ) : null}

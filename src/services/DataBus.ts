@@ -19,11 +19,17 @@ import {
     type TimedEntityState,
 } from "@/logic/entity/entityStateMachine";
 import {
+    DEFAULT_INTERACTION_DISTANCE_PX,
     normalizeEnvironmentalForceZone,
+    getEntityDistancePx,
+    hasLineOfSightBetweenEntities,
+    resolveInteractionHintLabel,
     resolveEnvironmentalForceEffect,
     createStatusEffectsSimulation,
     type EnvironmentalForceZone,
     type EnvironmentalForceZoneInput,
+    type InteractionInputHint,
+    type InteractionInputMode,
     type StatusEffectInput,
     type StatusEffectInstance,
 } from "@/logic/simulation";
@@ -94,6 +100,43 @@ export type NpcWaypoint = {
 
 export type EnvironmentalForceZoneProfile = EnvironmentalForceZoneInput;
 export type EntityStatusEffectInput = StatusEffectInput;
+
+export type InteractionBlockedReason =
+    | "missing-target"
+    | "out-of-range"
+    | "line-of-sight-blocked"
+    | "interaction-disabled";
+
+export type InteractionContext = {
+    player: Entity;
+    target: Entity;
+    inputMode: InteractionInputMode;
+    distancePx: number;
+    hasLineOfSight: boolean;
+};
+
+export type EntityInteractionContract = {
+    canInteract?: (context: InteractionContext) => boolean;
+    interact: (context: InteractionContext) => void;
+    blockedReason?: (
+        context: InteractionContext,
+        reason: InteractionBlockedReason,
+    ) => string | null;
+    maxDistancePx?: number;
+    requireLineOfSight?: boolean;
+    inputHint?: InteractionInputHint;
+};
+
+export type InteractionResolution = {
+    targetId: string | null;
+    canInteract: boolean;
+    blockedReason: string | null;
+    defaultBlockedReason: InteractionBlockedReason | null;
+    distancePx: number | null;
+    hasLineOfSight: boolean;
+    inputHintLabel: string | null;
+    inputMode: InteractionInputMode;
+};
 
 export type NpcArchetypeProfile = {
     mode?: NpcArchetypeMode;
@@ -179,6 +222,10 @@ class DataBus {
     private npcWaypointIndices = new Map<string, number>();
     private environmentalForceZones = new Map<string, EnvironmentalForceZone>();
     private statusEffects = createStatusEffectsSimulation();
+    private entityInteractionContracts = new Map<
+        string,
+        EntityInteractionContract
+    >();
 
     private state: GameState = (() => {
         const player: Entity = {
@@ -340,6 +387,12 @@ class DataBus {
         for (const id of this.npcWaypointIndices.keys()) {
             if (!validIds.has(id)) {
                 this.npcWaypointIndices.delete(id);
+            }
+        }
+
+        for (const id of this.entityInteractionContracts.keys()) {
+            if (!validIds.has(id)) {
+                this.entityInteractionContracts.delete(id);
             }
         }
 
@@ -1114,6 +1167,230 @@ class DataBus {
 
     public clearEnvironmentalForceZones() {
         this.environmentalForceZones.clear();
+    }
+
+    public setEntityInteractionContract(
+        entityId: string,
+        contract: EntityInteractionContract,
+    ) {
+        const entity = this.state.entitiesById[entityId];
+        if (!entity) {
+            return false;
+        }
+
+        this.entityInteractionContracts.set(entityId, contract);
+        return true;
+    }
+
+    public getEntityInteractionContract(
+        entityId: string,
+    ): EntityInteractionContract | null {
+        return this.entityInteractionContracts.get(entityId) ?? null;
+    }
+
+    public clearEntityInteractionContract(entityId: string) {
+        return this.entityInteractionContracts.delete(entityId);
+    }
+
+    public clearEntityInteractionContracts() {
+        this.entityInteractionContracts.clear();
+    }
+
+    private buildInteractionResolution(
+        entity: Entity,
+        contract: EntityInteractionContract,
+        inputMode: InteractionInputMode,
+        fallbackMaxDistancePx?: number,
+        fallbackRequireLineOfSight?: boolean,
+    ): InteractionResolution {
+        const player = this.getPlayer();
+        const distancePx = getEntityDistancePx(player, entity);
+        const maxDistancePx = Math.max(
+            0,
+            contract.maxDistancePx ??
+                fallbackMaxDistancePx ??
+                DEFAULT_INTERACTION_DISTANCE_PX,
+        );
+        const requireLineOfSight =
+            contract.requireLineOfSight ?? fallbackRequireLineOfSight ?? true;
+        const hasLineOfSight = requireLineOfSight
+            ? hasLineOfSightBetweenEntities(player, entity, this.getEntities())
+            : true;
+
+        const context: InteractionContext = {
+            player,
+            target: entity,
+            inputMode,
+            distancePx,
+            hasLineOfSight,
+        };
+
+        let defaultBlockedReason: InteractionBlockedReason | null = null;
+
+        if (distancePx > maxDistancePx) {
+            defaultBlockedReason = "out-of-range";
+        } else if (requireLineOfSight && !hasLineOfSight) {
+            defaultBlockedReason = "line-of-sight-blocked";
+        } else if (contract.canInteract && !contract.canInteract(context)) {
+            defaultBlockedReason = "interaction-disabled";
+        }
+
+        const blockedReason = defaultBlockedReason
+            ? (contract.blockedReason?.(context, defaultBlockedReason) ??
+              defaultBlockedReason)
+            : null;
+
+        return {
+            targetId: entity.id,
+            canInteract: defaultBlockedReason === null,
+            blockedReason,
+            defaultBlockedReason,
+            distancePx,
+            hasLineOfSight,
+            inputHintLabel: resolveInteractionHintLabel(
+                contract.inputHint,
+                inputMode,
+                "Interact",
+            ),
+            inputMode,
+        };
+    }
+
+    public resolveEntityInteraction(
+        entityId: string,
+        inputMode: InteractionInputMode = "keyboard",
+        options?: {
+            maxDistancePx?: number;
+            requireLineOfSight?: boolean;
+        },
+    ): InteractionResolution {
+        const entity = this.state.entitiesById[entityId];
+        const contract = this.entityInteractionContracts.get(entityId);
+
+        if (!entity || !contract) {
+            return {
+                targetId: null,
+                canInteract: false,
+                blockedReason: "missing-target",
+                defaultBlockedReason: "missing-target",
+                distancePx: null,
+                hasLineOfSight: false,
+                inputHintLabel: null,
+                inputMode,
+            };
+        }
+
+        return this.buildInteractionResolution(
+            entity,
+            contract,
+            inputMode,
+            options?.maxDistancePx,
+            options?.requireLineOfSight,
+        );
+    }
+
+    public resolvePlayerInteraction(
+        inputMode: InteractionInputMode = "keyboard",
+        options?: {
+            maxDistancePx?: number;
+            requireLineOfSight?: boolean;
+        },
+    ): InteractionResolution {
+        const player = this.getPlayer();
+
+        const candidates = Array.from(this.entityInteractionContracts.keys())
+            .map((entityId) => {
+                const entity = this.state.entitiesById[entityId];
+                const contract = this.entityInteractionContracts.get(entityId);
+                if (!entity || !contract || entity.id === player.id) {
+                    return null;
+                }
+
+                return this.buildInteractionResolution(
+                    entity,
+                    contract,
+                    inputMode,
+                    options?.maxDistancePx,
+                    options?.requireLineOfSight,
+                );
+            })
+            .filter((entry): entry is InteractionResolution => !!entry)
+            .sort(
+                (a, b) =>
+                    (a.distancePx ?? Number.POSITIVE_INFINITY) -
+                    (b.distancePx ?? Number.POSITIVE_INFINITY),
+            );
+
+        if (candidates.length <= 0) {
+            return {
+                targetId: null,
+                canInteract: false,
+                blockedReason: "missing-target",
+                defaultBlockedReason: "missing-target",
+                distancePx: null,
+                hasLineOfSight: false,
+                inputHintLabel: null,
+                inputMode,
+            };
+        }
+
+        return (
+            candidates.find((entry) => entry.canInteract) ??
+            candidates[0] ?? {
+                targetId: null,
+                canInteract: false,
+                blockedReason: "missing-target",
+                defaultBlockedReason: "missing-target",
+                distancePx: null,
+                hasLineOfSight: false,
+                inputHintLabel: null,
+                inputMode,
+            }
+        );
+    }
+
+    public interactWithEntity(
+        entityId: string,
+        inputMode: InteractionInputMode = "keyboard",
+    ): InteractionResolution {
+        const resolution = this.resolveEntityInteraction(entityId, inputMode);
+        if (!resolution.canInteract || !resolution.targetId) {
+            return resolution;
+        }
+
+        const target = this.state.entitiesById[resolution.targetId];
+        const contract = this.entityInteractionContracts.get(
+            resolution.targetId,
+        );
+        if (!target || !contract) {
+            return {
+                ...resolution,
+                canInteract: false,
+                blockedReason: "missing-target",
+                defaultBlockedReason: "missing-target",
+            };
+        }
+
+        contract.interact({
+            player: this.getPlayer(),
+            target,
+            inputMode,
+            distancePx: resolution.distancePx ?? 0,
+            hasLineOfSight: resolution.hasLineOfSight,
+        });
+
+        return resolution;
+    }
+
+    public interactWithNearestTarget(
+        inputMode: InteractionInputMode = "keyboard",
+    ): InteractionResolution {
+        const resolution = this.resolvePlayerInteraction(inputMode);
+        if (!resolution.canInteract || !resolution.targetId) {
+            return resolution;
+        }
+
+        return this.interactWithEntity(resolution.targetId, inputMode);
     }
 
     public applyEntityStatusEffect(

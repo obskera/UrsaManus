@@ -8,6 +8,7 @@ Internal README for the save stack in `src/services/save`.
 - `state.ts` — conversion between runtime `GameState` and save-safe JSON
 - `bus.ts` — localStorage quick-save service + throttled scheduler
 - `file.ts` — JSON file export/import service and structured error results
+- `slots.ts` — multi-slot save profiles with rollback snapshot restore flow
 - `index.ts` — barrel exports
 
 ## Public API Surface
@@ -23,6 +24,8 @@ import {
     quickLoad,
     clearQuickSave,
     createQuickSaveScheduler,
+    createSaveSlotService,
+    saveSlots,
     exportSaveFile,
     importSaveFile,
     parseSaveGame,

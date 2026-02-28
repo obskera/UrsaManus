@@ -308,7 +308,7 @@ describe("screen pseudo shader canvas pass", () => {
         });
         expect(drawImage).not.toHaveBeenCalled();
 
-        controller.pass.reset();
+        controller.pass.reset?.();
         controller.setBounds(80, 40);
         controller.setEffects([
             {

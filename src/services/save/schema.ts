@@ -1,6 +1,8 @@
 import type { GameState } from "@/services/DataBus";
+import { createVersionedSchemaMigration } from "@/services/schemaMigration";
 
 export const SAVE_GAME_VERSION = 1 as const;
+export const SAVE_GAME_LEGACY_VERSION = 0 as const;
 
 export type SaveGameVersion = typeof SAVE_GAME_VERSION;
 
@@ -64,6 +66,24 @@ export type SaveGameV1 = {
 };
 
 export type SaveGame = SaveGameV1;
+
+export type SaveGameStateV0 = Omit<
+    SaveGameStateV1,
+    "camera" | "worldBoundsEnabled" | "worldBoundsIds"
+> & {
+    camera: {
+        x: number;
+        y: number;
+        viewport: { width: number; height: number };
+        mode: "follow-player" | "manual";
+    };
+};
+
+export type SaveGameV0 = {
+    version: typeof SAVE_GAME_LEGACY_VERSION;
+    savedAt: string;
+    state: SaveGameStateV0;
+};
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
     return typeof value === "object" && value !== null;
@@ -261,6 +281,44 @@ const isSaveGameStateV1 = (value: unknown): value is SaveGameStateV1 => {
     return true;
 };
 
+const isSaveGameStateV0 = (value: unknown): value is SaveGameStateV0 => {
+    if (!isRecord(value)) return false;
+
+    if (!isRecord(value.entitiesById)) return false;
+    for (const [entityId, entity] of Object.entries(value.entitiesById)) {
+        if (!entityId) return false;
+        if (!isSaveEntityV1(entity)) return false;
+    }
+
+    if (typeof value.playerId !== "string") return false;
+    if (!(value.playerId in value.entitiesById)) return false;
+
+    if (!isRecord(value.worldSize)) return false;
+    if (
+        !isFiniteNumber(value.worldSize.width) ||
+        !isFiniteNumber(value.worldSize.height)
+    ) {
+        return false;
+    }
+
+    if (!isRecord(value.camera) || !isRecord(value.camera.viewport)) {
+        return false;
+    }
+
+    if (
+        !isFiniteNumber(value.camera.x) ||
+        !isFiniteNumber(value.camera.y) ||
+        !isFiniteNumber(value.camera.viewport.width) ||
+        !isFiniteNumber(value.camera.viewport.height) ||
+        (value.camera.mode !== "follow-player" &&
+            value.camera.mode !== "manual")
+    ) {
+        return false;
+    }
+
+    return true;
+};
+
 export const isSaveGameV1 = (value: unknown): value is SaveGameV1 => {
     if (!isRecord(value)) return false;
 
@@ -271,17 +329,59 @@ export const isSaveGameV1 = (value: unknown): value is SaveGameV1 => {
     );
 };
 
-export const parseSaveGame = (input: unknown): SaveGame | null => {
-    if (!isRecord(input)) return null;
+export const isSaveGameV0 = (value: unknown): value is SaveGameV0 => {
+    if (!isRecord(value)) return false;
 
-    const version = input.version;
-    if (version === SAVE_GAME_VERSION && isSaveGameV1(input)) {
-        return input;
+    return (
+        value.version === SAVE_GAME_LEGACY_VERSION &&
+        typeof value.savedAt === "string" &&
+        isSaveGameStateV0(value.state)
+    );
+};
+
+const migrateSaveGameV0ToV1 = (input: unknown): SaveGameV1 => {
+    if (!isSaveGameV0(input)) {
+        throw new Error("Invalid v0 save payload");
     }
 
-    return null;
+    return {
+        version: SAVE_GAME_VERSION,
+        savedAt: input.savedAt,
+        state: {
+            entitiesById: input.state.entitiesById,
+            playerId: input.state.playerId,
+            worldSize: input.state.worldSize,
+            camera: {
+                ...input.state.camera,
+                clampToWorld: true,
+                followTargetId:
+                    input.state.camera.mode === "follow-player"
+                        ? input.state.playerId
+                        : null,
+            },
+            worldBoundsEnabled: false,
+            worldBoundsIds: [],
+        },
+    };
+};
+
+const saveGameMigrationPipeline = createVersionedSchemaMigration<SaveGameV1>({
+    currentVersion: SAVE_GAME_VERSION,
+    validateCurrent: isSaveGameV1,
+    migrations: {
+        [SAVE_GAME_LEGACY_VERSION]: migrateSaveGameV0ToV1,
+    },
+});
+
+export const parseSaveGame = (input: unknown): SaveGame | null => {
+    return isSaveGameV1(input) ? input : null;
 };
 
 export const migrateSaveGame = (input: unknown): SaveGame | null => {
-    return parseSaveGame(input);
+    const result = saveGameMigrationPipeline.migrate(input);
+    return result.ok ? result.value : null;
+};
+
+export const preflightSaveGameMigration = (input: unknown) => {
+    return saveGameMigrationPipeline.preflight(input);
 };

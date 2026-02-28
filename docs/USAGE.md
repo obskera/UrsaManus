@@ -32,7 +32,13 @@ Quick links for reusable, copy/paste-friendly UI building blocks:
 - [SurvivalHUDPreset starter](#survivalhudpreset-starter)
 - [BossEncounterHUDPreset starter](#bossencounterhudpreset-starter)
 - [HUD preset composition helper](#hud-preset-composition-helper)
+- [Interaction system core](#interaction-system-core)
 - [Dev-mode state sanitizer/reset](#dev-mode-state-sanitizerreset)
+- [Deterministic replay system](#deterministic-replay-system)
+- [Schema migration framework](#schema-migration-framework)
+- [Content hot-reload pipeline](#content-hot-reload-pipeline)
+- [Unified marker/POI registry](#unified-markerpoi-registry)
+- [Accessibility runtime settings](#accessibility-runtime-settings)
 - [Visual world/entity placement tool (planned)](#planned-visual-worldentity-placement-tool)
 - [LifeGauge full example component](../src/components/examples/LifeGaugeExample.tsx)
 - [AbilityBar full example component](../src/components/examples/AbilityBarExample.tsx)
@@ -101,74 +107,352 @@ These are implementation placeholders to keep usage docs aligned with active TOD
     - Support reset scopes (`save-only`, `input-profiles`, `all`) with confirmation guard.
     - Expose a debug shortcut and optional dev-panel action for rapid recovery from bad state.
 
-- [ ] `Deterministic replay system`
+<a id="interaction-system-core"></a>
+
+- [x] `Interaction system core`
+    - Add unified interaction contract for world objects/NPCs through `setEntityInteractionContract(...)`.
+    - Resolve nearest interaction targets with distance + line-of-sight gating via `resolvePlayerInteraction(...)` / `resolveEntityInteraction(...)`.
+    - Return input hints for keyboard/controller/pointer and execute contracts through `interactWithNearestTarget(...)`.
+
+- [x] `Deterministic replay system`
     - Record input/events with seed snapshots to allow exact gameplay bug reproduction.
     - Support replay export/import for regression validation.
 
-- [ ] `Schema migration framework`
+<a id="deterministic-replay-system"></a>
+
+- Replay capture and playback APIs are available in `src/services/replay.ts`:
+    - `createDeterministicReplayRecorder(...)`
+    - `exportReplayPayload(...)`
+    - `parseReplayPayload(...)` / `validateReplayPayload(...)`
+    - `createReplayCursor(...)`
+- Payloads include deterministic seed snapshot metadata and ordered input/event records with millisecond offsets.
+
+- [x] `Schema migration framework`
     - Add versioned migrations for save files and authored JSON assets.
     - Validate and migrate payloads before runtime apply.
     - Use this as the shared compatibility layer for runtime + tooling checks.
 
-- [ ] `Content hot-reload pipeline (dev)`
+<a id="schema-migration-framework"></a>
+
+- Shared migration utility is available in `src/services/schemaMigration.ts` via `createVersionedSchemaMigration(...)`.
+- Save pipeline uses this utility in `src/services/save/schema.ts` with:
+    - `migrateSaveGame(...)`
+    - `preflightSaveGameMigration(...)`
+- Runtime loaders can preflight payload versions for compatibility checks before full migration/rehydration.
+
+- [x] `Content hot-reload pipeline (dev)`
     - Reload authored JSON domains in development without full app restart.
     - Trigger targeted refresh for dialogue/quest/map/editor data.
 
-- [ ] `Unified marker/POI registry`
+<a id="content-hot-reload-pipeline"></a>
+
+- Dev reload pipeline is available in `src/services/contentHotReload.ts`.
+- Use `createContentHotReloadPipeline(...)` to register domain handlers and process manual/watcher refresh requests.
+- Runtime signals emitted by default:
+    - `content:hot-reload:requested`
+    - `content:hot-reload:applied`
+    - `content:hot-reload:failed`
+    - `content:refresh:<domain>` for targeted refresh fan-out.
+
+- [x] `Unified marker/POI registry`
     - Use one source-of-truth marker feed for map, mini-map, objectives, and prompts.
     - Support typed marker categories, visibility rules, and priority.
     - Prevent per-system marker duplication by centralizing marker ownership.
 
-- [ ] `Accessibility runtime settings`
+<a id="unified-markerpoi-registry"></a>
+
+- Shared marker authority is available in `src/services/markerRegistry.ts`.
+- Use `createMarkerRegistry(...)` for isolated registries or `markerRegistry` singleton for app-wide usage.
+- Marker resolution supports:
+    - typed categories (`objective`, `poi`, `interaction`, `navigation`, `custom`)
+    - channel visibility (`map`, `minimap`, `objective-tracker`, `interaction-prompt`)
+    - context predicates and stack-group priority winner selection.
+
+- [x] `Accessibility runtime settings`
     - Add text scale, hold/toggle input options, reduced flash/shake, and subtitle speed.
     - Persist user preferences and expose settings hooks.
 
-- [ ] `Error telemetry + dev diagnostics`
+<a id="accessibility-runtime-settings"></a>
+
+- Accessibility settings service is available in `src/services/accessibilitySettings.ts`.
+- Includes persisted settings for:
+    - `textScale`
+    - `controlMode` (`hold` or `toggle`)
+    - `reducedFlash`
+    - `reducedShake`
+    - `subtitleSpeed` (`slow`, `normal`, `fast`)
+- Minimal prefab hook is available as `useAccessibilitySettings(...)` in `src/components/screenController/useAccessibilitySettings.ts`.
+
+- [x] `Error telemetry + dev diagnostics`
     - Emit structured runtime errors with subsystem/context payloads.
     - Provide debug overlays/log hooks for fast triage.
 
-- [ ] `Performance budgets + alerts`
+<a id="error-telemetry-dev-diagnostics"></a>
+
+- Runtime telemetry service is available in `src/services/errorTelemetry.ts`.
+- Use `createErrorTelemetry(...)` for isolated instances or `errorTelemetry` singleton for shared diagnostics.
+- Captured events include structured context payloads:
+    - `severity` (`error`, `warning`, `info`)
+    - `subsystem`
+    - `statePhase`
+    - `entityRefs`
+    - optional `metadata` / `source`
+- Default lifecycle signals emitted by the service:
+    - `error:telemetry:captured`
+    - `error:telemetry:cleared`
+- Dev log hooks are available through `createLogHook(...)`, and snapshot queries support severity/subsystem/phase filtering for overlays.
+
+- [x] `Performance budgets + alerts`
     - Define frame/entity/effect budget thresholds with dev warnings.
     - Surface simple subsystem timing summaries.
 
-- [ ] `Crash-safe recovery flow`
+<a id="performance-budgets-alerts"></a>
+
+- Performance budget service is available in `src/services/performanceBudgets.ts`.
+- Use `createPerformanceBudgetService(...)` for scoped instances or `performanceBudgets` singleton for shared runtime checks.
+- Frame evaluation supports budget thresholds for:
+    - `frameMs`
+    - `entityCount`
+    - `effectCount`
+    - per-subsystem timing (`subsystemMs` map)
+- Default lifecycle signals emitted by the service:
+    - `performance:budget:evaluated`
+    - `performance:budget:alert`
+- Alert tooling support includes `subscribe(...)`, `createAlertLogHook(...)`, report history via `getRecentReports(...)`, and hotspot summaries via `getSubsystemSummary(...)`.
+
+- [x] `Crash-safe recovery flow`
     - Add startup recovery checks for corrupted persisted state.
     - Offer restore/reset flows with clear diagnostics.
 
-- [ ] `Profiling snapshot tooling`
+<a id="crash-safe-recovery-flow"></a>
+
+- Crash-safe save recovery service is available in `src/services/save/recovery.ts`.
+- Use `createSaveRecoveryService(...)` for isolated startup flows or `saveRecovery` singleton for shared runtime usage.
+- Startup validation entrypoint: `inspectStartup()`.
+    - Returns status `clean`, `recoverable`, `corrupted`, or `storage-unavailable`.
+    - Includes structured diagnostics (`code`, `message`, `atMs`, `storageKey`, optional `payloadBytes`).
+- Recovery actions:
+    - `restorePersisted()` applies validated persisted quick-save state.
+    - `resetPersisted()` clears persisted quick-save state for safe fallback.
+- Default lifecycle signals:
+    - `save:recovery:startup-checked`
+    - `save:recovery:restore-applied`
+    - `save:recovery:reset-applied`
+    - `save:recovery:failed`
+
+- [x] `Profiling snapshot tooling`
     - Capture dev snapshots for frame timing, entity counts, and active effects.
     - Compare snapshots to identify performance regressions.
 
-- [ ] `Mod/plugin sandbox + capability permissions`
+<a id="profiling-snapshot-tooling"></a>
+
+- Profiling snapshot service is available in `src/services/profilingSnapshots.ts`.
+- Use `createProfilingSnapshotService(...)` for isolated workflows or `profilingSnapshots` singleton for shared diagnostics.
+- One-click capture entrypoint: `captureSnapshot(...)`.
+    - Captures `frameMs`, `entityCount`, `activeEffects`, and optional per-subsystem timings.
+- Snapshot diff APIs:
+    - `compareSnapshots(baseId, targetId, options?)`
+    - `compareLatestToPrevious(options?)`
+- Diff results return normalized deltas and threshold-based regression flags for quick triage.
+- Default lifecycle signals:
+    - `profiling:snapshot:captured`
+    - `profiling:snapshot:compared`
+
+- [x] `Mod/plugin sandbox + capability permissions`
     - Define extension sandbox boundaries and explicit capability grants.
     - Restrict direct writes to protected engine/runtime domains.
 
-- [ ] `Save slot manager + rollback snapshots`
+<a id="modplugin-sandbox-capability-permissions"></a>
+
+- Plugin sandbox service is available in `src/services/pluginSandbox.ts`.
+- Use `createPluginSandbox(...)` for isolated hosts or `pluginSandbox` singleton for shared runtime integration.
+- Capability grants are explicit per plugin manifest:
+    - `renderHooks`
+    - `dataRead`
+    - `dataWrite`
+    - `signalEmit`
+    - `signalSubscribe`
+- Runtime plugin API is scoped and guarded through `createRuntime(pluginId)`:
+    - `registerRenderHook(...)`
+    - `readData(...)` / `writeData(...)`
+    - `emitSignal(...)` / `subscribeSignal(...)`
+- Protected write domains are denied even when broad grants exist (default prefixes include `engine.`, `runtime.`, `services.`, `save.`, `state.`).
+- Default lifecycle signals:
+    - `plugin:sandbox:action`
+    - `plugin:sandbox:denied`
+
+- [x] `Save slot manager + rollback snapshots`
     - Support multi-slot save profiles with metadata and version tracking.
     - Provide rollback snapshot restore for rapid state recovery.
 
-- [ ] `Memory lifecycle management`
+<a id="save-slot-manager-rollback-snapshots"></a>
+
+- Save slot manager service is available in `src/services/save/slots.ts`.
+- Use `createSaveSlotService(...)` for isolated test/runtime hosts or `saveSlots` singleton for shared app usage.
+- Slot metadata fields include:
+    - `slot`
+    - `timestamp`
+    - `playtime`
+    - `version`
+- Core slot APIs:
+    - `saveSlot(...)`
+    - `loadSlot(...)`
+    - `deleteSlot(...)`
+    - `listSlots(...)`
+    - `getSlot(...)`
+- Rollback APIs:
+    - `listRollbackSnapshots(slot)`
+    - `restoreRollbackSnapshot(slot, snapshotId)`
+- Lifecycle signals:
+    - `save:slot:saved`
+    - `save:slot:loaded`
+    - `save:slot:deleted`
+    - `save:slot:rollback:created`
+    - `save:slot:rollback:restored`
+    - `save:slot:failed`
+
+- [x] `Memory lifecycle management`
     - Define explicit allocate/dispose contracts for runtime resources.
     - Add leak-detection diagnostics for long sessions.
 
-- [ ] `Save/content import security hardening`
+<a id="memory-lifecycle-management"></a>
+
+- Memory lifecycle service is available in `src/services/memoryLifecycle.ts`.
+- Use `createMemoryLifecycleService(...)` for isolated environments or `memoryLifecycle` singleton for shared runtime tracking.
+- Explicit lifecycle contract APIs:
+    - `allocate(...)`
+    - `touch(...)`
+    - `dispose(...)`
+    - `disposeByType(...)`
+- Runtime diagnostics APIs:
+    - `getSnapshot()` for active/disposed counts and byte totals by resource type
+    - `scanForLeaks(...)` for long-session leak checks
+    - `getLeakDiagnostics(...)` for recent leak history
+- Supported baseline resource categories: `texture`, `audio-buffer`, `emitter`, `runtime-cache`, `custom`.
+- Lifecycle signals:
+    - `memory:lifecycle:allocated`
+    - `memory:lifecycle:disposed`
+    - `memory:lifecycle:leak-detected`
+    - `memory:lifecycle:leak-scan-completed`
+
+- [x] `Save/content import security hardening`
     - Enforce strict size limits, safe parsing, and schema-first validation for imports.
     - Reject malformed/malicious payloads before runtime apply.
 
-- [ ] `Observability baseline`
+<a id="savecontent-import-security-hardening"></a>
+
+- Save import hardening is enforced in `src/services/save/file.ts`.
+- `importSaveFile(file, options?)` now supports security limits:
+    - `maxBytes`
+    - `maxJsonNodes`
+    - `maxJsonDepth`
+- Imports reject oversized payloads (`payload-too-large`) before runtime parse/apply.
+- Imports reject unsafe payload structures (`unsafe-payload`) including blocked prototype-style keys and JSON complexity over limits.
+- Schema-first runtime apply remains enforced through migration + rehydrate checks (`migrateSaveGame(...)` then `rehydrateGameState(...)`).
+
+- [x] `Observability baseline`
     - Define structured telemetry schema for crashes, perf regressions, and content-validation failures.
     - Surface baseline dashboards/reports for triage and trend tracking.
 
+<a id="observability-baseline"></a>
+
+- Observability baseline service is available in `src/services/observabilityBaseline.ts`.
+- Use `createObservabilityBaselineService(...)` for isolated hosts or `observabilityBaseline` singleton for shared runtime diagnostics.
+- Structured baseline event categories:
+    - `crash`
+    - `perf-regression`
+    - `content-validation-failure`
+- Event ingestion APIs:
+    - `recordEvent(...)`
+    - `recordCrash(...)`
+    - `recordPerfRegression(...)`
+    - `recordContentValidationFailure(...)`
+- Baseline reporting APIs:
+    - `getSnapshot(...)`
+    - `getBaselineReport(...)`
+- Lifecycle signals:
+    - `observability:baseline:event-recorded`
+    - `observability:baseline:report`
+
+- [x] `Quest/mission system`
+    - Add objective graph support with state transitions (`pending`, `active`, `completed`, `failed`) and reward hooks.
+    - Emit progress/completion signals for HUD tracker + toast integrations.
+
+<a id="questmission-system"></a>
+
+- Quest mission service is available in `src/services/questMissions.ts`.
+- Use `createQuestMissionService(...)` for isolated hosts/tests or `questMissions` singleton for shared runtime usage.
+- Mission lifecycle APIs:
+    - `registerMission(...)`
+    - `activateMission(...)`
+    - `completeObjective(...)`
+    - `setObjectiveProgress(...)`
+    - `setMissionFailed(...)`
+- Objective graph transitions support runtime states `pending`, `active`, `completed`, and `failed`.
+- Reward hooks are supported through `rewardHandlers` at creation time or `setRewardHandler(rewardId, handler)` at runtime.
+- Default lifecycle signals:
+    - `quest:mission:progress`
+    - `quest:mission:completed`
+    - `quest:mission:failed`
+
+- [x] `Combat core module`
+    - Add hit/hurt handling (damage events, invulnerability windows, knockback, damage typing).
+    - Keep combat resolution deterministic and decoupled from render concerns.
+
+<a id="combat-core-module"></a>
+
+- Combat core service is available in `src/services/combatCore.ts`.
+- Use `createCombatCoreService(...)` for isolated hosts/tests or `combatCore` singleton for shared runtime usage.
+- Combatant lifecycle APIs:
+    - `registerCombatant(...)`
+    - `applyHit(...)`
+    - `setInvulnerableUntil(...)`
+    - `reviveCombatant(...)`
+    - `listCombatants(...)`
+- `applyHit(...)` supports typed damage (`physical`, `magic`, `true`), deterministic invulnerability windows, and optional knockback payloads.
+- Default lifecycle signals:
+    - `combat:hit:applied`
+    - `combat:hit:blocked`
+    - `combat:entity:defeated`
+
 #### P2 — Gameplay systems + player experience
 
-- [ ] `TextBox` prefab (canvas draw)
+- [x] `TextBox` prefab (canvas draw)
     - Spawn at canvas coordinates (`x`, `y`) with width/max-lines constraints.
     - Render text + border + background, with static or typewriter reveal mode.
-    - Optional `awaitInput` behavior and open/close lifecycle callbacks.
+    - Optional open/update/close lifecycle callbacks, auto-close timers, and deterministic queue/stack sequencing.
 
-- [ ] `Toasts` prefab (UI layer draw)
+<a id="textbox-prefab"></a>
+
+- TextBox prefab is available in `src/components/textBox/TextBox.tsx`.
+- Use `TextBox` props for runtime placement and render behavior:
+    - `x`, `y`, `width`, `maxLines`
+    - `revealMode` (`static` or `typewriter`)
+    - `typewriterCharsPerSecond`, `autoCloseMs`, `open`
+    - `align`, `portrait`, `icon`, `panelStyle`, `textStyle`
+    - lifecycle hooks: `onOpen`, `onUpdate`, `onClose`
+- Deterministic queue utility is available in `src/components/textBox/createTextBoxQueue.ts`:
+    - `createTextBoxQueue("queue" | "stack")`
+    - `enqueue(...)`, `dequeue()`, `getActive()`, `clear()`, `size()`, `list()`
+- Dev example is available in `src/components/examples/TextBoxExample.tsx` and rendered in the App example-components tab.
+
+- [x] `Toasts` prefab (UI layer draw)
     - Render toast stack in screen-space overlay (non-world coordinates).
     - Support queueing, timed auto-dismiss, manual dismiss, and per-variant styling.
+
+<a id="toasts-prefab"></a>
+
+- Toasts prefab is available in `src/components/toasts/Toasts.tsx`.
+- Use `Toasts` props for runtime screen-space UI feedback:
+    - `toasts` list (`id`, `message`, optional `variant`, optional `autoDismissMs`)
+    - `anchor` (`top-left`, `top-right`, `bottom-left`, `bottom-right`) for stacked positioning
+    - `maxVisible`, `gapPx`, `dismissible`
+    - style slots: `style`, `listStyle`, `itemStyle`, `variantStyles`, `variantIcons`
+    - dismiss lifecycle hook: `onDismiss` with `reason` (`auto-dismiss`, `manual-dismiss`)
+- Deterministic queue utility is available in `src/components/toasts/createToastQueue.ts`:
+    - `createToastQueue()`
+    - `enqueue(...)`, `dequeue()`, `remove(id)`, `peek()`, `clear()`, `size()`, `list()`
+- Dev example is available in `src/components/examples/ToastsExample.tsx` and rendered in the App example-components tab.
 
 - [ ] `Cutscene` sequence system
     - Provide step runner with text/wait/signal/transition hooks.
@@ -178,86 +462,480 @@ These are implementation placeholders to keep usage docs aligned with active TOD
     - Accept authored conversation payloads and validate them before runtime.
     - Convert dialogue nodes into cutscene steps consumable by the sequence system.
 
-- [ ] `Map + mini-map system`
+- [x] `Map + mini-map system`
     - Add shared map state model for discovery/fog, player location, and marker layers.
     - Provide full-screen map view and HUD mini-map from the same source-of-truth data.
     - Support objective/NPC/checkpoint markers with configurable zoom/scale behavior.
 
-- [ ] `Camera system v2`
+<a id="map-mini-map-system"></a>
+
+- Map/minimap shared state service is available in `src/services/mapMiniMap.ts`.
+- Use `createMapMiniMapService(...)` for isolated hosts/tests or `mapMiniMap` singleton for shared runtime usage.
+- Core map state APIs:
+    - `setWorld(...)`
+    - `setPlayerPosition(...)`
+    - `discoverTile(...)` / `discoverAtWorldPosition(...)` / `discoverAroundWorldPosition(...)`
+    - `isDiscoveredTile(...)`
+- View/layer policy APIs:
+    - `setLayerVisibility(channel, layer, visible)`
+    - `setZoomPolicy(channel, patch)`
+    - `setZoom(channel, value)`
+- Marker resolution API:
+    - `resolveMarkers({ channel: "map" | "minimap", context? })`
+    - honors marker layers (`objective`, `npc`, `checkpoint`, `poi`, `custom`) and minimap radius filtering derived from zoom policy.
+- Snapshot API:
+    - `getSnapshot()` exposes world model, discovered tile count, player position, zoom state, and layer visibility for HUD/full-map consumers.
+- Default lifecycle signals:
+    - `map:discovery:updated`
+    - `map:player:updated`
+    - `map:view:changed`
+
+- [x] `Camera system v2`
     - Add dead-zone, look-ahead, bounds, shake layering, and scripted camera track support.
     - Expose camera behaviors consumable by gameplay and cutscene flows.
 
-- [ ] `Pathfinding/navigation grid`
+<a id="camera-system-v2"></a>
+
+- Camera v2 service is available in `src/services/cameraV2.ts`.
+- Use `createCameraV2Service(...)` for isolated hosts/tests or `cameraV2` singleton for shared runtime usage.
+- Core camera configuration APIs:
+    - `setViewport(...)`
+    - `setPosition(...)`
+    - `setBounds(...)`
+    - `setDeadZone(...)`
+    - `setLookAhead(...)`
+- Runtime camera behavior APIs:
+    - `update(deltaMs, target?)` for deterministic follow/track progression
+    - `startShake(...)` for layered timed shake channels
+    - `playTrack(...)` / `stopTrack(...)` for scripted camera track control
+    - `getSnapshot()` for gameplay/HUD/render consumers
+- Default lifecycle signals:
+    - `camera:v2:updated`
+    - `camera:v2:track:started`
+    - `camera:v2:track:completed`
+    - `camera:v2:shake:started`
+    - `camera:v2:shake:completed`
+
+- [x] `Pathfinding/navigation grid`
     - Add reusable path query layer for NPC patrol/chase/navigation.
     - Integrate with collision/world data and deterministic query behavior.
 
-- [ ] `Ability + cooldown effects system`
+<a id="pathfinding-navigation-grid"></a>
+
+- Pathfinding/navigation service is available in `src/services/pathfindingNavigation.ts`.
+- Use `createPathfindingNavigationService(...)` for isolated hosts/tests or `pathfindingNavigation` singleton for shared runtime usage.
+- Grid/world setup APIs:
+    - `setGrid(...)`
+    - `setWalkableTileValues(...)`
+    - `setWorldConfig(...)`
+    - `setDynamicBlocker(...)` / `clearDynamicBlockers()`
+- Deterministic query APIs:
+    - `findPath(start, goal, options?)` for A\* route resolution
+    - `buildFlowField(goal, options?)` for flow-field cost/next-step generation
+    - `getNextFlowStep(flowField, from)` for steering/runtime next-cell lookup
+    - `isWalkable(...)`, `worldToTile(...)`, `tileToWorld(...)` for collision/world alignment
+    - `getSnapshot()` for diagnostics and UI tooling
+- Default lifecycle signals:
+    - `navigation:grid:updated`
+    - `navigation:path:resolved`
+    - `navigation:flow-field:resolved`
+
+- [x] `Ability + cooldown effects system`
     - Define typed active/passive ability payloads with costs and cooldown groups.
     - Emit lifecycle signals for HUD/action button/cooldown UI integration.
 
-- [ ] `Entity state machine system (behavior + animation)`
+<a id="ability-cooldown-effects-system"></a>
+
+- Ability cooldown/effects service is available in `src/services/abilityCooldownEffects.ts`.
+- Use `createAbilityCooldownEffectsService(...)` for isolated hosts/tests or `abilityCooldownEffects` singleton for shared runtime usage.
+- Ability/runtime setup APIs:
+    - `registerAbility(...)` / `unregisterAbility(...)`
+    - `setResource(...)` / `getResource(...)`
+    - `getAbility(...)` / `listAbilities(...)`
+- Cast/cooldown/effect APIs:
+    - `canCast(abilityId, context?)` for deterministic cast guard diagnostics
+    - `cast(abilityId, context?)` for cost spend + cooldown + effect application
+    - `tick(deltaMs)` for cooldown/effect progression and expiry
+    - `getSnapshot()` for HUD/action button/cooldown indicator state projection
+- Active/passive definition hooks:
+    - `castCondition(...)`
+    - `resolveCosts(...)`
+    - `resolveEffects(...)`
+- Default lifecycle signals:
+    - `ability:cast:applied`
+    - `ability:cast:blocked`
+    - `ability:cooldown:updated`
+    - `ability:effect:applied`
+    - `ability:effect:expired`
+
+- [x] `Entity state machine system (behavior + animation)`
     - Define per-entity state profiles (`idle`, `moving`, `attacking`, `damaged`, `stunned`, `dead`) with guarded transitions.
     - Keep behavior logic and animation selection synchronized through one active state source.
     - Support interrupt priorities and `onEnter`/`onExit` hooks for gameplay events.
     - Define `player`/`npc`/`boss` state taxonomies with shared naming/transition conventions.
     - Baseline taxonomy example: `player` (`dodge`, `block`), `npc` (`patrol`, `flee`), `boss` (`phase-1`, `phase-2`).
 
-- [ ] `Loot/progression economy system`
+<a id="entity-state-machine-system-behavior-animation"></a>
+
+- Entity state profile machine utilities are available in `src/logic/entity/entityStateMachine.ts`.
+- Use `createEntityBehaviorStateMachine(archetype, hooks?)` for deterministic per-archetype behavior flow.
+- Transition signals are exposed via `ENTITY_BEHAVIOR_SIGNAL` (`attack`, `damaged`, `stunned`, `dodge`, `block`, `patrol`, `flee`, `phase-2`).
+- Behavior/animation synchronization is sourced from the same active state via:
+    - machine `getState()` for behavior logic
+    - machine `getAnimationClip()` or `resolveEntityAnimationClip(state)` for animation selection
+- Archetype taxonomy coverage:
+    - `player`: includes `dodge`, `block` interrupt transitions
+    - `npc`: includes `patrol`, `flee` transitions
+    - `boss`: includes `phase-1`, `phase-2` transitions
+
+- [x] `Equipment + stats aggregation`
+    - Add stat resolution pipeline (`base + gear + buffs/debuffs`) with typed modifiers.
+    - Expose derived stats to combat/movement modules and HUD.
+
+<a id="equipment-stats-aggregation"></a>
+
+- Equipment stats aggregation service is available in `src/services/equipmentStats.ts`.
+- Use `createEquipmentStatsService(...)` for isolated hosts/tests or `equipmentStats` singleton for shared runtime usage.
+- Entity stat lifecycle APIs:
+    - `registerEntity(...)`
+    - `setBaseStats(...)`
+    - `equipItem(...)` / `unequipItem(...)`
+    - `applyEffect(...)` / `removeEffect(...)`
+    - `getResolvedStats(...)`
+- Derived projections are exposed for downstream systems:
+    - combat: `maxHealth`, `attackPower`, `defense`, `critChance`, `damageReduction`
+    - movement: `moveSpeed`, `maxSpeedScale`
+    - HUD snapshot access through `getEntitySnapshot(...)` / `listEntitySnapshots(...)`
+- Default lifecycle signals:
+    - `stats:equipment:changed`
+    - `stats:equipment:equipped`
+    - `stats:equipment:effect-applied`
+
+- [x] `Loot/progression economy system`
     - Add weighted drops, tier tables, and reward bundle composition hooks.
     - Support balancing-friendly data tables for progression tuning.
 
-- [ ] `World streaming/chunk loader`
+<a id="loot-progression-economy-system"></a>
+
+- Loot/progression economy service is available in `src/services/lootEconomy.ts`.
+- Use `createLootEconomyService(...)` for isolated hosts/tests or `lootEconomy` singleton for shared runtime usage.
+- Authoring/registration APIs:
+    - `registerDropTable(...)`
+    - `registerAffixPool(...)`
+    - `registerEconomyTable(...)`
+    - `registerRewardBundle(...)`
+- Runtime resolution APIs:
+    - `resolveDropTable(tableId, options?)` for deterministic weighted drop results
+    - `resolveRewardBundle(bundleId, options?)` for static + table-composed reward resolution
+    - `quoteItem(tableId, itemId)` for buy/sell pricing lookups
+    - `getSnapshot()` for diagnostics and tooling counters
+- Default lifecycle signals:
+    - `loot:drop:resolved`
+    - `loot:bundle:resolved`
+    - `loot:economy:table:updated`
+
+- [x] `World streaming/chunk loader`
     - Load/unload world chunks dynamically for large map support.
     - Keep region-boundary activation deterministic.
 
-- [ ] `Tutorial/onboarding state machine`
+<a id="world-streaming-chunk-loader"></a>
+
+- World streaming service is available in `src/services/worldStreaming.ts`.
+- Use `createWorldStreamingService(...)` for isolated hosts/tests or `worldStreaming` singleton for shared runtime usage.
+- World and policy APIs:
+    - `setWorld(...)`
+    - `setLoadPolicy(...)`
+    - `updateFocus(...)`
+- Entity/chunk lifecycle APIs:
+    - `registerEntity(...)` / `unregisterEntity(...)`
+    - `updateEntityPosition(...)`
+    - `forceLoadChunk(...)` / `forceUnloadChunk(...)`
+    - `isEntityActive(...)`
+    - `getSnapshot()`
+- Default lifecycle signals:
+    - `world:stream:chunk:loaded`
+    - `world:stream:chunk:unloaded`
+    - `world:stream:entity:activated`
+    - `world:stream:entity:deactivated`
+    - `world:stream:updated`
+
+- [x] `Tutorial/onboarding state machine`
     - Add gated tutorial step flow with prompt + completion tracking.
     - Support skip/resume behaviors.
 
-- [ ] `Multiplayer readiness boundary`
+<a id="tutorial-onboarding-state-machine"></a>
+
+- Tutorial onboarding service is available in `src/services/tutorialOnboarding.ts`.
+- Use `createTutorialOnboardingService(...)` for isolated hosts/tests or `tutorialOnboarding` singleton for shared runtime usage.
+- Flow/runtime APIs:
+    - `registerFlow(...)` / `unregisterFlow(...)`
+    - `start(flowId, options?)`
+    - `canAdvance()` / `advance()`
+    - `skip()` / `resume()`
+    - `setContext(...)` / `resetContext()`
+    - `getSnapshot()`
+- Completion persistence APIs:
+    - `getPersistedState()`
+    - `restorePersistedState(...)`
+- Prompt integration:
+    - step definitions support `prompt` payloads with `dialogue` / `textbox` / `toast` / `custom` channels.
+- Default lifecycle signals:
+    - `tutorial:onboarding:started`
+    - `tutorial:onboarding:step:changed`
+    - `tutorial:onboarding:step:blocked`
+    - `tutorial:onboarding:step:completed`
+    - `tutorial:onboarding:completed`
+    - `tutorial:onboarding:skipped`
+    - `tutorial:onboarding:resumed`
+    - `tutorial:onboarding:prompt`
+
+- [x] `Multiplayer readiness boundary`
     - Define deterministic simulation and state-authority boundaries for future networking.
     - Keep core APIs replication-safe where practical.
+
+<a id="multiplayer-readiness-boundary"></a>
+
+- Multiplayer boundary service is available in `src/services/multiplayerBoundary.ts`.
+- Use `createMultiplayerBoundaryService(...)` for isolated hosts/tests or `multiplayerBoundary` singleton for shared runtime usage.
+- Contract and validation APIs:
+    - `registerContract(...)` / `unregisterContract(...)`
+    - `getContract(...)` / `listContracts()`
+    - `isApiReplicationSafe(contractId, api)`
+    - `evaluateAction({ contractId, api, actor })`
+    - `getReadinessReport()`
+- Authority and replication model:
+    - contracts declare deterministic domain ownership (`server`, `client`, `shared`)
+    - evaluations block actor-authority mismatch and non-replication-safe API usage
+- Default lifecycle signals:
+    - `multiplayer:boundary:updated`
+    - `multiplayer:boundary:evaluated`
 
 #### P3 — Tooling + authoring
 
 <a id="planned-visual-worldentity-placement-tool"></a>
 
-- [ ] `Visual world/entity placement tool`
+- [x] `Visual world/entity placement tool`
     - Add editor-mode UI to place/move/delete entities directly on the canvas.
     - Support snap/grid placement, selection/drag helpers, and basic bounds validation.
     - Export/import placement payloads as JSON for level bootstrap workflows.
 
-- [ ] `Encounter/content authoring presets`
+<a id="visual-worldentity-placement-tool"></a>
+
+- World entity placement authoring service is available in `src/services/worldEntityPlacement.ts`.
+- Use `createWorldEntityPlacementService(...)` for isolated hosts/tests or `worldEntityPlacement` singleton for shared editor/runtime usage.
+- Placement authoring APIs:
+    - `setWorldBounds(...)`
+    - `setGridOptions(...)`
+    - `placeEntity(...)`
+    - `moveEntity(...)`
+    - `deleteEntity(...)`
+- Lightweight gizmo/workflow APIs:
+    - `selectEntity(...)`
+    - `moveSelected(...)`
+    - `duplicateSelected(...)`
+- Placement persistence APIs:
+    - `exportPayload(...)`
+    - `importPayload(...)`
+    - `getSnapshot()`
+- Default lifecycle signals:
+    - `world:placement:changed`
+    - `world:placement:selected`
+    - `world:placement:invalid`
+    - `world:placement:imported`
+
+- [x] `Encounter/content authoring presets`
     - Define reusable templates for spawn packs, objectives, and rewards.
     - Support preset import/export for fast iteration.
 
-- [ ] `Prefab contract test harness`
+- Encounter preset authoring service is available in `src/services/encounterPresets.ts`.
+- Use `createEncounterPresetService(...)` for isolated hosts/tests or `encounterPresets` singleton for shared tooling/runtime usage.
+- Core authoring registration APIs:
+    - `registerSpawnPack(...)` / `unregisterSpawnPack(...)`
+    - `registerObjectiveBundle(...)` / `unregisterObjectiveBundle(...)`
+    - `registerRewardBundle(...)` / `unregisterRewardBundle(...)`
+    - `registerTemplate(...)` / `unregisterTemplate(...)`
+- Template retrieval and expansion APIs:
+    - `getTemplate(...)`
+    - `resolveTemplate(...)`
+- Preset sharing APIs:
+    - `exportPayload(...)`
+    - `importPayload(...)`
+    - `getSnapshot()`
+- Default lifecycle signals:
+    - `encounter:preset:changed`
+    - `encounter:preset:invalid`
+    - `encounter:preset:imported`
+
+- [x] `Localization/text key pipeline`
+    - Add key-based text lookup service with fallback locale behavior.
+    - Support dialogue/textbox/toast integration using localized key payloads.
+
+- Localization service is available in `src/services/localization.ts`.
+- Use `createLocalizationService(...)` for scoped hosts/tests or `localizationService` singleton for shared runtime usage.
+- Core localization APIs:
+    - `registerCatalog(...)` / `unregisterCatalog(...)`
+    - `setLocale(...)` / `getLocale()`
+    - `setFallbackLocale(...)` / `getFallbackLocale()`
+    - `translate(...)`
+- Prompt key payload resolution helper:
+    - `resolveLocalizedPromptMessage(...)` supports `dialogueKey` / `textboxKey` / `toastKey` and generic `textKey` payload fallback.
+    - parameter payload keys support channel-specific (`dialogueParams` / `textboxParams` / `toastParams`) and generic (`textParams`) variants.
+- Tutorial prompt integration:
+    - `createTutorialOnboardingService(...)` now supports `localizePrompt` resolver hooks for localized prompt emission.
+
+- [x] `Content validation CLI (authored JSON)`
+    - Validate dialogue/quest/loot/placement authored JSON files before runtime apply.
+    - Reuse schema migration + runtime registration/import contracts for consistency.
+
+- Content validation command is available via `npm run content:validate`.
+- Optional domain filter: `npm run content:validate -- --domain dialogue`.
+- File targeting supports explicit JSON paths: `npm run content:validate -- content/dialogue/intro.json content/quest/main.json`.
+- Default discovery (when no files are passed) scans `content/`, `data/`, and `public/content/` for `.json` files.
+- Validation output includes file-relative path plus JSON-path issue lines for actionable fixes.
+
+- [x] `Prefab contract test harness`
     - Provide reusable lifecycle/input/render contract tests for prefabs.
     - Keep new prefab additions consistent through shared test suites.
 
-- [ ] `CI quality gates for content`
+- Shared prefab contract harness is available in `src/tests/contracts/prefabContractHarness.tsx`.
+- Use `runPrefabContractSuite(...)` to apply standardized contract checks for:
+    - render invariants (`assertRender`)
+    - lifecycle/update invariants (`assertUpdate`)
+    - optional input interactions (`inputContract.run` + `inputContract.assert`)
+- Reference usage is available in `src/tests/prefabContractHarness.test.tsx` for `Toggle` and `HUDSlot` prefab contract coverage.
+
+- [x] `CI quality gates for content`
     - Fail CI when content schemas/migrations/contracts regress.
     - Run fast validation for authored data and prefab contracts on pull requests.
 
-- [ ] `Balancing simulator tooling`
+- Content quality gate commands are available in `package.json`:
+    - `npm run content:validate:gates` (domain checks for `dialogue`, `quest`, `placement`)
+    - `npm run test:content:gates` (focused migration + content validation + prefab contract suites)
+    - `npm run quality:content` (combined pre-merge gate command)
+- CI workflow integration is available in `.github/workflows/ci.yml` through the `content-quality-gates` job.
+- The gate fails when authored content schema/migration checks or prefab contract checks regress.
+
+- [x] `Balancing simulator tooling`
     - Run batch combat/economy simulations from config presets.
     - Emit summary reports for tuning workflows.
 
-- [ ] `Release pipeline + versioning`
+- Balancing simulator service is available in `src/services/balancingSimulator.ts`.
+- Use `createBalancingSimulatorService(...)` for isolated tuning jobs/tests or `balancingSimulator` singleton for shared tooling usage.
+- Preset payloads support `version: 1` with `combatScenarios` and/or `economyScenarios` arrays.
+- Batch report APIs:
+    - `parsePresetPayload(...)`
+    - `runCombatScenario(...)`
+    - `runEconomyScenario(...)`
+    - `runBatch(...)`
+- CLI runner command is available via `npm run balance:simulate`.
+    - Optional deterministic seed: `npm run balance:simulate -- --seed 1337`
+    - Optional JSON output: `npm run balance:simulate -- --json --pretty`
+    - Optional explicit files: `npm run balance:simulate -- content/balancing/combat-baseline.json`
+
+- [x] `Release pipeline + versioning`
     - Define semantic version workflow, changelog automation, and artifact verification.
     - Include rollback and promotion gate policies.
 
-- [ ] `Asset pipeline tooling`
+- Release pipeline workflow is available in `.github/workflows/release.yml`.
+    - Tag trigger: push semantic tags (`v*.*.*`) to run release verification + staged promotion.
+    - Manual trigger: `workflow_dispatch` with `release_tag` and `promote_to` (`staging` or `production`).
+- Changelog tooling command:
+    - `npm run release:changelog -- --version 0.1.0 --to HEAD --notes release-notes.md`
+- Artifact verification commands:
+    - `npm run build`
+    - `npm run release:verify:artifacts -- --version 0.1.0`
+    - writes `dist/SHA256SUMS.txt` + `dist/release-manifest.json`.
+- Full release gate command:
+    - `npm run release:verify`
+    - runs content quality gates, lint, tests, strict coverage, build, and artifact verification.
+- Rollback strategy:
+    - dispatch the release workflow with `release_tag` set to a previously known-good tag (example: `v0.2.3`).
+    - set `promote_to=production` to re-promote previously verified artifacts through the same staged gates.
+
+- [x] `Asset pipeline tooling`
     - Validate sprite/audio imports, atlas pack workflows, and missing-asset conditions.
     - Track asset size/compression budgets.
 
-- [ ] `Economy/content balancing governance`
+- Asset validation service is available in `src/services/assetValidation.ts`.
+- Use `validateAssetPipeline(...)` for deterministic validation reports in tooling/tests.
+- CLI command is available via `npm run asset:validate`.
+    - Optional JSON output: `npm run asset:validate -- --json --pretty`
+    - Optional budget overrides (bytes):
+        - `--max-total-bytes`
+        - `--max-sprite-bytes`
+        - `--max-audio-bytes`
+        - `--max-atlas-bytes`
+    - Optional explicit source files: `npm run asset:validate -- src/components/gameModes/sceneAudio.ts`
+- Validation resolves both:
+    - alias asset imports (`@/assets/...` => `src/assets/...`)
+    - public URL asset refs (`/foo/bar.png` => `public/foo/bar.png`, including URL-encoded paths)
+
+- [x] `Economy/content balancing governance`
     - Define tuning ownership workflow and accepted balance metrics.
     - Require signoff criteria for major economy/combat table updates.
 
-- [ ] `Accessibility QA matrix`
+- Balancing governance service is available in `src/services/balancingGovernance.ts`.
+- Use `evaluateBalancingGovernance(...)` to validate report benchmark metrics and required owner signoffs.
+- CLI command is available via `npm run balance:governance`.
+    - Optional policy override: `npm run balance:governance -- --policy content/balancing/governance.policy.json`
+    - Optional JSON output: `npm run balance:governance -- --json --pretty`
+    - Optional explicit report files: `npm run balance:governance -- content/balancing/reports/combat-major-update.json`
+- Quality gate command is available via `npm run quality:balance`.
+    - Includes governance validation (`--allow-empty`) plus focused deterministic tests.
+
+- [x] `Accessibility QA matrix`
     - Define repeatable QA checks for keyboard-only, readability/contrast, reduced motion, and assist timing.
     - Integrate matrix checks into release readiness.
+
+- Accessibility QA matrix service is available in `src/services/accessibilityQaMatrix.ts`.
+- Use `evaluateAccessibilityQaMatrix(...)` to validate required checklist areas/checks and release-pass status output.
+- CLI command is available via `npm run accessibility:qa`.
+    - Optional JSON output: `npm run accessibility:qa -- --json --pretty`
+    - Optional explicit report files: `npm run accessibility:qa -- content/accessibility/qa-matrix/main-release.json`
+- Quality gate command is available via `npm run quality:accessibility`.
+    - Includes accessibility QA matrix report validation (`--allow-empty`) plus focused deterministic tests.
+- Release verification gate (`npm run release:verify`) now includes `quality:accessibility`.
+
+Draft JSON shape for accessibility QA matrix report:
+
+```json
+{
+    "version": 1,
+    "runId": "qa-2026-02-28-main",
+    "executedAt": "2026-02-28T12:00:00.000Z",
+    "areas": [
+        {
+            "id": "keyboard-navigation",
+            "checks": [
+                { "id": "focus-order", "status": "pass" },
+                { "id": "focus-visible", "status": "pass" },
+                { "id": "primary-actions-reachable", "status": "pass" }
+            ]
+        },
+        {
+            "id": "readability-contrast",
+            "checks": [
+                { "id": "text-scale-legible", "status": "pass" },
+                { "id": "contrast-aa", "status": "pass" }
+            ]
+        },
+        {
+            "id": "reduced-motion",
+            "checks": [
+                { "id": "reduced-flash-toggle", "status": "pass" },
+                { "id": "reduced-shake-toggle", "status": "pass" }
+            ]
+        },
+        {
+            "id": "assist-timing",
+            "checks": [
+                { "id": "hold-toggle-option", "status": "pass" },
+                { "id": "subtitle-speed-options", "status": "pass" }
+            ]
+        }
+    ]
+}
+```
 
 Draft JSON shape for authored dialogue:
 

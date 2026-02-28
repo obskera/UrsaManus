@@ -15,6 +15,18 @@ type WorldgenScenePresetDefinition = {
     options: CreateWorldgenScenarioOptions;
 };
 
+type WorldgenScenarioOverrides = Omit<
+    Partial<CreateWorldgenScenarioOptions>,
+    "map" | "spawns" | "world" | "composition"
+> & {
+    map?: Partial<CreateWorldgenScenarioOptions["map"]>;
+    spawns?: Partial<NonNullable<CreateWorldgenScenarioOptions["spawns"]>>;
+    world?: Partial<NonNullable<CreateWorldgenScenarioOptions["world"]>>;
+    composition?: Partial<
+        NonNullable<CreateWorldgenScenarioOptions["composition"]>
+    >;
+};
+
 const PRESETS: Record<WorldgenScenePresetId, WorldgenScenePresetDefinition> = {
     "compact-run": {
         id: "compact-run",
@@ -115,7 +127,7 @@ const PRESETS: Record<WorldgenScenePresetId, WorldgenScenePresetDefinition> = {
 
 function mergeScenarioOptions(
     base: CreateWorldgenScenarioOptions,
-    overrides?: Partial<CreateWorldgenScenarioOptions>,
+    overrides?: WorldgenScenarioOverrides,
 ): CreateWorldgenScenarioOptions {
     if (!overrides) {
         return {
@@ -134,18 +146,24 @@ function mergeScenarioOptions(
             ...base.map,
             ...(overrides.map ?? {}),
         },
-        spawns: {
-            ...(base.spawns ?? {}),
-            ...(overrides.spawns ?? {}),
-        },
-        world: {
-            ...(base.world ?? {}),
-            ...(overrides.world ?? {}),
-        },
-        composition: {
-            ...(base.composition ?? {}),
-            ...(overrides.composition ?? {}),
-        },
+        spawns: base.spawns
+            ? {
+                  ...base.spawns,
+                  ...(overrides.spawns ?? {}),
+              }
+            : undefined,
+        world: base.world
+            ? {
+                  ...base.world,
+                  ...(overrides.world ?? {}),
+              }
+            : undefined,
+        composition: base.composition
+            ? {
+                  ...base.composition,
+                  ...(overrides.composition ?? {}),
+              }
+            : undefined,
     };
 }
 
@@ -161,7 +179,7 @@ export function listWorldgenScenePresets(): Array<{
 
 export function createWorldgenScenePresetOptions(
     presetId: WorldgenScenePresetId,
-    overrides?: Partial<CreateWorldgenScenarioOptions>,
+    overrides?: WorldgenScenarioOverrides,
 ): CreateWorldgenScenarioOptions {
     const preset = PRESETS[presetId];
     return mergeScenarioOptions(preset.options, overrides);
@@ -169,7 +187,7 @@ export function createWorldgenScenePresetOptions(
 
 export function createWorldgenScenePreset(
     presetId: WorldgenScenePresetId,
-    overrides?: Partial<CreateWorldgenScenarioOptions>,
+    overrides?: WorldgenScenarioOverrides,
 ): WorldgenScenarioResult {
     return createWorldgenScenario(
         createWorldgenScenePresetOptions(presetId, overrides),

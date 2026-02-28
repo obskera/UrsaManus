@@ -38,3 +38,7 @@ export { default as PauseMenuExample } from "./PauseMenuExample";
 export type { PauseMenuExampleProps } from "./PauseMenuExample";
 export { default as GameOverScreenExample } from "./GameOverScreenExample";
 export type { GameOverScreenExampleProps } from "./GameOverScreenExample";
+export { default as TextBoxExample } from "./TextBoxExample";
+export type { TextBoxExampleProps } from "./TextBoxExample";
+export { default as ToastsExample } from "./ToastsExample";
+export type { ToastsExampleProps } from "./ToastsExample";
