@@ -129,10 +129,7 @@ const saveErrorCopy: Record<SaveFileErrorCode, string> = {
 
 ## Keyboard Shortcuts (dev)
 
-- `Alt + Shift + S` — Quick Save
-- `Alt + Shift + L` — Quick Load
-- `Alt + Shift + E` — Export Save
-- `Alt + Shift + I` — Import Save
+- `Alt + Shift + P` — Toggle World Pause (dev reason)
 
 ## Related Docs
 

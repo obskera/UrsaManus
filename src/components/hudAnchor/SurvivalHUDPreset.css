@@ -1,0 +1,4 @@
+.um-survival-hud-preset__stack {
+    display: grid;
+    gap: var(--um-space-2);
+}

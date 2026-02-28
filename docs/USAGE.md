@@ -29,7 +29,11 @@ Quick links for reusable, copy/paste-friendly UI building blocks:
 - [HUDSlot UI primitive](#hudslot-ui-primitive)
 - [HUDAnchor UI primitive](#hudanchor-ui-primitive)
 - [AbilityBar prefab](#abilitybar-prefab)
+- [SurvivalHUDPreset starter](#survivalhudpreset-starter)
+- [BossEncounterHUDPreset starter](#bossencounterhudpreset-starter)
 - [HUD preset composition helper](#hud-preset-composition-helper)
+- [Dev-mode state sanitizer/reset](#dev-mode-state-sanitizerreset)
+- [Visual world/entity placement tool (planned)](#planned-visual-worldentity-placement-tool)
 - [LifeGauge full example component](../src/components/examples/LifeGaugeExample.tsx)
 - [AbilityBar full example component](../src/components/examples/AbilityBarExample.tsx)
 
@@ -78,6 +82,226 @@ If you started from this repository as a template, complete this once before fea
     - `npm run test:run`
     - `npm run test:coverage:strict`
 - [ ] Confirm CI passes in GitHub Actions after first push
+
+### Planned system stubs (TODO-aligned)
+
+These are implementation placeholders to keep usage docs aligned with active TODO items.
+
+#### P1 — Core runtime + reliability
+
+- [ ] `Global world pause` controller
+    - Freeze simulation updates (physics/movement/AI/ticks) while paused.
+    - Block gameplay controls while allowing pause-menu and cutscene-continue input.
+    - Support scoped pause reasons (`pause-menu`, `cutscene`) with deterministic resume behavior.
+
+<a id="dev-mode-state-sanitizerreset"></a>
+
+- [x] `Dev-mode state sanitizer/reset`
+    - Add a development-only reset path for persisted runtime state (`localStorage`, quick-save keys, dev toggles).
+    - Support reset scopes (`save-only`, `input-profiles`, `all`) with confirmation guard.
+    - Expose a debug shortcut and optional dev-panel action for rapid recovery from bad state.
+
+- [ ] `Deterministic replay system`
+    - Record input/events with seed snapshots to allow exact gameplay bug reproduction.
+    - Support replay export/import for regression validation.
+
+- [ ] `Schema migration framework`
+    - Add versioned migrations for save files and authored JSON assets.
+    - Validate and migrate payloads before runtime apply.
+    - Use this as the shared compatibility layer for runtime + tooling checks.
+
+- [ ] `Content hot-reload pipeline (dev)`
+    - Reload authored JSON domains in development without full app restart.
+    - Trigger targeted refresh for dialogue/quest/map/editor data.
+
+- [ ] `Unified marker/POI registry`
+    - Use one source-of-truth marker feed for map, mini-map, objectives, and prompts.
+    - Support typed marker categories, visibility rules, and priority.
+    - Prevent per-system marker duplication by centralizing marker ownership.
+
+- [ ] `Accessibility runtime settings`
+    - Add text scale, hold/toggle input options, reduced flash/shake, and subtitle speed.
+    - Persist user preferences and expose settings hooks.
+
+- [ ] `Error telemetry + dev diagnostics`
+    - Emit structured runtime errors with subsystem/context payloads.
+    - Provide debug overlays/log hooks for fast triage.
+
+- [ ] `Performance budgets + alerts`
+    - Define frame/entity/effect budget thresholds with dev warnings.
+    - Surface simple subsystem timing summaries.
+
+- [ ] `Crash-safe recovery flow`
+    - Add startup recovery checks for corrupted persisted state.
+    - Offer restore/reset flows with clear diagnostics.
+
+- [ ] `Profiling snapshot tooling`
+    - Capture dev snapshots for frame timing, entity counts, and active effects.
+    - Compare snapshots to identify performance regressions.
+
+- [ ] `Mod/plugin sandbox + capability permissions`
+    - Define extension sandbox boundaries and explicit capability grants.
+    - Restrict direct writes to protected engine/runtime domains.
+
+- [ ] `Save slot manager + rollback snapshots`
+    - Support multi-slot save profiles with metadata and version tracking.
+    - Provide rollback snapshot restore for rapid state recovery.
+
+- [ ] `Memory lifecycle management`
+    - Define explicit allocate/dispose contracts for runtime resources.
+    - Add leak-detection diagnostics for long sessions.
+
+- [ ] `Save/content import security hardening`
+    - Enforce strict size limits, safe parsing, and schema-first validation for imports.
+    - Reject malformed/malicious payloads before runtime apply.
+
+- [ ] `Observability baseline`
+    - Define structured telemetry schema for crashes, perf regressions, and content-validation failures.
+    - Surface baseline dashboards/reports for triage and trend tracking.
+
+#### P2 — Gameplay systems + player experience
+
+- [ ] `TextBox` prefab (canvas draw)
+    - Spawn at canvas coordinates (`x`, `y`) with width/max-lines constraints.
+    - Render text + border + background, with static or typewriter reveal mode.
+    - Optional `awaitInput` behavior and open/close lifecycle callbacks.
+
+- [ ] `Toasts` prefab (UI layer draw)
+    - Render toast stack in screen-space overlay (non-world coordinates).
+    - Support queueing, timed auto-dismiss, manual dismiss, and per-variant styling.
+
+- [ ] `Cutscene` sequence system
+    - Provide step runner with text/wait/signal/transition hooks.
+    - Support per-step progression mode (`awaitInput` or timed auto-advance) and skip policy.
+
+- [ ] `Dialogue` JSON format + runtime bridge
+    - Accept authored conversation payloads and validate them before runtime.
+    - Convert dialogue nodes into cutscene steps consumable by the sequence system.
+
+- [ ] `Map + mini-map system`
+    - Add shared map state model for discovery/fog, player location, and marker layers.
+    - Provide full-screen map view and HUD mini-map from the same source-of-truth data.
+    - Support objective/NPC/checkpoint markers with configurable zoom/scale behavior.
+
+- [ ] `Camera system v2`
+    - Add dead-zone, look-ahead, bounds, shake layering, and scripted camera track support.
+    - Expose camera behaviors consumable by gameplay and cutscene flows.
+
+- [ ] `Pathfinding/navigation grid`
+    - Add reusable path query layer for NPC patrol/chase/navigation.
+    - Integrate with collision/world data and deterministic query behavior.
+
+- [ ] `Ability + cooldown effects system`
+    - Define typed active/passive ability payloads with costs and cooldown groups.
+    - Emit lifecycle signals for HUD/action button/cooldown UI integration.
+
+- [ ] `Entity state machine system (behavior + animation)`
+    - Define per-entity state profiles (`idle`, `moving`, `attacking`, `damaged`, `stunned`, `dead`) with guarded transitions.
+    - Keep behavior logic and animation selection synchronized through one active state source.
+    - Support interrupt priorities and `onEnter`/`onExit` hooks for gameplay events.
+    - Define `player`/`npc`/`boss` state taxonomies with shared naming/transition conventions.
+    - Baseline taxonomy example: `player` (`dodge`, `block`), `npc` (`patrol`, `flee`), `boss` (`phase-1`, `phase-2`).
+
+- [ ] `Loot/progression economy system`
+    - Add weighted drops, tier tables, and reward bundle composition hooks.
+    - Support balancing-friendly data tables for progression tuning.
+
+- [ ] `World streaming/chunk loader`
+    - Load/unload world chunks dynamically for large map support.
+    - Keep region-boundary activation deterministic.
+
+- [ ] `Tutorial/onboarding state machine`
+    - Add gated tutorial step flow with prompt + completion tracking.
+    - Support skip/resume behaviors.
+
+- [ ] `Multiplayer readiness boundary`
+    - Define deterministic simulation and state-authority boundaries for future networking.
+    - Keep core APIs replication-safe where practical.
+
+#### P3 — Tooling + authoring
+
+<a id="planned-visual-worldentity-placement-tool"></a>
+
+- [ ] `Visual world/entity placement tool`
+    - Add editor-mode UI to place/move/delete entities directly on the canvas.
+    - Support snap/grid placement, selection/drag helpers, and basic bounds validation.
+    - Export/import placement payloads as JSON for level bootstrap workflows.
+
+- [ ] `Encounter/content authoring presets`
+    - Define reusable templates for spawn packs, objectives, and rewards.
+    - Support preset import/export for fast iteration.
+
+- [ ] `Prefab contract test harness`
+    - Provide reusable lifecycle/input/render contract tests for prefabs.
+    - Keep new prefab additions consistent through shared test suites.
+
+- [ ] `CI quality gates for content`
+    - Fail CI when content schemas/migrations/contracts regress.
+    - Run fast validation for authored data and prefab contracts on pull requests.
+
+- [ ] `Balancing simulator tooling`
+    - Run batch combat/economy simulations from config presets.
+    - Emit summary reports for tuning workflows.
+
+- [ ] `Release pipeline + versioning`
+    - Define semantic version workflow, changelog automation, and artifact verification.
+    - Include rollback and promotion gate policies.
+
+- [ ] `Asset pipeline tooling`
+    - Validate sprite/audio imports, atlas pack workflows, and missing-asset conditions.
+    - Track asset size/compression budgets.
+
+- [ ] `Economy/content balancing governance`
+    - Define tuning ownership workflow and accepted balance metrics.
+    - Require signoff criteria for major economy/combat table updates.
+
+- [ ] `Accessibility QA matrix`
+    - Define repeatable QA checks for keyboard-only, readability/contrast, reduced motion, and assist timing.
+    - Integrate matrix checks into release readiness.
+
+Draft JSON shape for authored dialogue:
+
+```json
+{
+    "id": "intro-village",
+    "start": "n1",
+    "nodes": [
+        {
+            "id": "n1",
+            "speakerId": "elder",
+            "speakerName": "Village Elder",
+            "portrait": "elder-neutral",
+            "emotion": "neutral",
+            "dialogues": [
+                "Welcome, traveler.",
+                "The forest path is dangerous after dusk."
+            ],
+            "voiceCue": "npc:elder:line1",
+            "speedMs": 28,
+            "awaitInput": true,
+            "next": "n2",
+            "tags": ["intro", "tutorial"]
+        },
+        {
+            "id": "n2",
+            "speakerName": "Village Elder",
+            "dialogues": ["Will you help us?"],
+            "choices": [
+                {
+                    "id": "accept",
+                    "label": "I will help.",
+                    "next": "accept-node"
+                },
+                {
+                    "id": "decline",
+                    "label": "Not right now.",
+                    "next": "decline-node"
+                }
+            ]
+        }
+    ]
+}
+```
 
 ### Default style primitives (`src/styles/defaults.css`)
 
@@ -383,6 +607,7 @@ import {
 function InputModule({ onChanged }: { onChanged?: () => void }) {
     const actions = createPlayerInputActions({
         onChanged,
+        interactBehavior: "dodge", // optional: "attack" (default) | "dodge"
         onInteract: () => {
             // custom interact behavior
         },
@@ -398,6 +623,7 @@ function InputModule({ onChanged }: { onChanged?: () => void }) {
 ```
 
 Tip: treat `actions` as your semantic gameplay contract (`north/south/east/west/interact`) and keep device bindings (`WASD`, arrows, on-screen buttons) thin.
+Use `interactBehavior: "dodge"` when you want quick player dodge-state validation without introducing a new action key.
 
 #### Gamepad mapping helper (init-time remap)
 
@@ -441,6 +667,37 @@ function InputWithGamepad({ onChanged }: { onChanged?: () => void }) {
 ```
 
 Use this API when you want remapping to be easy for users at app init time (e.g., from persisted settings or per-platform defaults).
+
+#### Input profile presets + persistence helper
+
+Use `createInputProfileBindings` (or `useInputProfileBindings`) when you want one profile object to drive keyboard + gamepad + pointer options together.
+
+```tsx
+import {
+    createPlayerInputActions,
+    createInputProfileBindings,
+    loadInputProfilePreset,
+    saveInputProfilePreset,
+    useActionKeyBindings,
+    useGamepadInput,
+} from "@/components/screenController";
+
+const savedProfile = loadInputProfilePreset();
+
+const bindings = createInputProfileBindings({
+    profile: savedProfile ?? "default",
+});
+
+const actions = createPlayerInputActions();
+
+useActionKeyBindings(actions, bindings.keyBindings);
+useGamepadInput(actions, bindings.gamepad);
+
+saveInputProfilePreset({
+    ...bindings.profile,
+    deadzone: 0.26,
+});
+```
 
 #### Pointer click/tap tracking helper
 
@@ -1075,6 +1332,70 @@ import { TopDownHUDPreset } from "@/components/hudAnchor";
 />;
 ```
 
+### SurvivalHUDPreset starter
+
+Use SurvivalHUDPreset from @/components/hudAnchor for a ready-made survival HUD with hunger + temperature status slots and a craft action.
+
+#### Default usage
+
+```tsx
+import { SurvivalHUDPreset } from "@/components/hudAnchor";
+
+<SurvivalHUDPreset
+    healthValue="90/100"
+    minimapValue="Camp 01"
+    hungerValue="74%"
+    temperatureValue="Warm"
+/>;
+```
+
+#### With craft cooldown
+
+```tsx
+import { SurvivalHUDPreset } from "@/components/hudAnchor";
+
+<SurvivalHUDPreset
+    craftLabel="Craft"
+    craftCooldownRemainingMs={850}
+    craftCooldownTotalMs={1100}
+    onCraft={() => {
+        // trigger crafting action
+    }}
+/>;
+```
+
+### BossEncounterHUDPreset starter
+
+Use BossEncounterHUDPreset from @/components/hudAnchor for a ready-made boss encounter HUD with boss metadata and a special action cooldown.
+
+#### Default usage
+
+```tsx
+import { BossEncounterHUDPreset } from "@/components/hudAnchor";
+
+<BossEncounterHUDPreset
+    healthValue="66/100"
+    minimapValue="Arena"
+    bossNameValue="Warden"
+    bossPhaseValue="Phase 1"
+/>;
+```
+
+#### With special action cooldown
+
+```tsx
+import { BossEncounterHUDPreset } from "@/components/hudAnchor";
+
+<BossEncounterHUDPreset
+    specialLabel="Special"
+    specialCooldownRemainingMs={700}
+    specialCooldownTotalMs={1200}
+    onSpecial={() => {
+        // trigger special action
+    }}
+/>;
+```
+
 ### AbilityBar prefab
 
 Use `AbilityBar` from `@/components/hudAnchor` for a compact action row that preserves `ActionButton` cooldown and disabled behavior.
@@ -1317,6 +1638,36 @@ Audio control helpers:
 - `audioBus.setChannelMuted(channel, boolean)`
 - `audioBus.setMasterVolume(0..1)`
 
+### Game state flow controller
+
+Use `GameStateFlowController` when you want canonical runtime states with guarded transitions and transition lifecycle hooks.
+
+```ts
+import { GameStateFlowController } from "@/services/gameStateFlow";
+
+const flow = new GameStateFlowController("boot");
+
+flow.transition("menu", { reason: "boot-complete" });
+flow.transition("play", { reason: "new-game" });
+
+const offEnterPause = flow.onEnter("pause", (event) => {
+    // event.from === "play"
+});
+
+const offAny = flow.subscribe((event) => {
+    if (event.type === "blocked") {
+        // invalid transition attempt
+    }
+});
+
+flow.transition("pause", { reason: "pause-key" });
+
+offEnterPause();
+offAny();
+```
+
+Singleton runtime helper is also available as `gameStateFlow`.
+
 ### Global app-level world/camera config
 
 Default app wiring uses `src/config/gameViewConfig.ts` so both modes share one camera/world definition.
@@ -1440,12 +1791,384 @@ return mode === "side-scroller" ? (
 - `?mode=side-scroller`
 - `?mode=top-down`
 
+### Timer signal helper (`once` / `interval` / `cooldown`)
+
+Use `createTimerSignals` to run deterministic gameplay timers that emit typed payloads through the signal bus.
+
+```tsx
+import { createTimerSignals } from "@/services/timerSignals";
+import { signalBus } from "@/services/signalBus";
+
+const timers = createTimerSignals();
+
+signalBus.on("timer:spawn", (payload) => {
+    // payload.phase: "started" | "tick" | "cancelled"
+});
+
+timers.once({
+    id: "spawn-wave-1",
+    delayMs: 1500,
+    signal: "timer:spawn",
+    data: { wave: 1 },
+});
+```
+
+```tsx
+const objectiveTick = timers.interval({
+    id: "objective-tick",
+    intervalMs: 1000,
+    signal: "timer:objective",
+    data: { objectiveId: "harvest" },
+});
+
+// pause/resume for overlays or menus
+objectiveTick.pause();
+objectiveTick.resume();
+```
+
+```tsx
+const dashCooldown = timers.cooldown({
+    id: "dash",
+    cooldownMs: 850,
+    signal: "timer:dash",
+});
+
+const canDash = dashCooldown.trigger({ source: "input" });
+// `false` means blocked and an optional `phase: "blocked"` event is emitted.
+```
+
+### Growth/tick simulation (`seed -> sprout -> mature`)
+
+Use `createGrowthTickSimulation` for deterministic crop/resource progression with pause/resume controls and stage transition signals.
+
+```tsx
+import {
+    createGrowthTickSimulation,
+    GROWTH_STAGE_TRANSITION_SIGNAL,
+} from "@/logic/simulation";
+import { signalBus } from "@/services/signalBus";
+
+const growth = createGrowthTickSimulation({ initialNowMs: 0 });
+
+growth.addNode({
+    id: "crop:carrot:1",
+    seed: 42,
+    profile: {
+        durations: {
+            seedToSproutMs: 4000,
+            sproutToMatureMs: 7000,
+        },
+        jitterRatio: 0.15,
+    },
+});
+
+const offGrowth = signalBus.on(GROWTH_STAGE_TRANSITION_SIGNAL, (event) => {
+    // event.from / event.to / event.atMs
+});
+
+growth.tick(1000);
+growth.pause();
+growth.resume();
+growth.tick(3000);
+
+offGrowth();
+```
+
+### Environmental forces (`wind` / `current` zones)
+
+Use force zones to apply directional velocity modifiers inside bounded world areas. Optional `dragScaleByType` lets you increase or reduce horizontal resistance by entity type.
+
+```tsx
+import { dataBus } from "@/services/DataBus";
+
+dataBus.setEnvironmentalForceZone({
+    id: "river-current",
+    bounds: { x: 320, y: 120, width: 280, height: 96 },
+    forcePxPerSec: { x: 140, y: 0 },
+    dragScaleByType: {
+        player: 1.25,
+        enemy: 0.9,
+    },
+});
+
+// inside your simulation loop
+dataBus.stepPhysics(16);
+
+const zones = dataBus.getEnvironmentalForceZoneProfiles();
+dataBus.removeEnvironmentalForceZone("river-current");
+dataBus.clearEnvironmentalForceZones();
+```
+
+### Status effect modifiers (`slow` / `haste` / `burn` / `regen`)
+
+Use status helpers to apply typed effects with deterministic duration + tick behavior. Movement speed scaling composes directly with `DataBus` physics updates.
+
+```tsx
+import {
+    STATUS_EFFECT_EXPIRED_SIGNAL,
+    STATUS_EFFECT_TICK_SIGNAL,
+    type StatusEffectTickEvent,
+} from "@/logic/simulation";
+import { dataBus } from "@/services/DataBus";
+import { signalBus } from "@/services/signalBus";
+
+const player = dataBus.getPlayer();
+
+dataBus.applyEntitySlow(player.id, {
+    durationMs: 1200,
+    magnitude: 0.25,
+});
+
+dataBus.applyEntityBurn(player.id, {
+    durationMs: 3000,
+    magnitude: 2,
+    tickIntervalMs: 1000,
+});
+
+const offTick = signalBus.on<StatusEffectTickEvent>(
+    STATUS_EFFECT_TICK_SIGNAL,
+    (event) => {
+        // burn/regen periodic tick payload
+    },
+);
+
+const offExpired = signalBus.on(STATUS_EFFECT_EXPIRED_SIGNAL, (event) => {
+    // effect expiry payload
+});
+
+dataBus.stepPhysics(16);
+const scale = dataBus.getEntityMovementSpeedScale(player.id);
+const active = dataBus.getEntityStatusEffects(player.id);
+
+offTick();
+offExpired();
+```
+
+### Sprite animation atlas + clip helper
+
+Use `createSpriteAnimationClips` to define named animation clips from raw atlas metadata with built-in validation for duplicate names and out-of-bounds frame coordinates.
+
+```tsx
+import {
+    clipsToSpriteAnimations,
+    createSpriteAnimationClips,
+    sampleSpriteClipFrame,
+} from "@/logic/entity/spriteAnimationAtlas";
+
+const rawAtlas = {
+    image: "/spriteSheet.png",
+    tileWidth: 49,
+    tileHeight: 22,
+};
+
+const clips = createSpriteAnimationClips({
+    spriteSheet: rawAtlas.image,
+    tileWidth: rawAtlas.tileWidth,
+    tileHeight: rawAtlas.tileHeight,
+    defaultFps: 10,
+    defaultLoop: "loop",
+    clips: [
+        {
+            name: "idle",
+            frames: [
+                [7, 19],
+                [8, 19],
+            ],
+        },
+        {
+            name: "run",
+            range: {
+                from: [0, 19],
+                to: [5, 19],
+            },
+            fps: 14,
+            loop: "ping-pong",
+        },
+    ],
+});
+
+const animations = clipsToSpriteAnimations(clips);
+```
+
+```tsx
+// Sample the current frame for non-standard loop behavior (`once` / `ping-pong`)
+const runClip = clips.find((clip) => clip.name === "run");
+
+if (runClip) {
+    const elapsedMs = performance.now() - animationStartedAtMs;
+    const sampled = sampleSpriteClipFrame(runClip, elapsedMs);
+    const frame = sampled.frame;
+    // frame -> [tileX, tileY]
+}
+```
+
+### Animation state machine utility
+
+Use `createAnimationStateMachine` as a low-level primitive for entity animation/behavior profiles with guarded transitions, lifecycle hooks, and mixed signal/time triggers.
+
+```tsx
+import { createAnimationStateMachine } from "@/logic/entity/animationStateMachine";
+
+const machine = createAnimationStateMachine<
+    "idle" | "run" | "jump" | "attack",
+    { hasMoveIntent: boolean; isGrounded: boolean }
+>({
+    initialState: "idle",
+    transitions: [
+        { from: "*", to: "attack", signal: "attack", priority: 20 },
+        {
+            from: ["idle", "run"],
+            to: "jump",
+            signal: "jump",
+            priority: 15,
+        },
+        {
+            from: "jump",
+            to: "run",
+            guard: ({ context }) => context.isGrounded && context.hasMoveIntent,
+        },
+        {
+            from: "jump",
+            to: "idle",
+            guard: ({ context }) =>
+                context.isGrounded && !context.hasMoveIntent,
+        },
+        {
+            from: "idle",
+            to: "run",
+            guard: ({ context }) => context.hasMoveIntent,
+        },
+        {
+            from: "run",
+            to: "idle",
+            guard: ({ context }) => !context.hasMoveIntent,
+        },
+    ],
+});
+```
+
+```tsx
+// Lightweight runtime integration pattern
+// 1) signal-based transition (input/events)
+machine.send("attack", nowMs, {
+    hasMoveIntent,
+    isGrounded,
+});
+
+// 2) time/guard-based transition (per-frame update)
+const state = machine.update(nowMs, {
+    hasMoveIntent,
+    isGrounded,
+});
+
+entity.currentAnimation = state;
+```
+
+```tsx
+import { createBasicEntityAnimationProfileStateMachine } from "@/logic/entity/entityStateMachine";
+
+const profileMachine = createBasicEntityAnimationProfileStateMachine();
+```
+
+### Sprite pseudo-shader effects (`tint` / `flash` / `outline` / `desaturate`)
+
+Attach optional `spriteEffects` to render items/entities to apply pseudo-shader-like post-process passes in the default Canvas2D sprite flow.
+
+```tsx
+const enemy = {
+    id: "enemy-1",
+    spriteImageSheet: "/spriteSheet.png",
+    spriteSize: 16,
+    spriteSheetTileWidth: 49,
+    spriteSheetTileHeight: 22,
+    characterSpriteTiles: [[3, 19]],
+    scaler: 4,
+    position: { x: 120, y: 90 },
+    spriteEffects: [
+        { kind: "tint", color: "#7c3aed", alpha: 0.28 },
+        { kind: "outline", color: "#111827", width: 2, alpha: 0.9 },
+    ],
+};
+```
+
+```tsx
+// Flash + desaturate damage style (time-varying flash pulse)
+entity.spriteEffects = [
+    { kind: "flash", color: "#ffffff", strength: 0.75, pulseHz: 10 },
+    { kind: "desaturate", amount: 0.35 },
+];
+```
+
+```tsx
+import {
+    applySpritePseudoShaderEffects,
+    computeFlashAlpha,
+} from "@/components/effects";
+
+// utility exports are available for custom runtime/plugin usage as needed
+const alpha = computeFlashAlpha({ nowMs: performance.now(), pulseHz: 8 });
+```
+
+### Screen-wide canvas effects (`tint` / `monochrome` / `scanline` / `wavy` / `vhs`)
+
+Register stackable full-screen effects through the screen pseudo-shader signal helpers.
+
+```tsx
+import {
+    setScreenPseudoShaderEffects,
+    pushScreenPseudoShaderEffect,
+    removeScreenPseudoShaderEffect,
+    clearScreenPseudoShaderEffects,
+} from "@/components/effects";
+
+setScreenPseudoShaderEffects([
+    { id: "scene-tint", kind: "tint", color: "#38bdf8", alpha: 0.12 },
+    { id: "scene-scan", kind: "scanline", lineAlpha: 0.08, lineSpacing: 3 },
+]);
+
+pushScreenPseudoShaderEffect({
+    id: "scene-wave",
+    kind: "wavy",
+    amplitudePx: 1.5,
+    frequency: 2,
+    speedHz: 0.6,
+});
+
+removeScreenPseudoShaderEffect("scene-wave");
+clearScreenPseudoShaderEffects();
+```
+
+```tsx
+import {
+    applyScreenPseudoShaderPreset,
+    createScreenPseudoShaderPreset,
+} from "@/components/effects";
+
+// deterministic preset for cutscene styling
+applyScreenPseudoShaderPreset("cutscene-warm");
+
+// inspect preset payload if needed for custom tooling
+const presetEffects = createScreenPseudoShaderPreset("vhs-noir");
+```
+
 ### Dev landing controls (default app)
 
 In development mode, the default landing page includes capsule toggles for debugging/help:
 
 - `Show/Hide debug outlines` toggles frame/collider debug visuals.
 - `Show/Hide dev controls` opens a compact in-page controls/hotkeys tab.
+- Canvas meta pills include live `Player State` from `DataBus` behavior/animation state resolution.
+- Canvas meta pills include live `Player Trail` (last 3 transitions) for transition-order debugging.
+- Canvas meta pills include live `Interact Mode` (`attack` / `dodge`) from the default app dev toggle state.
+- Canvas meta pills include live `Boss Target` (`id`, `index/total`, and active phase) from selected boss-target state.
+- Canvas meta pills include live `Perf` (`fps`, smoothed `frameMs`) and `Entities` (`total`, `enemy`) counters for quick runtime checks.
+- Canvas meta shows `NPC States` count and an `NPC Behaviors` line when enemies are present (truncated `enemyId:state` plus last 2 transitions with timestamps rounded to nearest `10ms`, compact `·` trail separator, full values on hover tooltip).
+- Dev controls include an `Interact` mode toggle (`attack` / `dodge`) that forwards into default control action mapping.
+- Dev controls include `Boss Phase 1` / `Boss Phase 2` triggers for the selected boss target, plus `Cycle Boss Target`.
+- Boss-target cycle dev status uses compact labels (`Boss tgt [next|prev] ...`) and `(wrap)` when selection wraps around.
+- Boss phase trigger status uses compact labels (`Boss <id> -> p1|p2`).
+- Dev controls include quick trigger buttons for `Player Attack`, `Player Dodge`, and `Player Block` taxonomy states.
+- Dev controls status lines include `Perf` and `Entities` readouts for quick frame/runtime triage without opening extra tooling.
 
 ### Dev + Input Cheat Sheet
 
@@ -1645,6 +2368,9 @@ export default function App() {
 - `setWorldBoundsEnabled(true|false)` — toggles world boundary entities
 - `setPlayerCanPassWorldBounds(true|false)` — toggles player vs world collisions
 - `setPlayerMoveInput(inputX)` — smooth horizontal input (`-1` to `1`)
+- `pauseWorld(reason?)` / `resumeWorld(reason?)` — pause/resume simulation by reason
+- `isWorldPaused()` / `getWorldPauseReasons()` — pause state inspection helpers
+- `onPause(handler)` / `onResume(handler)` — subscribe to pause lifecycle edge events
 - `setPhysicsConfig(config)` — configure gravity/terminal velocity/frame clamp
 - `enableEntityPhysics(entityId, bodyOverrides?)` — opt an entity into gravity/physics
 - `disableEntityPhysics(entityId)` — opt an entity out
@@ -1659,6 +2385,18 @@ export default function App() {
 - `jumpEntity(entityId, jumpVelocity?)` — grounded-gated jump helper
 - `jumpPlayer(jumpVelocity?)` — one-line player jump helper
 - `requestPlayerJump()` — buffered jump request (consumed in `stepPhysics`)
+- `markPlayerDamaged(durationMs?)` — apply timed `damaged` interrupt state
+- `markPlayerAttacking(durationMs?)` — apply timed `attacking` state
+- `markPlayerStunned(durationMs?)` — apply timed `stunned` interrupt state
+- `markPlayerDodging(durationMs?)` — apply timed `dodge` state
+- `markPlayerBlocking(durationMs?)` — apply timed `block` state
+- `getEntityBehaviorState(entityId)` — read shared behavior/animation state (`idle`, `moving`, etc.)
+- `getEntityBehaviorTransitions(entityId, limit?)` — read recent behavior-state transitions for debug tooling
+- `setEntityBossPhase(entityId, phase)` — assign persistent boss taxonomy state (`phase-1` / `phase-2`)
+- `setNpcArchetypeProfile(entityId, profile)` — configure NPC archetype behavior (`idle`, `idle-roam`, waypoint `patrol`, `chase`, with flee override)
+- `getNpcArchetypeProfile(entityId)` — inspect resolved NPC archetype profile
+- `clearNpcArchetypeProfile(entityId)` / `clearNpcArchetypeProfiles()` — clear one/all NPC profiles
+- In dev mode, default app HUD surfaces per-enemy behavior via `dataBus.getEntityBehaviorState(...)`.
 - `stepPhysics(deltaMs)` — advance physics and return whether positions changed
 
 ### Usage pattern
@@ -1713,7 +2451,64 @@ dataBus.setPlayerMoveInput(1); // move right
 
 // buffered jump input for coyote-time flows
 dataBus.requestPlayerJump();
+
+// timed behavior interrupt + shared animation state
+dataBus.markPlayerAttacking(180);
+dataBus.markPlayerDamaged(240);
+dataBus.markPlayerStunned(280);
+const playerState = dataBus.getEntityBehaviorState(dataBus.getState().playerId);
+const trail = dataBus.getEntityBehaviorTransitions(
+    dataBus.getState().playerId,
+    3,
+);
+
+// npc archetype profile (enemy)
+dataBus.setNpcArchetypeProfile("enemy-1", {
+    mode: "patrol",
+    waypoints: [
+        { x: 180, y: 120 },
+        { x: 240, y: 120 },
+        { x: 240, y: 180 },
+    ],
+    waypointTolerancePx: 6,
+    patrolSpeedPxPerSec: 120,
+    fleeDistancePx: 40,
+    fleeSpeedPxPerSec: 160,
+});
+
+dataBus.setNpcArchetypeProfile("enemy-chaser", {
+    mode: "chase",
+    chaseDistancePx: 180,
+    chaseStopDistancePx: 10,
+    chaseSpeedPxPerSec: 150,
+    fleeDistancePx: 36,
+    fleeSpeedPxPerSec: 170,
+});
+
+// global simulation pause controller
+dataBus.pauseWorld("cutscene");
+const paused = dataBus.isWorldPaused();
+dataBus.resumeWorld("cutscene");
+
+const offPause = dataBus.onPause((event) => {
+    // event.reason, event.reasons, event.paused === true
+});
+
+const offResume = dataBus.onResume((event) => {
+    // event.reason, event.reasons, event.paused === false
+});
+
+offPause();
+offResume();
 ```
+
+Input note:
+
+- The default `interact` action path now triggers `dataBus.markPlayerAttacking()` as part of the behavior+animation state-machine foundation.
+
+NPC note:
+
+- Enemy entities with an archetype profile resolve behavior states to `idle`, `patrol`, `chase`, or `flee` (with timed states like `damaged` still able to interrupt).
 
 ### Reusable physics module
 
@@ -1734,6 +2529,9 @@ Import from `src/logic/worldgen` when you want deterministic tile scaffolding ba
 - `spawnAnchorToWorld(anchor, options)`
 - `spawnAnchorsToWorld(anchors, options)`
 - `createWorldgenScenario(options)`
+- `createBiomePathComposition(options)`
+- `createWorldgenScenePresetOptions(presetId, overrides?)`
+- `createWorldgenScenePreset(presetId, overrides?)`
 - `createDataBusSpawnPayloads(options)`
 - `createDataBusSpawnPayloadRecord(options)`
 - `createWorldgenEntities(options)`
@@ -2270,6 +3068,54 @@ playScreenTransition({
 });
 ```
 
+Biome/path composition overlay for sprite-tile workflows:
+
+```ts
+import {
+    createBiomePathComposition,
+    generateSeededRoomMap,
+} from "@/logic/worldgen";
+
+const roomMap = generateSeededRoomMap({
+    width: 40,
+    height: 24,
+    seed: "biome-run",
+    roomCount: 8,
+});
+
+const composed = createBiomePathComposition({
+    tiles: roomMap.tiles,
+    seed: "biome-run",
+    pathStart: { x: 6, y: 6 },
+    pathEnd: { x: 30, y: 14 },
+    pathTileValue: 9,
+});
+
+console.log(composed.biomeMap[6][6]);
+console.log(composed.spriteTiles[6][6]);
+```
+
+Preset scenario builders for generated runs:
+
+```ts
+import {
+    createWorldgenScenePreset,
+    createWorldgenScenePresetOptions,
+} from "@/logic/worldgen";
+
+const options = createWorldgenScenePresetOptions("compact-run", {
+    map: { seed: "compact-run:custom" },
+    spawns: { enemyCount: 6 },
+});
+
+const scenario = createWorldgenScenePreset("compact-run", {
+    map: { seed: "compact-run:custom" },
+    spawns: { enemyCount: 6 },
+});
+
+console.log(options.map.width, scenario.map.rooms.length);
+```
+
 ### Trigger with black preset
 
 ```ts
@@ -2658,6 +3504,7 @@ Quick save APIs are available in `src/services/save/bus.ts`:
 - `quickSave()` stores current state in localStorage key `ursa:quickSave:v1`.
 - `quickLoad()` restores that snapshot when present/valid.
 - `clearQuickSave()` removes the stored snapshot.
+- `sanitizePersistedState(scope)` removes persisted local state in development (`save-only`, `input-profiles`, or `all`).
 
 Default app behavior in development:
 
@@ -2673,6 +3520,20 @@ Dev shortcuts (when dev mode is enabled):
 - `Alt + Shift + M` — Toggle Audio Mute
 - `Alt + Shift + N` — Toggle Music Mute
 - `Alt + Shift + B` — Toggle SFX Mute
+- `Alt + Shift + P` — Toggle World Pause (Dev Reason)
+- `Alt + Shift + D` — Toggle Interact Mode (Attack/Dodge)
+- `Alt + Shift + A` — Trigger Player Attack State
+- `Alt + Shift + Z` — Trigger Player Dodge State
+- `Alt + Shift + X` — Trigger Player Block State
+- `Alt + Shift + C` — Trigger Player Damaged State
+- `Alt + Shift + V` — Trigger Player Stunned State
+- `Alt + Shift + G` — Trigger Boss Phase-1 on Selected Enemy
+- `Alt + Shift + H` — Trigger Boss Phase-2 on Selected Enemy
+- `Alt + Shift + J` — Cycle Boss Target Enemy
+- `Alt + Shift + K` — Cycle Boss Target Enemy (Reverse)
+- `Alt + Shift + Q` — Sanitize Quick-Save State
+- `Alt + Shift + Y` — Sanitize Input Profiles
+- `Alt + Shift + R` — Sanitize Local Ursa State
 
 Save file APIs live in `src/services/save/file.ts` and use the versioned `SaveGameV1` schema from `src/services/save/schema.ts`.
 
@@ -2745,15 +3606,29 @@ const saveErrorCopy: Record<SaveFileErrorCode, string> = {
 
 ### Save shortcut cheat sheet
 
-| Action      | Shortcut          |
-| ----------- | ----------------- |
-| Quick Save  | `Alt + Shift + S` |
-| Quick Load  | `Alt + Shift + L` |
-| Export Save | `Alt + Shift + E` |
-| Import Save | `Alt + Shift + I` |
-| Audio Mute  | `Alt + Shift + M` |
-| Music Mute  | `Alt + Shift + N` |
-| SFX Mute    | `Alt + Shift + B` |
+| Action                    | Shortcut          |
+| ------------------------- | ----------------- |
+| Quick Save                | `Alt + Shift + S` |
+| Quick Load                | `Alt + Shift + L` |
+| Export Save               | `Alt + Shift + E` |
+| Import Save               | `Alt + Shift + I` |
+| Audio Mute                | `Alt + Shift + M` |
+| Music Mute                | `Alt + Shift + N` |
+| SFX Mute                  | `Alt + Shift + B` |
+| Toggle World Pause        | `Alt + Shift + P` |
+| Toggle Interact Mode      | `Alt + Shift + D` |
+| Trigger Player Attack     | `Alt + Shift + A` |
+| Trigger Player Dodge      | `Alt + Shift + Z` |
+| Trigger Player Block      | `Alt + Shift + X` |
+| Trigger Player Damaged    | `Alt + Shift + C` |
+| Trigger Player Stunned    | `Alt + Shift + V` |
+| Trigger Boss Phase-1      | `Alt + Shift + G` |
+| Trigger Boss Phase-2      | `Alt + Shift + H` |
+| Cycle Boss Target         | `Alt + Shift + J` |
+| Cycle Boss Target (Rev)   | `Alt + Shift + K` |
+| Sanitize Save State       | `Alt + Shift + Q` |
+| Sanitize Input Profiles   | `Alt + Shift + Y` |
+| Sanitize Local Ursa State | `Alt + Shift + R` |
 
 The import/export format is intentionally tied to `version` in schema so future migrations can be added without breaking existing save files.
 

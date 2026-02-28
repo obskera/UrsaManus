@@ -33,6 +33,22 @@ export {
     type WorldgenScenarioResult,
 } from "./scenario";
 export {
+    createBiomePathComposition,
+    type CreateBiomePathCompositionOptions,
+    type WorldgenBiomeCell,
+    type WorldgenBiomePalette,
+    type WorldgenBiomePaletteRule,
+    type WorldgenBiomePathCompositionResult,
+    type WorldgenBiomeType,
+    type WorldgenPathNode,
+} from "./biomePathComposition";
+export {
+    createWorldgenScenePreset,
+    createWorldgenScenePresetOptions,
+    listWorldgenScenePresets,
+    type WorldgenScenePresetId,
+} from "./presets";
+export {
     createDataBusSpawnPayloadRecord,
     createDataBusSpawnPayloads,
     type CreateDataBusSpawnPayloadOptions,

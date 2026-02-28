@@ -4,17 +4,20 @@ import ScreenControlGroup from "./ScreenControlGroup";
 import ScreenController from "./screenController";
 import TopDownKeyControl from "./topDownKeyControl";
 import TopDownOnScreenControl from "./topDownOnScreenControl";
+import type { CreatePlayerInputActionsOptions } from "./inputActions";
 
 export type TopDownControlsProps = {
     onMove?: () => void;
     allowDiagonal?: boolean;
     speedPxPerSec?: number;
+    interactBehavior?: CreatePlayerInputActionsOptions["interactBehavior"];
 };
 
 const TopDownControls = ({
     onMove,
     allowDiagonal = true,
     speedPxPerSec = 220,
+    interactBehavior,
 }: TopDownControlsProps) => {
     return createElement(
         ScreenController,
@@ -39,6 +42,7 @@ const TopDownControls = ({
             createElement(CompassDirectionControl, {
                 mode: "player-actions",
                 onMove,
+                interactBehavior,
             }),
         ),
     );

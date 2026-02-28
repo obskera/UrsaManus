@@ -121,4 +121,333 @@ describe("screen transition canvas pass", () => {
 
         controller.dispose();
     });
+
+    it("no-ops draw when no active transition exists", () => {
+        const fillRect = vi.fn();
+        const ctx = createMockCtx(fillRect);
+        const controller = createScreenTransitionCanvasPass({
+            width: 48,
+            height: 24,
+        });
+
+        controller.pass.draw({
+            ctx,
+            width: 48,
+            height: 24,
+            deltaMs: 16,
+        });
+
+        expect(fillRect).not.toHaveBeenCalled();
+        controller.dispose();
+    });
+
+    it("renders directional push and iris variants from different origins", () => {
+        const fillRect = vi.fn();
+        const ctx = createMockCtx(fillRect);
+        const controller = createScreenTransitionCanvasPass({
+            width: 60,
+            height: 40,
+        });
+
+        playScreenTransition({
+            color: "#222",
+            from: "top-right",
+            variant: "directional-push",
+            pushFrom: "right",
+            durationMs: 120,
+            stepMs: 6,
+            boxSize: 10,
+        });
+
+        controller.pass.update(60);
+        controller.pass.draw({
+            ctx,
+            width: 60,
+            height: 40,
+            deltaMs: 60,
+        });
+
+        playScreenTransition({
+            color: "#000",
+            from: "bottom-left",
+            variant: "iris",
+            irisOrigin: "bottom-right",
+            durationMs: 120,
+            stepMs: 8,
+            boxSize: 10,
+        });
+
+        controller.pass.update(60);
+        controller.pass.draw({
+            ctx,
+            width: 60,
+            height: 40,
+            deltaMs: 60,
+        });
+
+        expect(fillRect).toHaveBeenCalled();
+        controller.dispose();
+    });
+
+    it("renders venetian vertical wave from opposite corner", () => {
+        const fillRect = vi.fn();
+        const ctx = createMockCtx(fillRect);
+        const controller = createScreenTransitionCanvasPass({
+            width: 40,
+            height: 40,
+        });
+
+        playScreenTransition({
+            color: "#333",
+            from: "bottom-right",
+            variant: "venetian-blinds",
+            venetianOrientation: "vertical",
+            durationMs: 140,
+            stepMs: 12,
+            boxSize: 10,
+        });
+
+        controller.pass.update(70);
+        controller.pass.draw({
+            ctx,
+            width: 40,
+            height: 40,
+            deltaMs: 70,
+        });
+
+        expect(fillRect).toHaveBeenCalled();
+        controller.dispose();
+    });
+
+    it("covers diagonal corner and reveal-phase draw branches", () => {
+        const fillRect = vi.fn();
+        const ctx = createMockCtx(fillRect);
+        const controller = createScreenTransitionCanvasPass({
+            width: 30,
+            height: 30,
+        });
+
+        playScreenTransition({
+            color: "#444",
+            from: "top-right",
+            variant: "diagonal",
+            durationMs: 100,
+            stepMs: 10,
+            boxSize: 10,
+        });
+        controller.pass.update(50);
+        controller.pass.draw({
+            ctx,
+            width: 30,
+            height: 30,
+            deltaMs: 50,
+        });
+
+        controller.pass.update(50);
+        controller.pass.update(40);
+        controller.pass.draw({
+            ctx,
+            width: 30,
+            height: 30,
+            deltaMs: 40,
+        });
+
+        playScreenTransition({
+            color: "#444",
+            from: "bottom-left",
+            variant: "diagonal",
+            durationMs: 80,
+            stepMs: 8,
+            boxSize: 10,
+        });
+        controller.pass.update(30);
+        controller.pass.draw({
+            ctx,
+            width: 30,
+            height: 30,
+            deltaMs: 30,
+        });
+
+        expect(fillRect).toHaveBeenCalled();
+        controller.dispose();
+    });
+
+    it("covers directional push top/bottom branches", () => {
+        const fillRect = vi.fn();
+        const ctx = createMockCtx(fillRect);
+        const controller = createScreenTransitionCanvasPass({
+            width: 48,
+            height: 24,
+        });
+
+        playScreenTransition({
+            color: "#111",
+            from: "top-left",
+            variant: "directional-push",
+            pushFrom: "top",
+            durationMs: 120,
+            boxSize: 8,
+        });
+        controller.pass.update(45);
+        controller.pass.draw({
+            ctx,
+            width: 48,
+            height: 24,
+            deltaMs: 45,
+        });
+
+        playScreenTransition({
+            color: "#111",
+            from: "bottom-right",
+            variant: "directional-push",
+            pushFrom: "bottom",
+            durationMs: 120,
+            boxSize: 8,
+        });
+        controller.pass.update(45);
+        controller.pass.draw({
+            ctx,
+            width: 48,
+            height: 24,
+            deltaMs: 45,
+        });
+
+        expect(fillRect).toHaveBeenCalled();
+        controller.dispose();
+    });
+
+    it("covers remaining corner/orientation and reveal-threshold branches", () => {
+        const fillRect = vi.fn();
+        const ctx = createMockCtx(fillRect);
+        const controller = createScreenTransitionCanvasPass({
+            width: 40,
+            height: 40,
+        });
+
+        playScreenTransition({
+            color: "#111",
+            from: "top-right",
+            variant: "venetian-blinds",
+            venetianOrientation: "horizontal",
+            durationMs: 120,
+            stepMs: 10,
+            boxSize: 10,
+        });
+        controller.pass.update(50);
+        controller.pass.draw({ ctx, width: 40, height: 40, deltaMs: 50 });
+
+        playScreenTransition({
+            color: "#111",
+            from: "top-left",
+            variant: "venetian-blinds",
+            venetianOrientation: "vertical",
+            durationMs: 120,
+            stepMs: 10,
+            boxSize: 10,
+        });
+        controller.pass.update(50);
+        controller.pass.draw({ ctx, width: 40, height: 40, deltaMs: 50 });
+
+        playScreenTransition({
+            color: "#111",
+            from: "top-left",
+            variant: "diagonal",
+            durationMs: 120,
+            stepMs: 8,
+            boxSize: 10,
+        });
+        controller.pass.update(50);
+        controller.pass.draw({ ctx, width: 40, height: 40, deltaMs: 50 });
+
+        playScreenTransition({
+            color: "#111",
+            from: "bottom-right",
+            variant: "diagonal",
+            durationMs: 120,
+            stepMs: 8,
+            boxSize: 10,
+        });
+        controller.pass.update(50);
+        controller.pass.draw({ ctx, width: 40, height: 40, deltaMs: 50 });
+
+        playScreenTransition({
+            color: "#111",
+            from: "top-left",
+            variant: "directional-push",
+            pushFrom: "left",
+            durationMs: 100,
+            boxSize: 10,
+        });
+        controller.pass.update(100);
+        controller.pass.update(40);
+        controller.pass.draw({ ctx, width: 40, height: 40, deltaMs: 40 });
+
+        playScreenTransition({
+            color: "#111",
+            from: "bottom-left",
+            variant: "iris",
+            irisOrigin: "top-right",
+            durationMs: 100,
+            boxSize: 10,
+        });
+        controller.pass.update(100);
+        controller.pass.update(35);
+        controller.pass.draw({ ctx, width: 40, height: 40, deltaMs: 35 });
+
+        playScreenTransition({
+            color: "#111",
+            from: "bottom-left",
+            variant: "iris",
+            irisOrigin: "bottom-left",
+            durationMs: 100,
+            boxSize: 10,
+        });
+        controller.pass.update(45);
+        controller.pass.draw({ ctx, width: 40, height: 40, deltaMs: 45 });
+
+        playScreenTransition({
+            color: "#111",
+            from: "top-left",
+            variant: "mosaic-dissolve",
+            mosaicSeed: 3,
+            durationMs: 100,
+            boxSize: 10,
+        });
+        controller.pass.update(100);
+        controller.pass.update(30);
+        controller.pass.draw({ ctx, width: 40, height: 40, deltaMs: 30 });
+
+        expect(fillRect).toHaveBeenCalled();
+        controller.dispose();
+    });
+
+    it("covers horizontal venetian bottom-corner wave path", () => {
+        const fillRect = vi.fn();
+        const ctx = createMockCtx(fillRect);
+        const controller = createScreenTransitionCanvasPass({
+            width: 30,
+            height: 30,
+        });
+
+        playScreenTransition({
+            color: "#111",
+            from: "bottom-left",
+            variant: "venetian-blinds",
+            venetianOrientation: "horizontal",
+            durationMs: 100,
+            stepMs: 10,
+            boxSize: 10,
+        });
+
+        controller.pass.update(45);
+        controller.pass.draw({
+            ctx,
+            width: 30,
+            height: 30,
+            deltaMs: 45,
+        });
+
+        expect(fillRect).toHaveBeenCalled();
+        controller.dispose();
+    });
 });

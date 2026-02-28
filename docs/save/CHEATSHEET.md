@@ -71,7 +71,4 @@ scheduler.dispose();
 
 ## Dev Shortcut Keys
 
-- `Alt + Shift + S` quick save
-- `Alt + Shift + L` quick load
-- `Alt + Shift + E` export save
-- `Alt + Shift + I` import save
+- `Alt + Shift + P` toggle world pause (dev reason)

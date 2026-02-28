@@ -2,8 +2,11 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import type { CanvasEffectsStage } from "@/components/effects/canvas";
 import {
     createParticleEmitterCanvasPass,
+    createScreenPseudoShaderCanvasPass,
     createScreenTransitionCanvasPass,
+    type SpritePseudoShaderEffect,
     type ParticleEmitterCanvasPassController,
+    type ScreenPseudoShaderCanvasPassController,
     type ScreenTransitionCanvasPassController,
 } from "@/components/effects";
 import {
@@ -22,6 +25,7 @@ export interface RenderableItem {
     scaler: number;
     position: { x: number; y: number; z?: number };
     fps?: number;
+    spriteEffects?: SpritePseudoShaderEffect[];
 
     collider?: {
         type: "rectangle";
@@ -93,6 +97,8 @@ const Render = ({
         useRef<ParticleEmitterCanvasPassController | null>(null);
     const transitionControllerRef =
         useRef<ScreenTransitionCanvasPassController | null>(null);
+    const screenPseudoShaderControllerRef =
+        useRef<ScreenPseudoShaderCanvasPassController | null>(null);
 
     useLayoutEffect(() => {
         frameStateRef.current = {
@@ -121,6 +127,7 @@ const Render = ({
     useEffect(() => {
         particleControllerRef.current?.setBounds(width, height);
         transitionControllerRef.current?.setBounds(width, height);
+        screenPseudoShaderControllerRef.current?.setBounds(width, height);
     }, [width, height]);
 
     useEffect(() => {
@@ -142,9 +149,17 @@ const Render = ({
             height: frameStateRef.current.height,
             passId: "runtime-transition",
         });
+        const screenPseudoShaderController = createScreenPseudoShaderCanvasPass(
+            {
+                width: frameStateRef.current.width,
+                height: frameStateRef.current.height,
+                passId: "runtime-screen-pseudo-shader",
+            },
+        );
 
         particleControllerRef.current = particleController;
         transitionControllerRef.current = transitionController;
+        screenPseudoShaderControllerRef.current = screenPseudoShaderController;
 
         runtime.clear();
 
@@ -254,6 +269,44 @@ const Render = ({
                 transitionController.dispose();
                 if (transitionControllerRef.current === transitionController) {
                     transitionControllerRef.current = null;
+                }
+            },
+        });
+
+        runtime.upsertPlugin({
+            id: "render-runtime-screen-pseudo-shader",
+            phase: "drawEffectsScreen",
+            priority: 0.5,
+            isActive: () => {
+                const frameState = frameStateRef.current;
+                return (
+                    frameState.includeEffects &&
+                    RENDER_V2_EFFECTS &&
+                    screenPseudoShaderController.pass.isActive()
+                );
+            },
+            update: (frame) => {
+                screenPseudoShaderController.pass.update(frame.deltaMs);
+            },
+            draw: (frame) => {
+                const frameState = frameStateRef.current;
+                screenPseudoShaderController.pass.draw({
+                    ctx: context,
+                    width: frameState.width,
+                    height: frameState.height,
+                    deltaMs: frame.deltaMs,
+                });
+            },
+            reset: () => {
+                screenPseudoShaderController.pass.reset?.();
+            },
+            dispose: () => {
+                screenPseudoShaderController.dispose();
+                if (
+                    screenPseudoShaderControllerRef.current ===
+                    screenPseudoShaderController
+                ) {
+                    screenPseudoShaderControllerRef.current = null;
                 }
             },
         });

@@ -50,11 +50,20 @@ vi.mock("@/components/screenController/onScreenArrowControl", () => ({
 }));
 
 vi.mock("@/components/screenController/compassDirectionControl", () => ({
-    default: ({ mode, onMove }: { mode?: string; onMove?: () => void }) => (
+    default: ({
+        mode,
+        onMove,
+        interactBehavior,
+    }: {
+        mode?: string;
+        onMove?: () => void;
+        interactBehavior?: string;
+    }) => (
         <div
             data-testid="compass-direction-control"
             data-mode={mode}
             data-has-on-move={Boolean(onMove)}
+            data-interact-behavior={interactBehavior}
         />
     ),
 }));
@@ -101,7 +110,9 @@ describe("screen controller presets", () => {
     it("composes SideScrollerControls with expected groups and player-action mode", () => {
         const onMove = vi.fn();
 
-        render(<SideScrollerControls onMove={onMove} />);
+        render(
+            <SideScrollerControls onMove={onMove} interactBehavior="dodge" />,
+        );
 
         expect(screen.getByTestId("screen-controller")).toHaveAttribute(
             "data-classname",
@@ -126,6 +137,10 @@ describe("screen controller presets", () => {
         expect(screen.getByTestId("compass-direction-control")).toHaveAttribute(
             "data-mode",
             "player-actions",
+        );
+        expect(screen.getByTestId("compass-direction-control")).toHaveAttribute(
+            "data-interact-behavior",
+            "dodge",
         );
     });
 
@@ -153,12 +168,16 @@ describe("screen controller presets", () => {
             "data-speed",
             "220",
         );
+        expect(
+            screen.getByTestId("compass-direction-control"),
+        ).not.toHaveAttribute("data-interact-behavior");
 
         rerender(
             <TopDownControls
                 onMove={onMove}
                 allowDiagonal={false}
                 speedPxPerSec={300}
+                interactBehavior="dodge"
             />,
         );
 
@@ -177,6 +196,10 @@ describe("screen controller presets", () => {
         expect(screen.getByTestId("topdown-on-screen-control")).toHaveAttribute(
             "data-speed",
             "300",
+        );
+        expect(screen.getByTestId("compass-direction-control")).toHaveAttribute(
+            "data-interact-behavior",
+            "dodge",
         );
     });
 });

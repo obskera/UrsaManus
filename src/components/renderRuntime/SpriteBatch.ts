@@ -1,3 +1,8 @@
+import {
+    applySpritePseudoShaderEffects,
+    type SpritePseudoShaderEffect,
+} from "@/components/effects";
+
 export type SpriteBatchItem = {
     spriteImageSheet: string;
     spriteSize: number;
@@ -7,6 +12,7 @@ export type SpriteBatchItem = {
     scaler: number;
     position: { x: number; y: number; z?: number };
     fps?: number;
+    spriteEffects?: SpritePseudoShaderEffect[];
     collider?: {
         type: "rectangle";
         size: { width: number; height: number };
@@ -199,6 +205,31 @@ export class SpriteBatch {
                 drawWidth,
                 drawHeight,
             );
+
+            if (it.spriteEffects && it.spriteEffects.length > 0) {
+                applySpritePseudoShaderEffects({
+                    ctx,
+                    nowMs,
+                    effects: it.spriteEffects,
+                    destination: {
+                        x: dx,
+                        y: dy,
+                        width: drawWidth,
+                        height: drawHeight,
+                    },
+                    drawImageArgs: {
+                        image: img,
+                        sx: tilePos.x,
+                        sy: tilePos.y,
+                        sw: it.spriteSize,
+                        sh: it.spriteSize,
+                        dx,
+                        dy,
+                        dw: drawWidth,
+                        dh: drawHeight,
+                    },
+                });
+            }
 
             if (showDebugOutlines && it.collider?.debugDraw) {
                 const scale = it.scaler;

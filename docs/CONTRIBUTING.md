@@ -84,6 +84,7 @@ Update docs whenever architecture, APIs, or workflows change:
 - `README.md` for project-level messaging and setup
 - `docs/USAGE.md` for practical usage/API patterns
 - `docs/ARCHITECTURE.md` for system flow and responsibilities
+- `docs/AI_SETUP.md` for AI-agent guidance (see roadmap sync + entity state-machine planning notes)
 
 Local planning note:
 

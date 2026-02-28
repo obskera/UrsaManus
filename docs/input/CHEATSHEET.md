@@ -119,3 +119,36 @@ Use one action map, many device adapters:
 - `CompassActionControl actions={...}` or `createInputComponentAdapters(actions)`
 
 This keeps gameplay logic centralized and device bindings declarative.
+
+## Input Profile Presets + Persistence
+
+Use profile helpers when you want one object to drive keyboard/gamepad/pointer setup and persist user preference.
+
+```ts
+import {
+    createInputProfileBindings,
+    loadInputProfilePreset,
+    saveInputProfilePreset,
+} from "@/components/screenController";
+
+const saved = loadInputProfilePreset();
+
+const bindings = createInputProfileBindings({
+    profile: saved ?? "default",
+});
+
+useActionKeyBindings(actions, bindings.keyBindings);
+useGamepadInput(actions, bindings.gamepad);
+// pointer hook: enabled = bindings.pointerEnabled
+
+saveInputProfilePreset({
+    ...bindings.profile,
+    deadzone: 0.24,
+});
+```
+
+Profiles included by default:
+
+- `default`
+- `left-handed`
+- `gamepad-first`

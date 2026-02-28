@@ -1,7 +1,12 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { dataBus } from "@/services/DataBus";
 import type { GameState } from "@/services/DataBus";
 import { CollisionLayer } from "@/logic/collision";
+import {
+    STATUS_EFFECT_TICK_SIGNAL,
+    type StatusEffectTickEvent,
+} from "@/logic/simulation";
+import { signalBus } from "@/services/signalBus";
 
 function cloneGameState(state: GameState): GameState {
     const entitiesById: GameState["entitiesById"] = {};
@@ -40,10 +45,17 @@ function cloneGameState(state: GameState): GameState {
 
 describe("DataBus physics integration", () => {
     let baseline: GameState;
+    const initialBaseline = cloneGameState(dataBus.getState());
 
     beforeEach(() => {
-        baseline = cloneGameState(dataBus.getState());
+        baseline = cloneGameState(initialBaseline);
         dataBus.setState(() => cloneGameState(baseline));
+        dataBus.clearWorldPause();
+        dataBus.clearEntityTimedStates();
+        dataBus.clearEntityStatusEffects();
+        dataBus.clearEntityBehaviorTransitions();
+        dataBus.clearNpcArchetypeProfiles();
+        dataBus.clearEnvironmentalForceZones();
         dataBus.setWorldBoundsEnabled(false);
         dataBus.disablePlayerPhysics();
         dataBus.setPlayerMoveInput(0);
@@ -138,6 +150,97 @@ describe("DataBus physics integration", () => {
     it("returns false for non-positive delta in physics step", () => {
         expect(dataBus.stepPhysics(0)).toBe(false);
         expect(dataBus.stepPhysics(-10)).toBe(false);
+    });
+
+    it("freezes simulation while world is paused", () => {
+        const player = dataBus.getPlayer();
+        const startY = player.position.y;
+
+        dataBus.enablePlayerGravity({ velocity: { x: 0, y: 0 } });
+        dataBus.pauseWorld("pause-menu");
+
+        const changed = dataBus.stepPhysics(16);
+
+        expect(changed).toBe(false);
+        expect(player.position.y).toBe(startY);
+        expect(dataBus.isWorldPaused()).toBe(true);
+        expect(dataBus.getWorldPauseReasons()).toContain("pause-menu");
+
+        dataBus.resumeWorld("pause-menu");
+        expect(dataBus.isWorldPaused()).toBe(false);
+    });
+
+    it("gates player movement and jump input while paused", () => {
+        const player = dataBus.getPlayer();
+        dataBus.enablePlayerGravity({ velocity: { x: 0, y: 0 } });
+
+        dataBus.pauseWorld("cutscene");
+
+        const moved = dataBus.movePlayerBy(8, 0);
+        dataBus.setPlayerMoveInput(1);
+        dataBus.stepPhysics(16);
+        dataBus.requestPlayerJump();
+        dataBus.stepPhysics(16);
+
+        expect(moved).toBe(false);
+        expect(player.physicsBody?.velocity.x).toBe(0);
+        expect(player.physicsBody?.velocity.y).toBeGreaterThanOrEqual(0);
+    });
+
+    it("emits onPause/onResume hooks only on pause-state edges", () => {
+        const onPause = vi.fn();
+        const onResume = vi.fn();
+        const unsubscribePause = dataBus.onPause(onPause);
+        const unsubscribeResume = dataBus.onResume(onResume);
+
+        dataBus.pauseWorld("pause-menu");
+        dataBus.pauseWorld("cutscene");
+
+        expect(onPause).toHaveBeenCalledTimes(1);
+        expect(onPause).toHaveBeenCalledWith(
+            expect.objectContaining({
+                reason: "pause-menu",
+                paused: true,
+            }),
+        );
+        expect(onResume).toHaveBeenCalledTimes(0);
+
+        dataBus.resumeWorld("pause-menu");
+        expect(dataBus.isWorldPaused()).toBe(true);
+        expect(onResume).toHaveBeenCalledTimes(0);
+
+        dataBus.resumeWorld("cutscene");
+        expect(dataBus.isWorldPaused()).toBe(false);
+        expect(onResume).toHaveBeenCalledTimes(1);
+        expect(onResume).toHaveBeenCalledWith(
+            expect.objectContaining({
+                reason: "cutscene",
+                reasons: [],
+                paused: false,
+            }),
+        );
+
+        unsubscribePause();
+        unsubscribeResume();
+    });
+
+    it("emits resume hook when pause is cleared", () => {
+        const onResume = vi.fn();
+        const unsubscribeResume = dataBus.onResume(onResume);
+
+        dataBus.pauseWorld("pause-menu");
+        dataBus.clearWorldPause();
+
+        expect(onResume).toHaveBeenCalledTimes(1);
+        expect(onResume).toHaveBeenCalledWith(
+            expect.objectContaining({
+                reason: "clear",
+                reasons: [],
+                paused: false,
+            }),
+        );
+
+        unsubscribeResume();
     });
 
     it("applies gravity to an enabled entity", () => {
@@ -277,10 +380,425 @@ describe("DataBus physics integration", () => {
         expect(Math.abs(player.physicsBody?.velocity.x ?? 0)).toBeLessThan(220);
     });
 
+    it("syncs player behavior state and currentAnimation from move intent", () => {
+        const player = dataBus.getPlayer();
+
+        dataBus.setPlayerMoveInput(1);
+        dataBus.stepPhysics(16);
+
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("moving");
+        expect(player.currentAnimation).toBe("moving");
+
+        dataBus.setPlayerMoveInput(0);
+        dataBus.stepPhysics(16);
+
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("idle");
+        expect(player.currentAnimation).toBe("idle");
+    });
+
+    it("supports timed damaged state interrupt before returning to movement", () => {
+        const player = dataBus.getPlayer();
+
+        dataBus.setPlayerMoveInput(1);
+        dataBus.stepPhysics(16);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("moving");
+
+        dataBus.markPlayerDamaged(100);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("damaged");
+        expect(player.currentAnimation).toBe("damaged");
+
+        dataBus.stepPhysics(60);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("damaged");
+
+        dataBus.stepPhysics(60);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("moving");
+        expect(player.currentAnimation).toBe("moving");
+    });
+
+    it("supports timed attacking and stunned states", () => {
+        const player = dataBus.getPlayer();
+
+        dataBus.markPlayerAttacking(60);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("attacking");
+        expect(player.currentAnimation).toBe("attacking");
+
+        dataBus.stepPhysics(40);
+        dataBus.stepPhysics(40);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("idle");
+
+        dataBus.markPlayerStunned(80);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("stunned");
+        expect(player.currentAnimation).toBe("stunned");
+
+        dataBus.stepPhysics(50);
+        dataBus.stepPhysics(50);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("idle");
+    });
+
+    it("supports timed dodging and blocking states", () => {
+        const player = dataBus.getPlayer();
+
+        dataBus.markPlayerDodging(60);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("dodge");
+        expect(player.currentAnimation).toBe("dodge");
+
+        dataBus.stepPhysics(40);
+        dataBus.stepPhysics(40);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("idle");
+
+        dataBus.markPlayerBlocking(80);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("block");
+        expect(player.currentAnimation).toBe("block");
+
+        dataBus.stepPhysics(50);
+        dataBus.stepPhysics(50);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("idle");
+    });
+
+    it("lets damaged interrupt attacking timed state", () => {
+        const player = dataBus.getPlayer();
+
+        dataBus.markPlayerAttacking(200);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("attacking");
+
+        dataBus.markPlayerDamaged(80);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("damaged");
+
+        dataBus.stepPhysics(50);
+        dataBus.stepPhysics(50);
+        expect(dataBus.getEntityBehaviorState(player.id)).toBe("idle");
+    });
+
+    it("records recent behavior transitions for debug trail", () => {
+        const player = dataBus.getPlayer();
+
+        dataBus.setPlayerMoveInput(1);
+        dataBus.stepPhysics(16);
+
+        dataBus.markPlayerAttacking(40);
+        dataBus.stepPhysics(50);
+
+        const transitions = dataBus.getEntityBehaviorTransitions(player.id, 3);
+
+        expect(transitions.length).toBeGreaterThan(0);
+        expect(transitions.some((entry) => entry.to === "attacking")).toBe(
+            true,
+        );
+        expect(transitions.some((entry) => entry.to === "moving")).toBe(true);
+    });
+
+    it("can clear behavior transition history", () => {
+        const player = dataBus.getPlayer();
+
+        dataBus.markPlayerDamaged(40);
+        const transitionsBeforeClear = dataBus.getEntityBehaviorTransitions(
+            player.id,
+            3,
+        );
+        expect(transitionsBeforeClear.length).toBeGreaterThan(0);
+
+        dataBus.clearEntityBehaviorTransitions();
+        expect(dataBus.getEntityBehaviorTransitions(player.id, 3)).toEqual([]);
+    });
+
+    it("applies patrol profile to enemy archetype", () => {
+        const enemyId = "enemy-patrol" as unknown as GameState["playerId"];
+        const player = dataBus.getPlayer();
+
+        dataBus.setState((prev) => ({
+            ...prev,
+            entitiesById: {
+                ...prev.entitiesById,
+                [enemyId]: {
+                    ...player,
+                    id: enemyId,
+                    type: "enemy",
+                    name: "enemy-patrol",
+                    position: { ...player.position, x: 180 },
+                    collider: undefined,
+                    physicsBody: undefined,
+                    behaviorState: "idle",
+                    currentAnimation: "idle",
+                },
+            },
+        }));
+
+        dataBus.setNpcArchetypeProfile(enemyId, {
+            mode: "patrol",
+            anchorX: 180,
+            patrolDistancePx: 24,
+            patrolSpeedPxPerSec: 120,
+            fleeDistancePx: 10,
+            fleeSpeedPxPerSec: 150,
+        });
+
+        const enemyBefore = dataBus.getState().entitiesById[enemyId];
+        const startX = enemyBefore.position.x;
+
+        dataBus.stepPhysics(16);
+
+        const enemyAfter = dataBus.getState().entitiesById[enemyId];
+        expect(dataBus.getEntityBehaviorState(enemyId)).toBe("patrol");
+        expect(enemyAfter.currentAnimation).toBe("patrol");
+        expect(enemyAfter.position.x).toBeGreaterThan(startX);
+    });
+
+    it("switches enemy archetype to flee when player is nearby", () => {
+        const enemyId = "enemy-flee" as unknown as GameState["playerId"];
+        const player = dataBus.getPlayer();
+
+        dataBus.setState((prev) => ({
+            ...prev,
+            entitiesById: {
+                ...prev.entitiesById,
+                [enemyId]: {
+                    ...player,
+                    id: enemyId,
+                    type: "enemy",
+                    name: "enemy-flee",
+                    position: { ...player.position, x: player.position.x + 12 },
+                    collider: undefined,
+                    physicsBody: undefined,
+                    behaviorState: "idle",
+                    currentAnimation: "idle",
+                },
+            },
+        }));
+
+        dataBus.setNpcArchetypeProfile(enemyId, {
+            mode: "patrol",
+            anchorX: player.position.x + 12,
+            patrolDistancePx: 18,
+            patrolSpeedPxPerSec: 80,
+            fleeDistancePx: 40,
+            fleeSpeedPxPerSec: 160,
+        });
+
+        dataBus.stepPhysics(16);
+
+        const enemyAfter = dataBus.getState().entitiesById[enemyId];
+        expect(dataBus.getEntityBehaviorState(enemyId)).toBe("flee");
+        expect(enemyAfter.currentAnimation).toBe("flee");
+        expect((enemyAfter.physicsBody?.velocity.x ?? 0) > 0).toBe(true);
+    });
+
+    it("supports idle NPC profile and clear profile API", () => {
+        const enemyId = "enemy-idle" as unknown as GameState["playerId"];
+        const player = dataBus.getPlayer();
+
+        dataBus.setState((prev) => ({
+            ...prev,
+            entitiesById: {
+                ...prev.entitiesById,
+                [enemyId]: {
+                    ...player,
+                    id: enemyId,
+                    type: "enemy",
+                    name: "enemy-idle",
+                    position: { ...player.position, x: 250 },
+                    collider: undefined,
+                    physicsBody: undefined,
+                    behaviorState: "idle",
+                    currentAnimation: "idle",
+                },
+            },
+        }));
+
+        dataBus.setNpcArchetypeProfile(enemyId, {
+            mode: "idle",
+            fleeDistancePx: 10,
+        });
+
+        expect(dataBus.getNpcArchetypeProfile(enemyId)).not.toBeNull();
+
+        dataBus.stepPhysics(16);
+        expect(dataBus.getEntityBehaviorState(enemyId)).toBe("idle");
+
+        dataBus.clearNpcArchetypeProfile(enemyId);
+        expect(dataBus.getNpcArchetypeProfile(enemyId)).toBeNull();
+    });
+
+    it("supports idle-roam archetype with deterministic roaming motion", () => {
+        const enemyId = "enemy-roam" as unknown as GameState["playerId"];
+        const player = dataBus.getPlayer();
+
+        dataBus.setState((prev) => ({
+            ...prev,
+            entitiesById: {
+                ...prev.entitiesById,
+                [enemyId]: {
+                    ...player,
+                    id: enemyId,
+                    type: "enemy",
+                    name: "enemy-roam",
+                    position: { ...player.position, x: 210, y: 80 },
+                    collider: undefined,
+                    physicsBody: undefined,
+                    behaviorState: "idle",
+                    currentAnimation: "idle",
+                },
+            },
+        }));
+
+        dataBus.setNpcArchetypeProfile(enemyId, {
+            mode: "idle-roam",
+            anchorX: 210,
+            anchorY: 80,
+            roamDistancePx: 20,
+            roamSpeedPxPerSec: 120,
+            roamFrequencyHz: 1.2,
+            fleeDistancePx: 6,
+        });
+
+        const start = dataBus.getState().entitiesById[enemyId].position;
+        const startX = start.x;
+        const startY = start.y;
+        dataBus.stepPhysics(16);
+        dataBus.stepPhysics(16);
+        const after = dataBus.getState().entitiesById[enemyId].position;
+
+        expect(dataBus.getEntityBehaviorState(enemyId)).toBe("patrol");
+        expect(after.x !== startX || after.y !== startY).toBe(true);
+    });
+
+    it("supports waypoint patrol archetype", () => {
+        const enemyId = "enemy-waypoint" as unknown as GameState["playerId"];
+        const player = dataBus.getPlayer();
+
+        dataBus.setState((prev) => ({
+            ...prev,
+            entitiesById: {
+                ...prev.entitiesById,
+                [enemyId]: {
+                    ...player,
+                    id: enemyId,
+                    type: "enemy",
+                    name: "enemy-waypoint",
+                    position: { ...player.position, x: 100, y: 100 },
+                    collider: undefined,
+                    physicsBody: undefined,
+                    behaviorState: "idle",
+                    currentAnimation: "idle",
+                },
+            },
+        }));
+
+        dataBus.setNpcArchetypeProfile(enemyId, {
+            mode: "patrol",
+            waypoints: [
+                { x: 120, y: 100 },
+                { x: 120, y: 120 },
+            ],
+            patrolSpeedPxPerSec: 140,
+            waypointTolerancePx: 4,
+            fleeDistancePx: 6,
+        });
+
+        const before = dataBus.getState().entitiesById[enemyId].position;
+        const beforeX = before.x;
+        dataBus.stepPhysics(16);
+        const after = dataBus.getState().entitiesById[enemyId].position;
+
+        expect(dataBus.getEntityBehaviorState(enemyId)).toBe("patrol");
+        expect(after.x).toBeGreaterThan(beforeX);
+    });
+
+    it("supports chase archetype with distance gating", () => {
+        const enemyId = "enemy-chase" as unknown as GameState["playerId"];
+        const player = dataBus.getPlayer();
+
+        dataBus.setState((prev) => ({
+            ...prev,
+            entitiesById: {
+                ...prev.entitiesById,
+                [enemyId]: {
+                    ...player,
+                    id: enemyId,
+                    type: "enemy",
+                    name: "enemy-chase",
+                    position: { ...player.position, x: player.position.x + 80 },
+                    collider: undefined,
+                    physicsBody: undefined,
+                    behaviorState: "idle",
+                    currentAnimation: "idle",
+                },
+            },
+        }));
+
+        dataBus.setNpcArchetypeProfile(enemyId, {
+            mode: "chase",
+            chaseDistancePx: 120,
+            chaseStopDistancePx: 8,
+            chaseSpeedPxPerSec: 160,
+            fleeDistancePx: 6,
+        });
+
+        dataBus.stepPhysics(16);
+        const chasing = dataBus.getState().entitiesById[enemyId];
+
+        expect(dataBus.getEntityBehaviorState(enemyId)).toBe("chase");
+        expect((chasing.physicsBody?.velocity.x ?? 0) < 0).toBe(true);
+
+        dataBus.setState((prev) => ({
+            ...prev,
+            entitiesById: {
+                ...prev.entitiesById,
+                [enemyId]: {
+                    ...prev.entitiesById[enemyId],
+                    position: {
+                        x: player.position.x + 240,
+                        y: player.position.y,
+                    },
+                },
+            },
+        }));
+
+        dataBus.stepPhysics(16);
+        expect(dataBus.getEntityBehaviorState(enemyId)).toBe("idle");
+    });
+
+    it("supports manual boss phase state assignment", () => {
+        const bossId = "enemy-boss" as unknown as GameState["playerId"];
+        const player = dataBus.getPlayer();
+
+        dataBus.setState((prev) => ({
+            ...prev,
+            entitiesById: {
+                ...prev.entitiesById,
+                [bossId]: {
+                    ...player,
+                    id: bossId,
+                    type: "enemy",
+                    name: "enemy-boss",
+                    position: { ...player.position, x: 320 },
+                    collider: undefined,
+                    physicsBody: undefined,
+                    behaviorState: "idle",
+                    currentAnimation: "idle",
+                },
+            },
+        }));
+
+        dataBus.setEntityBossPhase(bossId, "phase-1");
+        expect(dataBus.getEntityBehaviorState(bossId)).toBe("phase-1");
+        expect(dataBus.getState().entitiesById[bossId].currentAnimation).toBe(
+            "phase-1",
+        );
+
+        dataBus.setEntityBossPhase(bossId, "phase-2");
+        expect(dataBus.getEntityBehaviorState(bossId)).toBe("phase-2");
+        expect(dataBus.getState().entitiesById[bossId].currentAnimation).toBe(
+            "phase-2",
+        );
+    });
+
     it("supports buffered jump request shortly before landing", () => {
         const player = dataBus.getPlayer();
         dataBus.setWorldBoundsEnabled(true);
         dataBus.enablePlayerGravity({ velocity: { x: 0, y: 0 } });
+
+        player.position.y = dataBus.getState().worldSize.height - 80;
+        dataBus.stepPhysics(16);
 
         player.position.y = dataBus.getState().worldSize.height - 84;
         dataBus.requestPlayerJump();
@@ -459,5 +977,147 @@ describe("DataBus physics integration", () => {
         dataBus.stepPhysics(100);
 
         expect(player.physicsBody?.velocity.x).toBe(0);
+    });
+
+    it("applies directional environmental force to entities inside zone", () => {
+        const player = dataBus.getPlayer();
+        dataBus.enablePlayerPhysics({
+            affectedByGravity: false,
+            dragX: 0,
+            velocity: { x: 0, y: 0 },
+        });
+
+        dataBus.setEnvironmentalForceZone({
+            id: "wind-right",
+            bounds: {
+                x: player.position.x - 8,
+                y: player.position.y - 8,
+                width: 64,
+                height: 64,
+            },
+            forcePxPerSec: { x: 120, y: 0 },
+        });
+
+        dataBus.stepPhysics(50);
+
+        expect(player.physicsBody?.velocity.x).toBeGreaterThan(0);
+        expect(player.position.x).toBeGreaterThan(10);
+    });
+
+    it("applies drag scaling by entity type inside force zone", () => {
+        const player = dataBus.getPlayer();
+        dataBus.enablePlayerPhysics({
+            affectedByGravity: false,
+            dragX: 1,
+            velocity: { x: 100, y: 0 },
+        });
+
+        dataBus.setEnvironmentalForceZone({
+            id: "current-resistance",
+            bounds: {
+                x: player.position.x - 10,
+                y: player.position.y - 10,
+                width: 80,
+                height: 80,
+            },
+            dragScaleByType: {
+                player: 4,
+            },
+        });
+
+        dataBus.stepPhysics(50);
+
+        expect(player.physicsBody?.velocity.x ?? 0).toBeLessThan(95);
+    });
+
+    it("does not apply environmental force when entity is outside zone", () => {
+        const player = dataBus.getPlayer();
+        dataBus.enablePlayerPhysics({
+            affectedByGravity: false,
+            dragX: 0,
+            velocity: { x: 0, y: 0 },
+        });
+
+        dataBus.setEnvironmentalForceZone({
+            id: "far-wind",
+            bounds: {
+                x: player.position.x + 500,
+                y: player.position.y + 500,
+                width: 64,
+                height: 64,
+            },
+            forcePxPerSec: { x: 200, y: 0 },
+        });
+
+        dataBus.stepPhysics(50);
+
+        expect(player.physicsBody?.velocity.x).toBe(0);
+    });
+
+    it("applies status effect speed scale to player motion", () => {
+        const player = dataBus.getPlayer();
+        dataBus.setPlayerMovementConfig({
+            maxSpeedX: 10,
+            groundAcceleration: 5000,
+            airAcceleration: 5000,
+        });
+        dataBus.enablePlayerGravity({
+            affectedByGravity: false,
+            velocity: { x: 0, y: 0 },
+        });
+
+        dataBus.setPlayerMoveInput(1);
+        dataBus.stepPhysics(16);
+        const baselineSpeed = player.physicsBody?.velocity.x ?? 0;
+
+        dataBus.setEntityVelocity(player.id, 0, 0);
+        dataBus.applyEntitySlow(player.id, {
+            durationMs: 1000,
+            magnitude: 0.5,
+        });
+        dataBus.stepPhysics(16);
+        const slowedSpeed = player.physicsBody?.velocity.x ?? 0;
+
+        expect(slowedSpeed).toBeLessThan(baselineSpeed);
+        expect(dataBus.getEntityMovementSpeedScale(player.id)).toBeCloseTo(0.5);
+    });
+
+    it("emits burn tick signals during physics stepping", () => {
+        const player = dataBus.getPlayer();
+        const ticks: StatusEffectTickEvent[] = [];
+        const off = signalBus.on<StatusEffectTickEvent>(
+            STATUS_EFFECT_TICK_SIGNAL,
+            (event) => {
+                ticks.push(event);
+            },
+        );
+
+        dataBus.applyEntityBurn(player.id, {
+            durationMs: 1200,
+            magnitude: 2,
+            tickIntervalMs: 500,
+        });
+
+        for (let index = 0; index < 10; index += 1) {
+            dataBus.stepPhysics(50);
+        }
+        for (let index = 0; index < 10; index += 1) {
+            dataBus.stepPhysics(50);
+        }
+        for (let index = 0; index < 6; index += 1) {
+            dataBus.stepPhysics(50);
+        }
+
+        expect(ticks.length).toBeGreaterThanOrEqual(2);
+        expect(ticks[0]).toEqual(
+            expect.objectContaining({
+                entityId: player.id,
+                type: "burn",
+            }),
+        );
+        expect(ticks[1].atMs - ticks[0].atMs).toBe(500);
+
+        off();
+        signalBus.clear(STATUS_EFFECT_TICK_SIGNAL);
     });
 });

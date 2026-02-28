@@ -6,75 +6,209 @@ This file tracks the immediate next systems planned for UrsaManus.
 
 ### P1 — Core runtime utilities
 
-- Canvas pseudo-shader effects (TypeScript + React Canvas2D, no WebGL).
-    - Add reusable sprite post-process passes: `tint`, `flash`, `outline`, `desaturate`.
-    - Keep API runtime/plugin-friendly and compatible with current canvas render flow.
-    - Add focused visual math tests + usage snippets for per-entity effect configs.
-
-- Screen-wide canvas effects (TypeScript + React Canvas2D, no WebGL).
-    - Add post-process screen passes: `tint`, `monochrome`, `scanline`, `wavy`, `vhs`.
-    - Keep effects configurable and stackable through runtime/plugin registration.
-    - Add deterministic parameter presets + docs for mode transitions/cutscene styling.
-
-- Sprite animation atlas + clip helper.
-    - Add typed helper to define animations from sprite sheets (ranges, named clips, fps, loop modes).
-    - Include validation for out-of-bounds frames and duplicate clip names.
-    - Add copy/paste docs for quick setup from raw atlas metadata.
-
-- Animation state machine utility.
-    - Add transition graph helper (`idle/run/jump/attack`) with guard functions and callbacks.
-    - Support time-based and signal-triggered transitions.
-    - Add lightweight integration example with current render/runtime pipeline.
-
-- Timer signal helper.
-    - Add typed timers (`once`, `interval`, `cooldown`) that emit through signal bus.
-    - Support pause/resume/cancel semantics and deterministic behavior tests.
-    - Add docs for gameplay event scheduling (spawns, buffs, objective ticks).
-
 ### P2 — Simulation modules (small + composable)
-
-- NPC behavior module (movement/chase/patrol).
-    - Add behavior presets: idle roam, waypoint patrol, target chase, flee.
-    - Keep AI updates modular and frame-safe (no hard coupling to render).
-    - Add focused behavior tests + example scene wiring.
-
-- Growth/tick simulation module (plants/crops/resources).
-    - Add tick-driven state progression (`seed -> sprout -> mature`) with configurable intervals.
-    - Support pause/resume and deterministic seed/timer behavior.
-    - Expose signals/events for growth stage transitions.
-
-- Environmental forces module (wind/current zones).
-    - Add area-based force fields that can apply directional impulses/velocity modifiers.
-    - Integrate with existing physics helpers without requiring WebGL or engine rewrite.
-    - Include optional resistance/drag scaling by entity type.
-
-- Status effect modifiers module.
-    - Add typed effect stack helpers (`slow`, `haste`, `burn`, `regen`) with duration + tick policies.
-    - Compose cleanly with movement/physics and timer signals.
-    - Add deterministic tests for stacking, refresh, and expiry rules.
 
 ### P3 — Integration + tooling
 
-- Input systems expansion (post-baseline).
-    - Build optional remapping/profile persistence on top of keyboard + pointer + gamepad baselines.
-    - Add higher-level composition helpers for multi-device presets.
+### Priority Expansion Backlog (2026-02-28)
 
-- Level/world generation expansion (post-baseline).
-    - Add biome/path composition layers over seeded tile + room generation.
-    - Add palette/rules helpers for sprite-tile generation workflows.
-    - Add preset scene builders for faster “generated run” bootstraps.
+#### P1 additions (high impact)
 
-- Next prefab wave.
-    - Draft next 1-2 gameplay/HUD prefabs and lock minimal props APIs.
-    - Add docs + usage snippets + baseline tests for each new prefab.
+- Interaction system core.
+    - Add unified interaction contract for world objects/NPCs (`canInteract`, `interact`, `blockedReason`).
+    - Support distance/raycast gating and input hints for keyboard/controller/pointer.
 
-- Debug/perf helper panel.
-    - Add optional dev HUD for frame timing, active effects, and entity counts.
-    - Keep it dev-only and non-invasive to production runtime.
+#### P1 quick wins (stability + iteration)
+
+- Deterministic replay system.
+    - Add input/event capture with seed snapshots so gameplay bugs can be replayed exactly.
+    - Support export/import replay payloads for regression reproduction.
+
+- Schema migration framework.
+    - Add versioned migration pipeline for save files and authored JSON assets (dialogue/quests/placements).
+    - Provide preflight validation + fallback behavior for unsupported versions.
+    - Keep this as the core migration/compat layer used by runtime loaders and tooling.
+
+- Content hot-reload pipeline (dev).
+    - Add development watcher/reload flow for authored JSON content without full app restart.
+    - Trigger targeted runtime refresh events for dialogue/quest/map/editor data domains.
+
+- Unified marker/POI registry.
+    - Add shared marker source for map/minimap/objective tracker/interaction prompt systems.
+    - Support typed marker categories, visibility rules, and priority stacking.
+    - Avoid duplicate marker stores by making this the single marker authority.
+
+- Accessibility runtime settings.
+    - Add text scale, hold-vs-toggle controls, reduced flash/shake, and subtitle speed options.
+    - Persist settings and expose a minimal settings UI prefab hook.
+
+- Error telemetry + dev diagnostics.
+    - Add structured runtime error events with context payloads (state phase, subsystem, entity refs).
+    - Provide dev overlay/log hooks for quick triage.
+
+- Performance budgets + alerts.
+    - Add frame-time/entity/effects budget thresholds with development warnings.
+    - Include simple per-subsystem timing summaries for hotspot detection.
+
+- Prefab contract test harness.
+    - Add reusable test helpers for prefab lifecycle/input/render assertions.
+    - Use shared contract suites to keep new prefab additions consistent.
+
+- Mod/plugin sandbox + capability permissions.
+    - Add extension runtime sandbox boundaries with explicit capability grants (render hooks, data access, signal scope).
+    - Prevent untrusted plugins from mutating restricted engine domains directly.
+
+- Save slot manager + rollback snapshots.
+    - Add multi-slot save profiles with metadata (`slot`, `timestamp`, `playtime`, `version`).
+    - Support rollback snapshot restore flow for quick recovery after bad state transitions.
+
+- Memory lifecycle management.
+    - Add explicit allocate/dispose contracts for textures, audio buffers, emitters, and runtime caches.
+    - Add leak-detection diagnostics for long-session playtests.
+
+- Save/content import security hardening.
+    - Enforce strict payload size limits, safe parsing paths, and schema-first validation for imported files.
+    - Add guards against malformed/malicious content payloads before runtime apply.
+
+- Observability baseline.
+    - Define structured telemetry schema for crashes, perf regressions, and content-validation failures.
+    - Expose baseline dashboards/report outputs for triage and trend tracking.
+
+#### P2 additions (gameplay loop)
+
+- Quest/mission system.
+    - Add objective graph support with state transitions (`pending`, `active`, `completed`, `failed`) and reward hooks.
+    - Emit progress/completion signals for HUD tracker + toast integrations.
+
+- Combat core module.
+    - Add hit/hurt handling (damage events, invulnerability windows, knockback, damage typing).
+    - Keep combat resolution deterministic and decoupled from render concerns.
+
+- Entity state machine system (behavior + animation).
+    - Add per-entity state profiles (`idle`, `moving`, `attacking`, `damaged`, `stunned`, `dead`) with guarded transitions.
+    - Bind behavior decisions and animation clip selection to the same active state source-of-truth.
+    - Support transition priorities/interrupt rules (e.g., `damaged` can interrupt `moving`/`attacking`).
+    - Expose `onEnter`/`onExit` hooks for gameplay side effects and deterministic transition tests.
+    - Define state taxonomy profiles for `player`, `npc`, and `boss` archetypes to keep shared semantics consistent.
+    - Baseline taxonomy example: `player` (`dodge`, `block`), `npc` (`patrol`, `flee`), `boss` (`phase-1`, `phase-2`).
+
+- Equipment + stats aggregation.
+    - Add stat resolution pipeline (`base + gear + buffs/debuffs`) with typed modifiers.
+    - Expose derived stats to combat/movement modules and HUD.
+
+- Map + mini-map system.
+    - Add world map data model (discovery/fog state, markers, points of interest, player position).
+    - Add full-screen map view and HUD mini-map renderer with shared source-of-truth map data.
+    - Support configurable marker layers (objectives, NPCs, checkpoints) and zoom/scale policies.
+    - Integrate with worldgen/level data so authored + generated maps resolve consistently.
+
+- Camera system v2.
+    - Add dead-zone, look-ahead, room bounds, and shake layering for gameplay camera behavior.
+    - Support scripted camera tracks for cutscene/cinematic steps.
+
+- Pathfinding/navigation grid.
+    - Add reusable pathfinding layer (A\*/flow-field friendly) for NPC patrol/chase/navigation queries.
+    - Integrate with collision/world data and expose deterministic query APIs.
+
+- Ability + cooldown effects system.
+    - Add typed active/passive ability definitions with cast conditions, cost hooks, and shared cooldown groups.
+    - Emit ability lifecycle signals for HUD/action button integration.
+
+- Loot/progression economy system.
+    - Add drop tiers/weights, affix hooks, and economy tables for progression balancing.
+    - Support reusable reward bundles for quests/encounters/vendors.
+
+- World streaming/chunk loader.
+    - Add chunk/region load-unload lifecycle for large maps to reduce memory and update overhead.
+    - Keep entity activation deterministic when crossing region boundaries.
+
+- Tutorial/onboarding state machine.
+    - Add step-driven onboarding flow with gating conditions, prompt hooks, and completion persistence.
+    - Support skip/resume behavior and integration with dialogue/textbox systems.
+
+- Multiplayer readiness boundary.
+    - Define deterministic simulation boundaries and state-authority contracts, even for single-player-first architecture.
+    - Identify APIs that must remain replication-safe for future networked expansion.
+
+#### P3 additions (authoring + tooling)
+
+- Visual world/entity placement tool (level authoring UI).
+    - Add editor-mode UI to place, move, and delete entities directly on the canvas with snap/grid options.
+    - Support save/export of authored placements to JSON for level bootstrap usage.
+    - Include lightweight gizmos (select, drag, duplicate) and validation for out-of-bounds placement.
+
+- Content validation CLI (authored JSON).
+    - Add schema validation command for dialogue, quests, loot tables, and level placement files before runtime.
+    - Build on the schema/migration framework so CLI and runtime checks stay consistent.
+    - Surface actionable error paths/messages for fast content iteration.
+
+- Localization/text key pipeline.
+    - Add key-based text lookup service with fallback locale behavior.
+    - Support dialogue/textbox/toast integration using localized key payloads.
+
+- Encounter/content authoring presets.
+    - Add reusable encounter templates (spawn packs, objective bundles, reward bundles) for fast level iteration.
+    - Support import/export of preset files for team reuse.
+
+- CI quality gates for content.
+    - Add CI checks that fail on schema/migration/contract regressions for authored content.
+    - Include fast pre-merge validation for dialogue/quests/placements + prefab contracts.
+
+- Crash-safe recovery flow.
+    - Add startup guard for corrupted persisted state with restore/reset options.
+    - Capture recovery diagnostics to aid bug triage.
+
+- Profiling snapshot tooling.
+    - Add one-click dev snapshots for frame timing, entity counts, and active effects.
+    - Support snapshot diff comparisons to detect performance regressions.
+
+- Balancing simulator tooling.
+    - Add batch simulation runner for combat/economy scenarios from authored config presets.
+    - Output summary metrics/reports to speed up tuning passes.
+
+- Release pipeline + versioning.
+    - Add semantic version/release workflow with changelog generation and build artifact verification.
+    - Define rollback strategy and release promotion gates.
+
+- Asset pipeline tooling.
+    - Add sprite/audio import validation, atlas/pack workflow checks, and missing-asset detection.
+    - Track asset size/compression budgets to prevent runtime bloat.
+
+- Economy/content balancing governance.
+    - Define tuning ownership workflow, benchmark scenarios, and acceptable balance metric thresholds.
+    - Require balance-report signoff for major economy/combat table updates.
+
+- Accessibility QA matrix.
+    - Add repeatable QA checklist for keyboard-only navigation, readability/contrast, reduced motion, and assist timing options.
+    - Integrate matrix checks into release readiness validation.
 
 ### Prefab Backlog (Plug-and-Play)
 
 #### P2 candidates
+
+- TextBox prefab.
+    - Add spawnable canvas text box renderer with coordinate-based placement (`x`, `y`, width, max lines).
+    - Support static text and animated typewriter reveal (character-by-character) with speed controls.
+    - Include configurable text style, border, background, padding, alignment, and optional portrait/icon slot.
+    - Add lifecycle hooks for open/update/close and optional auto-close timers.
+    - Support queueing/stack policy so multiple text boxes can be sequenced deterministically.
+
+- Toasts prefab (UI layer).
+    - Add lightweight toast queue drawn on the screen UI layer (non-world space).
+    - Support timed auto-dismiss, manual dismiss hook, and stacked positioning.
+    - Include configurable variants for basic feedback states (info/success/warn/error).
+
+- Cutscene sequence system.
+    - Add timeline/step runner for cutscenes (text box, wait, signal, camera/pan hook, transition hook).
+    - Support optional `awaitInput` per step so progression can be manual (`continue` key/button) or automatic.
+    - Allow skip policy options (`disabled`, `hold-to-skip`, `instant`) and completion callbacks.
+    - Integrate with `TextBox` + `Toasts` outputs without coupling to specific game mode logic.
+
+- Dialogue system (JSON-driven for cutscenes).
+    - Add parser/validator for JSON conversation payloads (example shape: `{ character, dialogues }`) with typed schema.
+    - Extend schema with useful props: `id`, `speakerId`, `speakerName`, `portrait`, `emotion`, `voiceCue`, `awaitInput`, `speedMs`, `choices`, `next`, `tags`.
+    - Support branching dialogue nodes and linear fallback when no branching is present.
+    - Add conversion helpers from JSON -> cutscene steps so authored conversations can run through the cutscene system.
 
 - Inventory core module + store.
     - Add typed slot/container/item schema (`stackable`, `maxStack`, `weight`, tags).
@@ -114,7 +248,103 @@ This file tracks the immediate next systems planned for UrsaManus.
 
 ## Recently Completed
 
-### 2026-02-27 (Latest)
+### 2026-02-28 (Latest)
+
+- Dev-mode state sanitizer/reset completion:
+    - expanded development sanitize utility scopes in `src/services/save/sanitize.ts` to support `save-only`, `input-profiles`, and `all`.
+    - scoped `input-profiles` cleanup now targets only persisted keys prefixed by `ursa:input-profile`.
+    - app-level sanitize actions are confirmation-gated and available via dev controls plus keyboard shortcuts (`Alt + Shift + Q`, `Alt + Shift + Y`, `Alt + Shift + R`).
+    - focused coverage added in `src/tests/save.sanitize.test.ts` for scoped profile-only sanitize behavior.
+
+- Game state flow controller completion:
+    - added canonical runtime state flow service in `src/services/gameStateFlow.ts`.
+    - supports guarded transitions across `boot`, `menu`, `play`, `pause`, `cutscene`, and `gameover`.
+    - provides transition hooks via `subscribe(...)`, `onEnter(...)`, and `onExit(...)`.
+    - blocked transition events are emitted for invalid state hops; focused coverage added in `src/tests/gameStateFlow.test.ts`.
+
+- Next prefab wave completion:
+    - added two HUD prefabs in `src/components/hudAnchor`: `SurvivalHUDPreset` and `BossEncounterHUDPreset`.
+    - locked minimal props APIs for both prefabs and preserved slot override support through `createHudPresetSlots(...)`.
+    - added example components in `src/components/examples`: `SurvivalHUDPresetExample` and `BossEncounterHUDPresetExample`.
+    - added focused prefab/example tests in `src/tests/SurvivalHUDPreset.test.tsx`, `src/tests/BossEncounterHUDPreset.test.tsx`, `src/tests/SurvivalHUDPresetExample.test.tsx`, and `src/tests/BossEncounterHUDPresetExample.test.tsx`.
+
+- Level/world generation expansion completion:
+    - added biome/path composition helpers in `src/logic/worldgen/biomePathComposition.ts`.
+    - composition now supports deterministic biome map generation, path carving, and sprite-tile palette rule output.
+    - `createWorldgenScenario(...)` supports optional composition overlays and start-to-objective path linking.
+    - added scene preset builders in `src/logic/worldgen/presets.ts` for fast generated run bootstraps (`compact-run`, `cavern-run`, `gauntlet-run`).
+    - focused deterministic tests added in `src/tests/worldgenComposition.test.ts`, `src/tests/worldgenPresets.test.ts`, and `src/tests/worldgenScenario.test.ts`.
+
+- Input systems expansion completion:
+    - added input profile preset helpers in `src/components/screenController/inputProfiles.ts` for keyboard/gamepad/pointer composition.
+    - supports optional profile persistence via `saveInputProfilePreset`, `loadInputProfilePreset`, and `clearInputProfilePreset`.
+    - includes multi-device composition helper `createInputProfileBindings(...)` and hook wrapper `useInputProfileBindings(...)`.
+    - focused deterministic tests added in `src/tests/inputProfiles.test.ts`.
+
+- Status effect modifiers module completion:
+    - added typed status-effects simulation utility in `src/logic/simulation/statusEffects.ts`.
+    - supports `slow`, `haste`, `burn`, and `regen` with duration, stacking policy (`stack`/`refresh`/`replace`), and interval tick policies.
+    - integrated with `DataBus` movement/physics flow via entity speed scaling and per-step status ticking.
+    - emits deterministic status tick/expiry signals (`STATUS_EFFECT_TICK_SIGNAL`, `STATUS_EFFECT_EXPIRED_SIGNAL`) and includes focused coverage for stacking, refresh, and expiry rules.
+
+- Environmental forces module completion:
+    - added composable force-zone utility in `src/logic/simulation/environmentalForces.ts`.
+    - supports area-based directional velocity modifiers and optional per-entity-type drag scaling.
+    - integrated with `DataBus.stepPhysics(...)` so zones apply without render-engine rewrites.
+    - deterministic coverage added in `src/tests/environmentalForces.test.ts` and `src/tests/DataBus.physics.test.ts`.
+
+- Growth/tick simulation module completion:
+    - added deterministic growth tick utility in `src/logic/simulation/growthTick.ts` with stage flow `seed -> sprout -> mature`.
+    - supports configurable stage durations, deterministic seed-based timing jitter, and pause/resume controls.
+    - emits growth stage transition events via `GROWTH_STAGE_TRANSITION_SIGNAL`.
+    - focused tests added in `src/tests/growthTick.test.ts`.
+
+- NPC behavior module completion:
+    - expanded NPC archetype presets in `DataBus` to include `idle-roam`, waypoint `patrol`, `chase`, plus `flee` override.
+    - behavior updates remain modular in simulation path (`stepPhysics`) with no render coupling.
+    - focused deterministic behavior tests added for roaming, waypoint patrol, chase distance gating, and flee override.
+
+- Global world pause controller completion:
+    - runtime pause reason stack now supports scoped pause/resume ordering with `pauseWorld(reason)` and `resumeWorld(reason)`.
+    - world simulation and player gameplay input remain gated while paused.
+    - pause lifecycle hooks are available via `onPause(...)` and `onResume(...)` callbacks.
+    - deterministic edge-trigger tests validate freeze behavior plus pause/resume hook emission ordering.
+
+- Screen-wide canvas effects baseline:
+    - added stackable screen pass controller in `src/components/effects/screenPseudoShader/createScreenPseudoShaderCanvasPass.ts`.
+    - supported post-process variants: `tint`, `monochrome`, `scanline`, `wavy`, `vhs`.
+    - effects are configurable via registration helpers/signals (`set`, `push`, `remove`, `clear`) and preset apply events.
+    - deterministic preset set added for mode/cutscene styling (`cutscene-warm`, `cutscene-cold`, `flashback-mono`, `vhs-noir`).
+    - focused tests added in `src/tests/screenPseudoShaderCanvasPass.test.ts`.
+
+- Canvas pseudo-shader effects baseline:
+    - added reusable sprite post-process passes (`tint`, `flash`, `outline`, `desaturate`) in `src/components/effects/spritePseudoShader/spritePseudoShader.ts`.
+    - effects are runtime/plugin-friendly through exported helpers and optional per-entity `spriteEffects` configs in `Render`/`SpriteBatch` flow.
+    - focused visual math + sequencing tests added in `src/tests/spritePseudoShader.test.ts`.
+
+- Animation state machine utility baseline:
+    - added low-level FSM primitive in `src/logic/entity/animationStateMachine.ts` with guarded transition graph support.
+    - transitions support both signal-triggered and time-based flow via `send(...)` and `update(...)`, plus `onEnter` / `onExit` hooks.
+    - added entity-profile integration helper `createBasicEntityAnimationProfileStateMachine()` in `src/logic/entity/entityStateMachine.ts`.
+    - focused tests added in `src/tests/animationStateMachine.test.ts` and docs now include runtime integration snippets.
+
+- Sprite animation atlas + clip helper baseline:
+    - added `createSpriteAnimationClips(...)` in `src/logic/entity/spriteAnimationAtlas.ts` for typed clip definitions from explicit `frames` or `range` metadata.
+    - clip options now support per-clip/default `fps` and loop modes (`loop`, `once`, `ping-pong`) with deterministic frame sampling via `sampleSpriteClipFrame(...)`.
+    - validation guards enforce non-empty/unique clip names and in-bounds frame coordinates against atlas tile dimensions.
+    - focused tests added in `src/tests/spriteAnimationAtlas.test.ts` and usage docs include raw-metadata copy/paste examples.
+
+- Timer signal helper baseline:
+    - added typed timer service (`once`, `interval`, `cooldown`) in `src/services/timerSignals.ts` with signal-based payload emissions.
+    - timers support pause/resume/cancel semantics and shared cancellation (`cancelAll`) for deterministic orchestration.
+    - focused tests added in `src/tests/timerSignals.test.ts` and docs updated with scheduling snippets.
+
+- Debug/perf helper panel baseline:
+    - default app dev panel now includes live perf sampling (`fps`, smoothed `frameMs`) and entity counts (`total`, `enemy`).
+    - canvas meta pills now include perf/entity counters for at-a-glance runtime checks.
+    - implementation remains dev-only and does not alter production runtime flow.
+
+### 2026-02-27
 
 - Worldgen end-to-end baseline:
     - deterministic pipeline shipped for tile map -> room map -> spawn anchors -> world-space conversion -> DataBus payloads -> Entity bridge -> safe DataBus apply helpers.
@@ -142,6 +372,10 @@ This file tracks the immediate next systems planned for UrsaManus.
 - Rendering/effects parity checkpoint:
     - ran `npm run test:run` on full suite.
     - result: 78 files passed, 320 tests passed.
+
+- Render re-rig plan retirement:
+    - removed `docs/RENDER_RERIG_PLAN.md` after architecture convergence and cleanup completion.
+    - migration/completion history remains tracked in this file under completed milestones.
 
 ### Earlier Milestones
 

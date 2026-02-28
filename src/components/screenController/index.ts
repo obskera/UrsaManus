@@ -18,6 +18,17 @@ export {
 export { useActionKeyBindings } from "./useActionKeyBindings";
 export { useGamepadInput } from "./useGamepadInput";
 export { usePointerTapTracking } from "./usePointerTapTracking";
+export {
+    INPUT_PROFILE_STORAGE_KEY,
+    clearInputProfilePreset,
+    createInputProfileBindings,
+    getInputProfilePreset,
+    listInputProfilePresets,
+    loadInputProfilePreset,
+    resolveInputProfilePreset,
+    saveInputProfilePreset,
+    useInputProfileBindings,
+} from "./inputProfiles";
 export { POINTER_TAP_SIGNAL } from "./pointerTapSignal";
 export { default as PointerTapDebugReadout } from "./PointerTapDebugReadout";
 export {
@@ -59,6 +70,14 @@ export type {
     UseGamepadInputOptions,
 } from "./useGamepadInput";
 export type { UsePointerTapTrackingOptions } from "./usePointerTapTracking";
+export type {
+    InputProfileBindingsOptions,
+    InputProfilePointerOptions,
+    InputProfilePreset,
+    InputProfilePresetId,
+    ResolvedInputProfileBindings,
+    ResolvedInputProfilePreset,
+} from "./inputProfiles";
 export type { PointerTapPayload } from "./pointerTapSignal";
 export type { PointerTapDebugReadoutProps } from "./PointerTapDebugReadout";
 export type {

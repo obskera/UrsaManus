@@ -121,6 +121,16 @@
     flex-wrap: wrap;
 }
 
+.DevActionLabel {
+    align-self: center;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    border: 1px dashed rgba(148, 163, 184, 0.36);
+    font-size: 0.7rem;
+    letter-spacing: 0.03em;
+    color: rgba(203, 213, 225, 0.9);
+}
+
 .DevHiddenFileInput {
     display: none;
 }

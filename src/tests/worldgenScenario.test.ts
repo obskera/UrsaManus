@@ -101,4 +101,29 @@ describe("createWorldgenScenario", () => {
         expect(playerStart.worldX).toBeGreaterThan(0);
         expect(playerStart.worldY).toBeGreaterThan(0);
     });
+
+    it("supports biome/path composition overlay for generated runs", () => {
+        const scenario = createWorldgenScenario({
+            map: {
+                width: 30,
+                height: 20,
+                seed: "scenario-composition",
+                roomCount: 8,
+            },
+            composition: {
+                enabled: true,
+                pathTileValue: 9,
+                connectStartToObjective: true,
+            },
+        });
+
+        expect(scenario.composition).not.toBeNull();
+        expect(scenario.composition?.path.length ?? 0).toBeGreaterThan(1);
+
+        const start = scenario.anchors.playerStart;
+        const end = scenario.anchors.objective;
+
+        expect(scenario.map.tiles[start.y][start.x]).toBe(9);
+        expect(scenario.map.tiles[end.y][end.x]).toBe(9);
+    });
 });

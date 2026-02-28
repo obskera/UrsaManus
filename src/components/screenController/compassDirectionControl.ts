@@ -1,6 +1,9 @@
 import { createElement } from "react";
 import CompassActionControl from "./CompassActionControl";
-import { createPlayerInputActions } from "./inputActions";
+import {
+    createPlayerInputActions,
+    type CreatePlayerInputActionsOptions,
+} from "./inputActions";
 import ScreenControl from "./ScreenControl";
 import type { ScreenControllerChildProps } from "./screenController";
 
@@ -10,6 +13,7 @@ export type CompassDirectionControlProps = ScreenControllerChildProps & {
     mode?: CompassDirectionControlMode;
     onMove?: () => void;
     onInteract?: () => void;
+    interactBehavior?: CreatePlayerInputActionsOptions["interactBehavior"];
     className?: string;
 };
 
@@ -17,6 +21,7 @@ const CompassDirectionControl = ({
     mode = "log",
     onMove,
     onInteract,
+    interactBehavior,
     className,
 }: CompassDirectionControlProps) => {
     if (mode === "player-actions") {
@@ -25,6 +30,7 @@ const CompassDirectionControl = ({
             actions: createPlayerInputActions({
                 onChanged: onMove,
                 onInteract,
+                interactBehavior,
             }),
         });
     }

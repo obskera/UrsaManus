@@ -24,6 +24,10 @@ export { default as PlatformerHUDPresetExample } from "./PlatformerHUDPresetExam
 export type { PlatformerHUDPresetExampleProps } from "./PlatformerHUDPresetExample";
 export { default as TopDownHUDPresetExample } from "./TopDownHUDPresetExample";
 export type { TopDownHUDPresetExampleProps } from "./TopDownHUDPresetExample";
+export { default as SurvivalHUDPresetExample } from "./SurvivalHUDPresetExample";
+export type { SurvivalHUDPresetExampleProps } from "./SurvivalHUDPresetExample";
+export { default as BossEncounterHUDPresetExample } from "./BossEncounterHUDPresetExample";
+export type { BossEncounterHUDPresetExampleProps } from "./BossEncounterHUDPresetExample";
 export { default as TopDownMiniGameExample } from "./TopDownMiniGameExample";
 export type { TopDownMiniGameExampleProps } from "./TopDownMiniGameExample";
 export { default as SideScrollerMiniGameExample } from "./SideScrollerMiniGameExample";

@@ -5,6 +5,8 @@ const dataBusMocks = vi.hoisted(() => {
     return {
         isPlayerGravityActive: vi.fn(() => false),
         requestPlayerJump: vi.fn(),
+        markPlayerAttacking: vi.fn(),
+        markPlayerDodging: vi.fn(),
         movePlayerUp: vi.fn(),
         movePlayerDown: vi.fn(),
         movePlayerLeft: vi.fn(),
@@ -17,6 +19,8 @@ vi.mock("@/services/DataBus", () => {
         dataBus: {
             isPlayerGravityActive: dataBusMocks.isPlayerGravityActive,
             requestPlayerJump: dataBusMocks.requestPlayerJump,
+            markPlayerAttacking: dataBusMocks.markPlayerAttacking,
+            markPlayerDodging: dataBusMocks.markPlayerDodging,
             movePlayerUp: dataBusMocks.movePlayerUp,
             movePlayerDown: dataBusMocks.movePlayerDown,
             movePlayerLeft: dataBusMocks.movePlayerLeft,
@@ -64,7 +68,19 @@ describe("createPlayerInputActions", () => {
 
         actions.interact();
 
+        expect(dataBusMocks.markPlayerAttacking).toHaveBeenCalledTimes(1);
         expect(onInteract).toHaveBeenCalledTimes(1);
         expect(onChanged).toHaveBeenCalledTimes(1);
+    });
+
+    it("can map interact action to dodge for quick testing", () => {
+        const actions = createPlayerInputActions({
+            interactBehavior: "dodge",
+        });
+
+        actions.interact();
+
+        expect(dataBusMocks.markPlayerDodging).toHaveBeenCalledTimes(1);
+        expect(dataBusMocks.markPlayerAttacking).not.toHaveBeenCalled();
     });
 });

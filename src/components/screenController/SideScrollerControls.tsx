@@ -4,12 +4,17 @@ import CompassDirectionControl from "./compassDirectionControl";
 import OnScreenArrowControl from "./onScreenArrowControl";
 import ScreenControlGroup from "./ScreenControlGroup";
 import ScreenController from "./screenController";
+import type { CreatePlayerInputActionsOptions } from "./inputActions";
 
 export type SideScrollerControlsProps = {
     onMove?: () => void;
+    interactBehavior?: CreatePlayerInputActionsOptions["interactBehavior"];
 };
 
-const SideScrollerControls = ({ onMove }: SideScrollerControlsProps) => {
+const SideScrollerControls = ({
+    onMove,
+    interactBehavior,
+}: SideScrollerControlsProps) => {
     return createElement(
         ScreenController,
         { className: "snes-layout" },
@@ -25,6 +30,7 @@ const SideScrollerControls = ({ onMove }: SideScrollerControlsProps) => {
             createElement(CompassDirectionControl, {
                 mode: "player-actions",
                 onMove,
+                interactBehavior,
             }),
         ),
     );

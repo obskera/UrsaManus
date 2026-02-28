@@ -47,6 +47,23 @@ export {
     type SetupDevEffectHotkeysOptions,
 } from "./dev";
 export {
+    APPLY_SCREEN_PSEUDO_SHADER_PRESET_SIGNAL,
+    CLEAR_SCREEN_PSEUDO_SHADER_EFFECTS_SIGNAL,
+    PUSH_SCREEN_PSEUDO_SHADER_EFFECT_SIGNAL,
+    REMOVE_SCREEN_PSEUDO_SHADER_EFFECT_SIGNAL,
+    SET_SCREEN_PSEUDO_SHADER_EFFECTS_SIGNAL,
+    applyScreenPseudoShaderPreset,
+    clearScreenPseudoShaderEffects,
+    createScreenPseudoShaderCanvasPass,
+    createScreenPseudoShaderPreset,
+    pushScreenPseudoShaderEffect,
+    removeScreenPseudoShaderEffect,
+    setScreenPseudoShaderEffects,
+    type ScreenPseudoShaderCanvasPassController,
+    type ScreenPseudoShaderEffect,
+    type ScreenPseudoShaderPresetName,
+} from "./screenPseudoShader";
+export {
     CanvasEffectsStage,
     EffectGraph,
     useCanvasEffectsStage,
@@ -56,3 +73,11 @@ export {
     type CanvasEffectPass,
     type EffectGraphPlugin,
 } from "./canvas";
+export {
+    applySpritePseudoShaderEffects,
+    computeFlashAlpha,
+    isSpritePseudoShaderEffectActive,
+    type SpritePseudoShaderApplyInput,
+    type SpritePseudoShaderDrawImageArgs,
+    type SpritePseudoShaderEffect,
+} from "./spritePseudoShader";

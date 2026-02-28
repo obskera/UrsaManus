@@ -173,3 +173,47 @@ dataBus.setState((prev) => {
 - Keep `map.seed` stable for stable room layout.
 - Override `spawns.seed` only if you want same map with different spawn placement.
 - Keep tile sizing (`tileWidth`, `tileHeight`) fixed across runs for stable world coordinates.
+
+## 8) Biome/path composition overlay
+
+```ts
+import { createBiomePathComposition } from "@/logic/worldgen";
+
+const composition = createBiomePathComposition({
+    tiles: scenario.map.tiles,
+    seed: "scenario-a1:composition",
+    pathStart: {
+        x: scenario.anchors.playerStart.x,
+        y: scenario.anchors.playerStart.y,
+    },
+    pathEnd: {
+        x: scenario.anchors.objective.x,
+        y: scenario.anchors.objective.y,
+    },
+    pathTileValue: 9,
+});
+
+console.log(composition.path.length);
+console.log(composition.spriteTiles[0][0]);
+```
+
+Use `spriteTiles` as a palette/rules-friendly layer for sprite-sheet tile workflows while keeping logical tiles deterministic.
+
+## 9) Preset generated runs
+
+```ts
+import { createWorldgenScenePreset } from "@/logic/worldgen";
+
+const run = createWorldgenScenePreset("gauntlet-run", {
+    map: { seed: "gauntlet-run:v2" },
+    spawns: { enemyCount: 10 },
+});
+
+console.log(run.map.rooms.length, run.anchors.enemySpawns.length);
+```
+
+Built-in presets:
+
+- `compact-run`
+- `cavern-run`
+- `gauntlet-run`

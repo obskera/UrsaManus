@@ -11,11 +11,13 @@ export type InputActionMap = {
 export type CreatePlayerInputActionsOptions = {
     onChanged?: () => void;
     onInteract?: () => void;
+    interactBehavior?: "attack" | "dodge";
 };
 
 export function createPlayerInputActions({
     onChanged,
     onInteract,
+    interactBehavior = "attack",
 }: CreatePlayerInputActionsOptions = {}): InputActionMap {
     const notifyChanged = () => {
         onChanged?.();
@@ -43,6 +45,11 @@ export function createPlayerInputActions({
             notifyChanged();
         },
         interact: () => {
+            if (interactBehavior === "dodge") {
+                dataBus.markPlayerDodging?.();
+            } else {
+                dataBus.markPlayerAttacking?.();
+            }
             onInteract?.();
             notifyChanged();
         },
