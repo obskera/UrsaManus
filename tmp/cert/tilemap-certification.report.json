@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "generatedAt": "2026-03-01T12:02:45.776Z",
+  "toolKey": "tilemap",
+  "status": "pass",
+  "checks": [
+    {
+      "id": "ux-parity",
+      "label": "Core UX create/edit/export/import parity",
+      "required": true,
+      "pass": true
+    },
+    {
+      "id": "deterministic-contract",
+      "label": "Deterministic versioned payload contract",
+      "required": true,
+      "pass": true
+    },
+    {
+      "id": "runtime-compat",
+      "label": "Runtime bootstrap/import compatibility",
+      "required": true,
+      "pass": true
+    },
+    {
+      "id": "golden-contract",
+      "label": "Golden payload contract test coverage",
+      "required": true,
+      "pass": true
+    }
+  ],
+  "warnings": [],
+  "remediation": []
+}

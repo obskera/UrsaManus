@@ -81,8 +81,57 @@ Use this quick docs map when onboarding or jumping into a subsystem:
 - [docs/worldgen/CHEATSHEET.md](docs/worldgen/CHEATSHEET.md) — deterministic worldgen + spawn payload quick reference
 - [docs/save/README.md](docs/save/README.md) — save/load workflows and integration snippets
 - [docs/save/CHEATSHEET.md](docs/save/CHEATSHEET.md) — one-page save/load API reference
+- [docs/tools/README.md](docs/tools/README.md) — authoring tool operator docs and builder guide
+
+### Tool UX Update (Tilemap)
+
+- Tile map tool now supports `Pick mode` for eyedropper selection and auto-returns to `Paint mode` after a pick.
+- Shortcut: hold `Alt` and click a tile to pick into the brush without switching modes.
+- Operator details: [docs/tools/TILEMAP_TOOL.md](docs/tools/TILEMAP_TOOL.md).
 
 ## Current Direction
+
+## Manual GitHub Workflows (No Auto Runs)
+
+This repository is configured so GitHub Actions do not run automatically on push or pull request.
+
+Run workflows only when needed:
+
+1. Open GitHub -> `Actions` tab.
+2. Select workflow:
+    - `CI`
+    - `Release Pipeline`
+3. Click `Run workflow` and choose the target branch.
+
+### Manual CI
+
+- Workflow: `CI`
+- Required input: none
+- Runs quality gates (content, balance, accessibility, recovery-contract, tool-certification contracts), lint, tests, and coverage checks.
+
+### Manual Release
+
+- Workflow: `Release Pipeline`
+- Required inputs:
+    - `release_tag` (example: `v1.2.3`)
+    - `promote_to` (`staging` or `production`)
+
+Notes:
+
+- Use `staging` first to verify artifacts before production promotion.
+- Use `production` only when you are ready to publish the release.
+- Release preflight includes the same recovery-contract quality gate (`npm run quality:recovery`).
+
+### Optional: GitHub CLI
+
+You can also dispatch workflows manually via CLI:
+
+```bash
+gh workflow run "CI" --ref main
+gh workflow run "Release Pipeline" --ref main -f release_tag=v1.2.3 -f promote_to=staging
+```
+
+If branch protection requires status checks, update those rules to match this manual-run workflow policy.
 
 Current direction is principle-led rather than milestone-led.
 
@@ -450,6 +499,14 @@ Install dependencies:
 Start development:
 
 `npm run dev`
+
+Open standalone tile map tool (dev mode):
+
+`http://localhost:5173/?tool=tilemap`
+
+Open standalone BGM composer tool (dev mode):
+
+`http://localhost:5173/?tool=bgm`
 
 Run tests:
 

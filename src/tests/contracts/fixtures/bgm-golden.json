@@ -1,0 +1,79 @@
+{
+    "version": "um-bgm-v1",
+    "name": "overworld-loop-a",
+    "bpm": 132,
+    "stepMs": 120,
+    "loop": {
+        "startStep": 0,
+        "endStep": 16
+    },
+    "palette": [
+        {
+            "id": "sq1",
+            "file": "assets/audio/chiptune/sq1.wav",
+            "gain": 0.8
+        },
+        {
+            "id": "sq2",
+            "file": "assets/audio/chiptune/sq2.wav",
+            "gain": 0.75
+        },
+        {
+            "id": "tri",
+            "file": "assets/audio/chiptune/tri.wav",
+            "gain": 0.9
+        },
+        {
+            "id": "noise",
+            "file": "assets/audio/chiptune/noise.wav",
+            "gain": 0.65
+        }
+    ],
+    "sequence": [
+        {
+            "step": 0,
+            "soundId": "sq1",
+            "lengthSteps": 2,
+            "effect": "vibrato"
+        },
+        {
+            "step": 2,
+            "soundId": "sq2",
+            "lengthSteps": 2,
+            "bend": {
+                "cents": 80,
+                "curve": "ease-out"
+            }
+        },
+        {
+            "step": 4,
+            "soundId": "tri",
+            "lengthSteps": 4,
+            "effect": "none"
+        },
+        {
+            "step": 8,
+            "soundId": "noise",
+            "lengthSteps": 1,
+            "effect": "bitcrush"
+        },
+        {
+            "step": 10,
+            "soundId": "sq1",
+            "lengthSteps": 2,
+            "effect": "tremolo"
+        },
+        {
+            "step": 12,
+            "soundId": "sq2",
+            "lengthSteps": 2,
+            "effect": "none"
+        },
+        {
+            "step": 14,
+            "soundId": "tri",
+            "lengthSteps": 2,
+            "effect": "none"
+        }
+    ]
+}

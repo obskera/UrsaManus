@@ -1,11 +1,7 @@
 name: CI
 
 on:
-    push:
-        branches:
-            - main
-            - master
-    pull_request:
+    workflow_dispatch:
 
 jobs:
     content-quality-gates:
@@ -32,6 +28,12 @@ jobs:
 
             - name: Accessibility QA matrix gates
               run: npm run quality:accessibility
+
+            - name: Recovery contract gates
+              run: npm run quality:recovery
+
+            - name: Tool certification contract gates
+              run: npm run quality:tool:certification
 
     verify:
         runs-on: ubuntu-latest

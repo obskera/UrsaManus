@@ -42,3 +42,7 @@ export { default as TextBoxExample } from "./TextBoxExample";
 export type { TextBoxExampleProps } from "./TextBoxExample";
 export { default as ToastsExample } from "./ToastsExample";
 export type { ToastsExampleProps } from "./ToastsExample";
+export { default as TileMapPlacementToolExample } from "./TileMapPlacementToolExample";
+export type { TileMapPlacementToolExampleProps } from "./TileMapPlacementToolExample";
+export { default as BgmComposerToolExample } from "./BgmComposerToolExample";
+export type { BgmComposerToolExampleProps } from "./BgmComposerToolExample";

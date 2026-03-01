@@ -33,11 +33,22 @@ import {
     GameOverScreenExample,
     TextBoxExample,
     ToastsExample,
+    TileMapPlacementToolExample,
+    BgmComposerToolExample,
 } from "./components/examples";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
 import { GAME_VIEW_CONFIG } from "@/config/gameViewConfig";
 import { dataBus } from "./services/DataBus";
 import { audioBus } from "@/services/audioBus";
+import {
+    applyTileMapRuntimeBootstrap,
+    resolveTileMapRuntimeBootstrap,
+} from "@/services/tileMapRuntimeBootstrap";
+import { resolveBgmRuntimeBootstrap } from "@/services/bgmRuntimeBootstrap";
+import {
+    buildPlaytestRuntimeSummary,
+    persistPlaytestRuntimeSummary,
+} from "@/services/playtestRuntimeSummary";
 import {
     createQuickSaveScheduler,
     exportSaveFile,
@@ -63,13 +74,24 @@ type DevPerfStats = {
     frameMs: number;
 };
 
+type DevToolMode = "tilemap" | "bgm";
+
 const GAME_MODE_QUERY_KEY = "mode";
+const DEV_TOOL_QUERY_KEY = "tool";
 const AUDIO_MUTE_STORAGE_KEY = "ursa:audio:masterMuted:v1";
 const AUDIO_MUSIC_MUTE_STORAGE_KEY = "ursa:audio:musicMuted:v1";
 const AUDIO_SFX_MUTE_STORAGE_KEY = "ursa:audio:sfxMuted:v1";
 
 function normalizeGameMode(value: string | null): GameMode | null {
     if (value === "side-scroller" || value === "top-down") {
+        return value;
+    }
+
+    return null;
+}
+
+function normalizeDevToolMode(value: string | null): DevToolMode | null {
+    if (value === "tilemap" || value === "bgm") {
         return value;
     }
 
@@ -83,6 +105,15 @@ export default function App() {
     const [showDebugOutlines, setShowDebugOutlines] = useState(isDevMode);
     const [showDevControls, setShowDevControls] = useState(false);
     const [showExamplesTab, setShowExamplesTab] = useState(false);
+    const [devToolMode] = useState<DevToolMode | null>(() => {
+        if (!isDevMode) {
+            return null;
+        }
+
+        return normalizeDevToolMode(
+            new URLSearchParams(window.location.search).get(DEV_TOOL_QUERY_KEY),
+        );
+    });
     const [devInteractBehavior, setDevInteractBehavior] =
         useState<InteractBehaviorMode>("attack");
     const [devBossTargetIndex, setDevBossTargetIndex] = useState(0);
@@ -581,6 +612,67 @@ export default function App() {
                 setHasProgress(true);
                 force((n) => n + 1);
             });
+        } else if (isDevMode && devToolMode === null) {
+            const tilemapBootstrap = resolveTileMapRuntimeBootstrap({
+                tileSize: 16,
+                collisionProfile: {
+                    solidLayerNameContains: ["collision", "solid", "blocker"],
+                    fallbackToVisibleNonZero: false,
+                },
+            });
+
+            const runtimeSummaryResults: Array<{
+                scope: string;
+                ok: boolean;
+                message: string;
+                missing?: boolean;
+            }> = [];
+
+            if (tilemapBootstrap.ok) {
+                applyTileMapRuntimeBootstrap(dataBus, tilemapBootstrap.payload);
+                runtimeSummaryResults.push({
+                    scope: "tilemap",
+                    ok: true,
+                    message: `Loaded tilemap bootstrap (${tilemapBootstrap.payload.map.width}x${tilemapBootstrap.payload.map.height}, ${tilemapBootstrap.payload.solidTiles.length} solid tiles).`,
+                });
+                queueMicrotask(() => {
+                    force((n) => n + 1);
+                });
+            } else {
+                runtimeSummaryResults.push({
+                    scope: "tilemap",
+                    ok: false,
+                    message: tilemapBootstrap.message,
+                    missing: tilemapBootstrap.missing,
+                });
+            }
+
+            const bgmBootstrap = resolveBgmRuntimeBootstrap();
+            if (bgmBootstrap.ok) {
+                runtimeSummaryResults.push({
+                    scope: "bgm",
+                    ok: true,
+                    message: `Loaded BGM bootstrap (${bgmBootstrap.payload.name}, ${bgmBootstrap.payload.cues.length} cues).`,
+                });
+            } else {
+                runtimeSummaryResults.push({
+                    scope: "bgm",
+                    ok: false,
+                    message: bgmBootstrap.message,
+                    missing: bgmBootstrap.missing,
+                });
+            }
+
+            queueMicrotask(() => {
+                const runtimeSummary = buildPlaytestRuntimeSummary(
+                    runtimeSummaryResults,
+                );
+                persistPlaytestRuntimeSummary(runtimeSummary);
+                publishDevSaveStatus(
+                    runtimeSummary.message,
+                    runtimeSummary.tone,
+                );
+            });
         }
 
         return () => {
@@ -594,7 +686,7 @@ export default function App() {
             }
             quickSaveScheduler.dispose();
         };
-    }, []);
+    }, [devToolMode, isDevMode, publishDevSaveStatus]);
 
     useEffect(() => {
         if (!isDevMode) {
@@ -990,6 +1082,43 @@ export default function App() {
               : "On";
     const interactModeLabel =
         devInteractBehavior === "dodge" ? "Dodge" : "Attack";
+
+    const isStandaloneToolMode = isDevMode && devToolMode !== null;
+
+    if (isStandaloneToolMode) {
+        return (
+            <div className="GameContainer">
+                <header className="AppHeader">
+                    <p className="AppEyebrow">UrsaManus Tool Mode</p>
+                    <h1 className="AppTitle">
+                        {devToolMode === "tilemap"
+                            ? "Tile map placement tool"
+                            : "BGM composer tool"}
+                    </h1>
+                    <p className="AppSubtitle">
+                        Standalone authoring mode booted via query param for
+                        direct localhost usage.
+                    </p>
+                    <p className="AppSubtitle">
+                        Exit tool mode by removing <strong>?tool=...</strong>
+                        from the URL.
+                    </p>
+                </header>
+
+                <div className="GameSurface">
+                    <aside className="DevControlsTab DevExamplesTab">
+                        <div className="DevExamplesArea DevExamplesStack">
+                            {devToolMode === "tilemap" ? (
+                                <TileMapPlacementToolExample title="TileMap placement tool MVP" />
+                            ) : (
+                                <BgmComposerToolExample title="BGM composer tool MVP" />
+                            )}
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="GameContainer">
@@ -1539,6 +1668,7 @@ export default function App() {
                             <GameOverScreenExample title="GameOverScreen preview" />
                             <TextBoxExample title="TextBox preview" />
                             <ToastsExample title="Toasts preview" />
+                            <TileMapPlacementToolExample title="TileMap placement tool MVP" />
                         </div>
                     </aside>
                 ) : null}

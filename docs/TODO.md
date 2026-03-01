@@ -10,7 +10,11 @@ This file tracks the immediate next systems planned for UrsaManus.
 
 ### P3 — Integration + tooling
 
-### Priority Expansion Backlog (2026-02-28)
+No open backlog items are currently tracked in the active Next section.
+
+## Recently Completed
+
+### 2026-03-01 (Backlog sweep)
 
 #### P1 additions (high impact)
 
@@ -20,61 +24,194 @@ This file tracks the immediate next systems planned for UrsaManus.
 
 #### P3 additions (authoring + tooling)
 
-### Prefab Backlog (Plug-and-Play)
+#### Now batch (completed)
 
-#### P2 candidates
+- [Completed] Bottable UI authoring components for level design (tile placement editor; MVP complete, integration pending).
+    - Status (2026-03-01): MVP + runtime bootstrap integration implemented.
+        - Added standalone tool-mode page (`?tool=tilemap`) with paint/erase grid editing, layer add/remove/select/visibility, clear layer, and map resize flows.
+        - Added tile brush selection UX improvements: quick-select tile buttons, dedicated eyedropper `Pick mode` (auto-returns to paint), and `Alt+click` tile-pick shortcut.
+        - Added deterministic JSON import/export (textarea + file import/export) backed by shared placement service + focused tests.
+        - Added authored collision profile controls in tile tool export flow (layer IDs/name keywords/tile-ID allowlist/fallback toggle) with payload round-trip + runtime bootstrap consumption.
+        - Added object/entity overlay authoring in tile tool (`Overlay mode`) with deterministic payload export/import linkage and runtime bootstrap injection.
+        - Added advanced layer tooling in tile tool and service (`lock`, `reorder`, `duplicate`, `merge`) with deterministic payload support and regression coverage.
+        - Added runtime bootstrap integration path that loads tilemap recovery payload into app startup world sizing/world-bounds when no quick-save restore is present.
+        - Added tile-based runtime collision overlay injection as deterministic obstacle colliders at startup bootstrap.
+        - Added collision semantics profile support (solid layer IDs/name rules + optional tile-id profile + visible-layer fallback toggle).
+    - Remaining: none for current tilemap tooling baseline.
+
+- [Completed] Robust documentation for tool usage + tool-builder workflows.
+    - Status (2026-03-01): delivered for current documentation baseline.
+        - Added localhost quickstart docs for standalone tool pages (`?tool=tilemap`, `?tool=bgm`) in `README.md` + `docs/USAGE.md`.
+        - Added manual GitHub workflow run docs (no auto push/PR runs).
+        - Added tools docs pack: `docs/tools/README.md`, `docs/tools/TILEMAP_TOOL.md`, `docs/tools/BGM_COMPOSER_TOOL.md`, `docs/tools/TOOL_BUILDER_GUIDE.md`.
+        - Added starter + certification artifacts: `docs/tools/TOOL_STARTER_TEMPLATE.md`, `docs/tools/certification/example-tool-certification.report.json`, `docs/tools/certification/example-tool-certification.summary.md`.
+        - Added operator walkthrough docs with screenshot/GIF checkpoints: `docs/tools/walkthroughs/TILEMAP_WALKTHROUGH.md`, `docs/tools/walkthroughs/BGM_COMPOSER_WALKTHROUGH.md`.
+        - Added walkthrough media folder/assets (`docs/tools/walkthroughs/media/*`) and linked media guidance from walkthrough docs index.
+        - Captured and committed walkthrough screenshot media assets for tilemap and BGM flows via automated capture pipeline (`scripts/captureToolWalkthroughMedia.ts`, `npm run tools:walkthrough:capture`) and marked checklist captures complete.
+        - Expanded builder guide with concrete tool-type blueprints for audio, narrative, and economy workflows.
+    - Remaining: none for current documentation baseline.
+
+- [Completed] Plug-and-play tool certification gate.
+    - Status (2026-03-01): significant progress delivered.
+        - Added `scripts/recoveryContractCheck.ts` and npm command `npm run recovery:contract` to fail on autosave-contract bypass patterns.
+        - Added focused policy/service tests: `src/tests/recoveryContractPolicy.test.ts`, `src/tests/toolRecoverySnapshot.test.ts`.
+        - Added aggregate gate `npm run quality:recovery` and wired it into `npm run release:verify`.
+        - Added concrete certification checklist artifact: `docs/tools/certification/TOOL_CERTIFICATION_CHECKLIST.md`.
+        - Added golden-file contract suite and fixtures for representative tool payloads: `src/tests/contracts/toolPayloadGolden.contract.test.tsx` + `src/tests/contracts/fixtures/*`.
+        - Added certification quality gate command `npm run quality:tool:certification` and wired it into manual CI + `release:verify`.
+        - Added certification report helper command `npm run tool:certification:report` (`scripts/toolCertificationReport.ts`).
+        - Wired release workflow to generate and upload certification artifacts (`tool-certification-<tag>`).
+    - Remaining: none for current certification gate baseline.
+
+- [Completed] Editor workflow resilience baseline (all authoring tools).
+    - Status (2026-03-01): delivered for current authoring-tool baseline.
+        - Added deterministic undo/redo history in tilemap and bgm authoring tools with bounded history depth.
+        - Added dirty-state tracking + browser unload guard while unsaved edits are present in both tools.
+        - Added autosave/recovery snapshots via localStorage for both tools to recover in-progress sessions.
+        - Added shared cross-tool recovery snapshot envelope contract (`um-tool-recovery-v1`) + helper service (`src/services/toolRecoverySnapshot.ts`).
+        - Added explicit recovery-state affordances in both tool UIs (last autosave timestamp display + manual recover/clear actions).
+        - Documented recovery contract in `docs/tools/TOOL_BUILDER_GUIDE.md`.
+        - Added deterministic action log output for core tilemap editing operations.
+        - Added focused regression coverage for undo/redo, dirty-state unload guards, and autosave/recovery behavior in both tool test suites.
+        - Added cross-tool regression coverage to enforce recovery helper/control presence for tool pages (`src/tests/toolRecoveryContractCoverage.test.ts`).
+    - Remaining: none for current authoring-tool resilience baseline.
+
+- [Completed] Source-control friendly authored-data workflow.
+    - Status (2026-03-01): foundational pieces implemented.
+        - Added shared JSON file helper + shared JSON parse/stringify/status utilities used by both tool MVPs.
+        - Tool payloads currently export deterministic pretty JSON for cleaner diffs.
+        - Added canonical payload field-order contract docs for tilemap/BGM payloads (`docs/tools/PAYLOAD_FIELD_ORDER.md`).
+        - Added authored JSON merge-conflict repair guidance (`docs/tools/AUTHORED_DATA_CONFLICT_REPAIR.md`).
+        - Added split-file export prototype + round-trip assemble parity utility for tilemaps (`src/services/tileMapSplitPayload.ts`, `scripts/tilemapSplitPayload.ts`, `src/tests/tileMapSplitPayload.test.ts`).
+    - Remaining: none for current authored-data workflow baseline.
+
+- [Completed] Chiptune-style micro BGM composer tool (NES-like motif sequencer; MVP complete, integration/docs expansion pending).
+    - Status (2026-03-01): MVP implemented ahead of schedule.
+        - Added standalone tool-mode page (`?tool=bgm`) with JSON authoring, schema validation, preset strip (`Intro`, `Loop A`, `Battle`), and file import/export.
+        - Added preview playback scheduling through `audioBus` + `SoundManager`, including loop preview and per-step mute/solo/channel overrides.
+        - Added runtime bootstrap contract service (`src/services/bgmRuntimeBootstrap.ts`) for deterministic cue resolution from BGM recovery payloads.
+        - Expanded effect expression support to include `filter` + `send` in BGM payload/runtime cue normalization.
+        - Added deterministic cue-shape hooks for effect/bend expression (`gainMultiplier`, `bendScale`, retrigger pattern, restart policy) in runtime bootstrap + preview scheduling.
+        - Added focused tests for validation, presets, preview controls, and import behavior.
+        - Added focused runtime contract tests (`src/tests/bgmRuntimeBootstrap.test.ts`).
+    - Remaining: none for current BGM MVP/runtime-contract baseline.
+
+#### Next batch (completed)
+
+- [Completed] Authoring spec + docs for BGM composition JSON.
+    - Status (2026-03-01): delivered.
+        - Published full markdown spec (`docs/tools/BGM_JSON_SPEC.md`) with field-by-field guide, starter example, runtime contract notes, and common error catalog.
+        - Expanded effect expression docs to include `filter` + `send` and cue-shape hook behavior.
+    - Remaining: none for current BGM JSON authoring spec baseline.
+
+- [Completed] Release promotion enforcement for tool certification.
+    - Status (2026-03-01): delivered for current promotion baseline.
+        - Added certification status enforcement script (`scripts/certificationStatusCheck.ts`) and npm command `npm run tool:certification:status`.
+        - Wired release workflow preflight to enforce no `fail` certification statuses before promotion artifact upload.
+        - Added schema-change promotion guard (`scripts/releaseSchemaChangeGuard.ts`, `npm run release:tool:schema:guard`) and wired it into release preflight.
+        - Added required migration + compatibility artifacts for schema-change releases (`docs/tools/SCHEMA_MIGRATION_NOTES.md`, `docs/tools/TOOL_COMPATIBILITY_NOTES.md`).
+        - Added explicit rollback guidance for tool-output compatibility regressions in compatibility notes.
+    - Remaining: none for current release promotion/certification enforcement baseline.
+
+- [Completed] In-editor playtest and round-trip loop.
+    - Status (2026-03-01): delivered for current playtest-loop baseline.
+        - Added one-click runtime playtest launch actions in tilemap/BGM tools that persist current authored snapshot before opening runtime mode.
+        - Added in-tool pre-launch validation/status summary for BGM playtest launch failures/success.
+        - Added focused regression coverage for runtime playtest launch controls.
+        - Added explicit round-trip verification controls in tilemap/BGM tools that re-import current payloads and report semantic drift status.
+        - Added focused regression coverage for round-trip verification pass/fail paths.
+        - Added consolidated post-launch runtime validation summary capture in runtime bootstrap handoff (loaded/warning/error counts), including persisted summary envelope.
+    - Remaining: none for current in-editor playtest/round-trip baseline.
+
+- [Completed] Authoring-tool accessibility baseline.
+    - Status (2026-03-01): delivered for current accessibility baseline.
+        - Published baseline requirements doc for tool accessibility (`docs/tools/TOOL_ACCESSIBILITY_BASELINE.md`) covering keyboard-only operation, focus order, labels, non-pointer parity, status visibility, reduced motion, and contrast expectations.
+        - Added certification-gate enforcement requiring `accessibility-baseline` pass evidence in report checks (`scripts/certificationStatusCheck.ts`, `scripts/toolCertificationReport.ts`).
+        - Updated certification checklist and example artifacts to align with required accessibility baseline pass criteria.
+        - Added operator-facing non-pointer/keyboard workflow guidance in tool docs (`docs/tools/TILEMAP_TOOL.md`, `docs/tools/BGM_COMPOSER_TOOL.md`).
+    - Remaining: none for current authoring-tool accessibility baseline.
+
+#### Later batch (completed)
+
+- [Completed] Tool scalability and performance budgets.
+    - Status (2026-03-01): delivered for current performance-budget baseline.
+        - Defined tool-runtime budget contracts for tilemap/BGM workflows (`src/services/toolPerformanceBudgets.ts`) and documented thresholds (`docs/tools/TOOL_PERFORMANCE_BUDGETS.md`).
+        - Added synthetic large-project fixture builders for perf smoke checks (`src/tests/fixtures/toolPerfFixtures.ts`).
+        - Added executable perf smoke command (`scripts/toolPerfSmoke.ts`, `npm run tool:perf:smoke`, `npm run quality:tool:perf`) with budget pass/fail gating.
+        - Added lightweight in-tool diagnostics in tilemap/BGM UIs (payload size + last sample + `Run perf diagnostics` action).
+    - Remaining: none for current tool scalability/performance budget baseline.
+
+### 2026-03-01 (Prefab backlog sweep)
+
+#### P2 delivered
 
 - Cutscene sequence system.
-    - Add timeline/step runner for cutscenes (text box, wait, signal, camera/pan hook, transition hook).
-    - Support optional `awaitInput` per step so progression can be manual (`continue` key/button) or automatic.
-    - Allow skip policy options (`disabled`, `hold-to-skip`, `instant`) and completion callbacks.
-    - Integrate with `TextBox` + `Toasts` outputs without coupling to specific game mode logic.
+    - Status (2026-03-01): delivered for current prefab baseline.
+        - Added timeline/step runner service with `text`/`toast`/`wait`/`signal`/`camera`/`transition` steps (`src/services/cutsceneSequence.ts`).
+        - Added optional `awaitInput` flow + timed update progression and explicit `continue()` control.
+        - Added skip policy support (`disabled`, `hold-to-skip`, `instant`) and completion callback path.
+        - Added decoupled `onText` + `onToast` hooks plus focused regression coverage (`src/tests/cutsceneSequence.test.ts`).
 
 - Dialogue system (JSON-driven for cutscenes).
-    - Add parser/validator for JSON conversation payloads (example shape: `{ character, dialogues }`) with typed schema.
-    - Extend schema with useful props: `id`, `speakerId`, `speakerName`, `portrait`, `emotion`, `voiceCue`, `awaitInput`, `speedMs`, `choices`, `next`, `tags`.
-    - Support branching dialogue nodes and linear fallback when no branching is present.
-    - Add conversion helpers from JSON -> cutscene steps so authored conversations can run through the cutscene system.
+    - Status (2026-03-01): delivered for current prefab baseline.
+        - Added parser/validator for typed dialogue payloads, including legacy `{ character, dialogues }` conversion (`src/services/dialogueCutscene.ts`).
+        - Added extended node/choice schema support: `id`, `speakerId`, `speakerName`, `portrait`, `emotion`, `voiceCue`, `awaitInput`, `speedMs`, `choices`, `next`, `tags`.
+        - Added branching path resolution with linear fallback when no branch target is selected.
+        - Added conversion helpers from dialogue payloads to cutscene sequence steps and tests (`src/tests/dialogueCutscene.test.ts`).
 
 - Inventory core module + store.
-    - Add typed slot/container/item schema (`stackable`, `maxStack`, `weight`, tags).
-    - Support add/remove/split/merge/move operations with deterministic tests.
+    - Status (2026-03-01): delivered for current prefab baseline.
+        - Added typed inventory item/container/slot runtime schema and bounded container constraints (`src/services/inventoryCore.ts`).
+        - Added deterministic add/remove/split/merge/move flows with stack/weight handling.
+        - Added focused regression coverage (`src/tests/inventoryCore.test.ts`).
 
 - Backpack UI prefab.
-    - Add reusable grid container UI for inventory slots with compact + expanded variants.
-    - Include keyboard/controller focus navigation and accessibility labels.
+    - Status (2026-03-01): delivered for current prefab baseline.
+        - Added reusable grid container component with compact + expanded variants (`src/components/backpack/Backpack.tsx`).
+        - Added slot selection affordance and accessibility labels for non-pointer workflows.
+        - Added focused component coverage (`src/tests/Backpack.test.tsx`).
 
 - Drag-and-drop inventory interactions.
-    - Add pointer drag/drop for slot swaps, stack split, merge, and invalid-drop rollback.
-    - Keep interaction logic modular so it works with inventory + hotbar + containers.
+    - Status (2026-03-01): delivered for current prefab baseline.
+        - Added modular drag session service for split/merge/swap workflows (`src/services/inventoryDragDrop.ts`).
+        - Added deterministic invalid-drop rollback behavior and integration tests (`src/tests/inventoryCore.test.ts`).
 
 - Hotbar prefab.
-    - Add 1–10 quick-slot bar with active index, cooldown/disabled visual hooks, and key bindings.
-    - Support binding inventory items/actions to hotbar slots.
+    - Status (2026-03-01): delivered for current prefab baseline.
+        - Added hotbar runtime service with 1–10 slots, active index state, key mapping, and cooldown/disabled hooks (`src/services/hotbar.ts`).
+        - Added item/action binding support and inventory item slot binding helper.
+        - Added reusable hotbar UI component + tests (`src/components/hotbar/Hotbar.tsx`, `src/tests/hotbar.test.ts`, `src/tests/Hotbar.test.tsx`).
 
 - Checkpoint/respawn prefab.
-    - Add activate/checkpoint/save + respawn flow with optional transition/audio hooks.
+    - Status (2026-03-01): delivered for current prefab baseline.
+        - Added checkpoint registration/activation service with snapshot export/import and respawn payload resolution (`src/services/checkpointRespawn.ts`).
+        - Added optional transition/audio hook metadata in respawn results.
+        - Added focused prefab coverage (`src/tests/prefabSystems.test.ts`).
 
 - Wave spawner prefab.
-    - Add spawn wave config (`count`, `cadence`, `maxActive`, tags) with simple difficulty scalar.
+    - Status (2026-03-01): delivered for current prefab baseline.
+        - Added wave spawner service with `count`, `cadenceMs`, `maxActive`, `tags`, and `difficultyScalar` support (`src/services/waveSpawner.ts`).
+        - Added deterministic update loop and completion tracking coverage (`src/tests/prefabSystems.test.ts`).
 
-#### P3 candidates
+#### P3 delivered
 
 - Loot/drop table prefab.
-    - Add weighted drop table resolver + pickup radius integration hooks.
+    - Status (2026-03-01): delivered in prior milestone via loot economy service baseline (`src/services/lootEconomy.ts`, `src/tests/lootEconomy.test.ts`).
 
 - Objective tracker prefab.
-    - Add modular objective state machine (`pending`, `active`, `completed`, `failed`) with signals.
+    - Status (2026-03-01): delivered for current prefab baseline.
+        - Added modular objective tracker service with `pending`/`active`/`completed`/`failed` states and status signals (`src/services/objectiveTracker.ts`).
+        - Added focused objective signal/state regression coverage (`src/tests/prefabSystems.test.ts`).
 
 - Interaction prompt prefab.
-    - Add proximity-driven prompt (`Press E`, etc.) with action gating and cooldown feedback.
+    - Status (2026-03-01): delivered for current prefab baseline.
+        - Added proximity-driven interaction prompt service with action gating and cooldown feedback (`src/services/interactionPrompt.ts`).
+        - Added focused proximity/cooldown behavior coverage (`src/tests/prefabSystems.test.ts`).
 
 - Dialogue/cutscene sequence prefab.
-    - Add lightweight scripted step runner (text, wait, signal, transition, continue).
+    - Status (2026-03-01): delivered for current prefab baseline through `cutsceneSequence` + `dialogueCutscene` services and tests.
 
-## Recently Completed
-
-### 2026-02-28 (Latest)
+### 2026-03-01 (Additional completions)
 
 - Toasts prefab completion:
     - added lightweight screen-space toast prefab in `src/components/toasts/Toasts.tsx` with anchored stacked positioning (`top-left`, `top-right`, `bottom-left`, `bottom-right`).

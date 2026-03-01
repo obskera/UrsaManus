@@ -12,7 +12,9 @@ For system-level flow and responsibilities, see [ARCHITECTURE.md](ARCHITECTURE.m
 - [worldgen/CHEATSHEET.md](worldgen/CHEATSHEET.md) — deterministic worldgen + spawn payload quick reference
 - [save/README.md](save/README.md) — save/load workflows and implementation snippets
 - [save/CHEATSHEET.md](save/CHEATSHEET.md) — quick save/load API and shortcut reference
+- [tools/README.md](tools/README.md) — tool operator quickstarts + plug-and-play builder guidance
 - [../src/services/save/README.md](../src/services/save/README.md) — contributor notes for save internals
+- [../README.md#manual-github-workflows-no-auto-runs](../README.md#manual-github-workflows-no-auto-runs) — how to manually run CI/release workflows on demand
 
 ### UI Primitives Index
 
@@ -64,6 +66,20 @@ Start dev server:
 
 `npm run dev`
 
+Open standalone tile map tool mode:
+
+`http://localhost:5173/?tool=tilemap`
+
+Tile map authoring shortcuts:
+
+- `Pick mode` samples tile id from the clicked cell and then returns to `Paint mode`.
+- Hold `Alt` while clicking a tile to pick it into the brush without changing modes.
+- Full operator guide: [tools/TILEMAP_TOOL.md](tools/TILEMAP_TOOL.md).
+
+Open standalone BGM composer tool mode:
+
+`http://localhost:5173/?tool=bgm`
+
 Run tests:
 
 `npm run test:run`
@@ -76,6 +92,22 @@ Run lint:
 
 `npm run lint`
 
+Prototype split-file tilemap export:
+
+`npm run tilemap:split:payload -- --input path/to/tilemap.json --out-dir ./tmp/tilemap-split`
+
+Prototype tilemap assemble from split files:
+
+`npm run tilemap:assemble:payload -- --input ./tmp/tilemap-split --output ./tmp/tilemap-assembled.json`
+
+### Manual Workflow Quality Gates
+
+- Manual `CI` runs `quality:content`, `quality:balance`, `quality:accessibility`, and `quality:recovery` before verification steps.
+- Manual `CI` also runs `quality:tool:certification` for golden payload contract coverage.
+- Manual `Release Pipeline` preflight also runs `quality:recovery` as part of release readiness gates.
+- Local equivalent for the recovery gate: `npm run quality:recovery`.
+- Local equivalent for tool certification contracts: `npm run quality:tool:certification`.
+
 ### Template Post-Clone Checklist
 
 If you started from this repository as a template, complete this once before feature work:
@@ -87,7 +119,7 @@ If you started from this repository as a template, complete this once before fea
     - `npm run lint`
     - `npm run test:run`
     - `npm run test:coverage:strict`
-- [ ] Confirm CI passes in GitHub Actions after first push
+- [ ] Manually run `CI` in GitHub Actions after first push and confirm it passes
 
 ### Planned system stubs (TODO-aligned)
 
