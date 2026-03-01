@@ -35,11 +35,16 @@ import {
     ToastsExample,
     TileMapPlacementToolExample,
     BgmComposerToolExample,
+    PrefabStarterWizardToolExample,
+    PrefabExampleMatrixExample,
 } from "./components/examples";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
 import { GAME_VIEW_CONFIG } from "@/config/gameViewConfig";
 import { dataBus } from "./services/DataBus";
 import { audioBus } from "@/services/audioBus";
+import { createPrefabAttachmentRuntime } from "@/services/prefabCore";
+import { createPrefabDiagnosticsService } from "@/services/prefabDiagnostics";
+import { createDefaultPrefabRegistry } from "@/services/prefabRegistryDefaults";
 import {
     applyTileMapRuntimeBootstrap,
     resolveTileMapRuntimeBootstrap,
@@ -74,7 +79,15 @@ type DevPerfStats = {
     frameMs: number;
 };
 
-type DevToolMode = "tilemap" | "bgm";
+type DevPrefabSnapshot = {
+    attachedModuleIds: string[];
+    unresolvedDependencies: string[];
+    eventsCaptured: number;
+    failedCount: number;
+    healthJson: string;
+};
+
+type DevToolMode = "tilemap" | "bgm" | "prefab";
 
 const GAME_MODE_QUERY_KEY = "mode";
 const DEV_TOOL_QUERY_KEY = "tool";
@@ -91,7 +104,7 @@ function normalizeGameMode(value: string | null): GameMode | null {
 }
 
 function normalizeDevToolMode(value: string | null): DevToolMode | null {
-    if (value === "tilemap" || value === "bgm") {
+    if (value === "tilemap" || value === "bgm" || value === "prefab") {
         return value;
     }
 
@@ -124,6 +137,8 @@ export default function App() {
         fps: 0,
         frameMs: 0,
     });
+    const [devPrefabSnapshot, setDevPrefabSnapshot] =
+        useState<DevPrefabSnapshot | null>(null);
     const [isAudioMuted, setIsAudioMuted] = useState(() => {
         const fallback = audioBus.getState().masterMuted;
 
@@ -256,6 +271,126 @@ export default function App() {
 
         publishDevSaveStatus(result.message, "error");
     }, [publishDevSaveStatus]);
+
+    const capturePrefabHealthReportAction = useCallback(() => {
+        try {
+            const registry = createDefaultPrefabRegistry();
+            const runtime = createPrefabAttachmentRuntime({ registry });
+            const diagnostics = createPrefabDiagnosticsService();
+
+            const scenarios = [
+                {
+                    blueprintId: "dev:player:rpg",
+                    entityId: "dev-player",
+                    requests: [
+                        { moduleId: "rpg.stats-equipment" },
+                        { moduleId: "rpg.inventory-hotbar" },
+                        { moduleId: "rpg.abilities" },
+                        { moduleId: "rpg.world-hooks" },
+                    ],
+                },
+                {
+                    blueprintId: "dev:enemy:melee",
+                    entityId: "dev-enemy",
+                    requests: [
+                        { moduleId: "enemy.core" },
+                        { moduleId: "enemy.pathing" },
+                        { moduleId: "enemy.melee-ability" },
+                    ],
+                },
+                {
+                    blueprintId: "dev:object:loot",
+                    entityId: "dev-object",
+                    requests: [
+                        { moduleId: "object.core" },
+                        { moduleId: "object.interactable" },
+                        { moduleId: "object.loot-state" },
+                    ],
+                },
+                {
+                    blueprintId: "dev:enemy:invalid-missing-dependency",
+                    entityId: "dev-enemy-invalid",
+                    requests: [{ moduleId: "enemy.melee-ability" }],
+                },
+            ];
+
+            const attachedModuleIdSet = new Set<string>();
+            for (const scenario of scenarios) {
+                const report = runtime.attachPrefabModules(
+                    scenario.entityId,
+                    scenario.requests,
+                    {},
+                );
+                diagnostics.recordAttachmentReport({
+                    blueprintId: scenario.blueprintId,
+                    report,
+                });
+
+                for (const moduleId of runtime.getAttachedModuleIds(
+                    scenario.entityId,
+                )) {
+                    attachedModuleIdSet.add(moduleId);
+                }
+            }
+
+            const health = diagnostics.getHealthReport();
+            const unresolvedDependencies = health.unresolvedDependencies.map(
+                (entry) =>
+                    `${entry.entityId}:${entry.moduleId}${entry.details ? ` (${entry.details})` : ""}`,
+            );
+
+            setDevPrefabSnapshot({
+                attachedModuleIds: Array.from(
+                    attachedModuleIdSet.values(),
+                ).sort((left, right) => left.localeCompare(right)),
+                unresolvedDependencies,
+                eventsCaptured: health.eventsCaptured,
+                failedCount: health.failedCount,
+                healthJson: diagnostics.exportHealthReport({ pretty: true }),
+            });
+
+            publishDevSaveStatus("Prefab health report captured", "success");
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : "Unknown prefab diagnostics failure.";
+            publishDevSaveStatus(
+                `Prefab health capture failed: ${message}`,
+                "error",
+            );
+        }
+    }, [publishDevSaveStatus]);
+
+    const exportPrefabHealthReportAction = useCallback(() => {
+        if (!devPrefabSnapshot?.healthJson) {
+            publishDevSaveStatus(
+                "No prefab health report to export",
+                "neutral",
+            );
+            return;
+        }
+
+        try {
+            const blob = new Blob([devPrefabSnapshot.healthJson], {
+                type: "application/json;charset=utf-8",
+            });
+            const href = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = href;
+            anchor.download = `prefab-health-report-${Date.now()}.json`;
+            anchor.click();
+            URL.revokeObjectURL(href);
+
+            publishDevSaveStatus("Prefab health report exported", "success");
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : "Unknown export failure.";
+            publishDevSaveStatus(`Prefab export failed: ${message}`, "error");
+        }
+    }, [devPrefabSnapshot, publishDevSaveStatus]);
 
     const runSanitizeStateAction = useCallback(
         (scope: PersistedStateSanitizeScope = "all") => {
@@ -1093,7 +1228,9 @@ export default function App() {
                     <h1 className="AppTitle">
                         {devToolMode === "tilemap"
                             ? "Tile map placement tool"
-                            : "BGM composer tool"}
+                            : devToolMode === "bgm"
+                              ? "BGM composer tool"
+                              : "Prefab starter wizard"}
                     </h1>
                     <p className="AppSubtitle">
                         Standalone authoring mode booted via query param for
@@ -1110,8 +1247,10 @@ export default function App() {
                         <div className="DevExamplesArea DevExamplesStack">
                             {devToolMode === "tilemap" ? (
                                 <TileMapPlacementToolExample title="TileMap placement tool MVP" />
-                            ) : (
+                            ) : devToolMode === "bgm" ? (
                                 <BgmComposerToolExample title="BGM composer tool MVP" />
+                            ) : (
+                                <PrefabStarterWizardToolExample title="Prefab starter wizard MVP" />
                             )}
                         </div>
                     </aside>
@@ -1358,6 +1497,26 @@ export default function App() {
                             </button>
                             <button
                                 type="button"
+                                className="DebugToggle"
+                                onClick={(event) => {
+                                    capturePrefabHealthReportAction();
+                                    event.currentTarget.blur();
+                                }}
+                            >
+                                Capture Prefab Health
+                            </button>
+                            <button
+                                type="button"
+                                className="DebugToggle"
+                                onClick={(event) => {
+                                    exportPrefabHealthReportAction();
+                                    event.currentTarget.blur();
+                                }}
+                            >
+                                Export Prefab Health Report
+                            </button>
+                            <button
+                                type="button"
                                 className={
                                     isWorldPaused
                                         ? "DebugToggle DebugToggle--active"
@@ -1522,6 +1681,34 @@ export default function App() {
                             Entities: {totalEntityCount} total /{" "}
                             {enemyEntityCount} enemy
                         </p>
+                        <p className="DevSaveStatus DevSaveStatus--neutral">
+                            Prefab diagnostics:{" "}
+                            {devPrefabSnapshot?.eventsCaptured ?? 0} events /{" "}
+                            {devPrefabSnapshot?.failedCount ?? 0} failed
+                        </p>
+                        <p className="DevSaveStatus DevSaveStatus--neutral">
+                            Prefab attached modules:{" "}
+                            {devPrefabSnapshot?.attachedModuleIds.length ?? 0}
+                        </p>
+                        <p className="DevSaveStatus DevSaveStatus--neutral">
+                            Prefab unresolved dependencies:{" "}
+                            {devPrefabSnapshot?.unresolvedDependencies.length ??
+                                0}
+                        </p>
+                        {devPrefabSnapshot?.attachedModuleIds.length ? (
+                            <p className="DevSaveStatus DevSaveStatus--neutral">
+                                Modules:{" "}
+                                {devPrefabSnapshot.attachedModuleIds.join(", ")}
+                            </p>
+                        ) : null}
+                        {devPrefabSnapshot?.unresolvedDependencies.length ? (
+                            <p className="DevSaveStatus DevSaveStatus--neutral">
+                                Unresolved:{" "}
+                                {devPrefabSnapshot.unresolvedDependencies.join(
+                                    " | ",
+                                )}
+                            </p>
+                        ) : null}
                         <ul className="DevControlsList">
                             <li>
                                 <span className="DevKey">Alt + Shift + S</span>
@@ -1668,6 +1855,7 @@ export default function App() {
                             <GameOverScreenExample title="GameOverScreen preview" />
                             <TextBoxExample title="TextBox preview" />
                             <ToastsExample title="Toasts preview" />
+                            <PrefabExampleMatrixExample title="Prefab example matrix" />
                             <TileMapPlacementToolExample title="TileMap placement tool MVP" />
                         </div>
                     </aside>

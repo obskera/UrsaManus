@@ -1,0 +1,27 @@
+{
+    "version": "um-prefab-encounter-bundle-v1",
+    "id": "boss-antechamber",
+    "label": "Boss Antechamber",
+    "spawns": [
+        {
+            "id": "party-lead",
+            "domain": "player",
+            "archetype": "jrpg-party-lead"
+        },
+        {
+            "id": "boss-core",
+            "domain": "enemy",
+            "archetype": "boss-phase"
+        },
+        {
+            "id": "support-core",
+            "domain": "enemy",
+            "archetype": "support-healer"
+        },
+        {
+            "id": "checkpoint-core",
+            "domain": "object",
+            "archetype": "checkpoint-statue"
+        }
+    ]
+}

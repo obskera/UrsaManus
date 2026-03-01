@@ -6,11 +6,233 @@ This file tracks the immediate next systems planned for UrsaManus.
 
 ### P1 — Core runtime utilities
 
+- [Completed] Prefab composition registry + builder API.
+    - Goal: register reusable prefab modules and compose them into copy/paste-ready presets.
+    - Deliverables:
+        - `createPrefabRegistry(...)` for module registration + lookup by domain/category.
+        - `createPrefabBuilder(...)` for deterministic compose/override/finalize flow.
+        - Validation path for required module dependencies and conflicting attachments.
+        - JSON-safe `exportPrefabBlueprint(...)` and `importPrefabBlueprint(...)` helpers.
+
+- [Completed] Entity attachment runtime contract.
+    - Goal: standardize “attach this system bundle to entity X” behavior for player, enemy, and object archetypes.
+    - Deliverables:
+        - `attachPrefabModules(entityId, modules, ctx)` and `detachPrefabModules(...)` lifecycle helpers.
+        - Shared attach status/report payload (attached, skipped, failed) for tooling + QA.
+        - Signal hooks for `prefab:attached`, `prefab:detached`, and `prefab:attach-failed`.
+
+- [Completed] Prefab defaults + override merge utility.
+    - Goal: allow users to start from prefab defaults and progressively override without rewriting everything.
+    - Deliverables:
+        - `mergePrefabConfig(base, overrides)` utility with deterministic key ordering.
+        - Policy for array merge semantics (`replace` vs `append`) per module domain.
+        - Guardrails for invalid override keys + actionable diagnostics.
+
+- [Completed] Prefab contract harness expansion.
+    - Goal: scale contract tests as prefab count grows.
+    - Deliverables:
+        - Extend `prefabContractHarness` for module attach/detach/override scenarios.
+        - Add reusable fixture matrix for player/enemy/object prefab blueprints.
+        - Add aggregate npm gate for prefab contract suite.
+    - Status (2026-03-01): delivered via runtime contract suite support in `src/tests/contracts/prefabContractHarness.tsx`, fixture matrix in `src/tests/contracts/fixtures/prefabBlueprintMatrix.ts`, runtime contract coverage in `src/tests/contracts/prefabRuntimeContractHarness.test.ts`, and aggregate gate `npm run quality:prefab:contracts`.
+
 ### P2 — Simulation modules (small + composable)
+
+- [Completed] RPG player preset bundle (copy/paste starter).
+    - Goal: one-call starter that wires common RPG player systems together.
+    - Includes:
+        - Core stats + equipment aggregation.
+        - Inventory + hotbar + ability cooldown/effects.
+        - Checkpoint/respawn + objective + interaction prompt hooks.
+    - Deliverables:
+        - `createRpgPlayerPrefab(...)` preset builder.
+        - Minimal “required inputs” contract and sane defaults for rapid bootstrapping.
+        - Example usage in docs + dev example scene.
+
+- [Completed] Enemy archetype preset packs.
+    - Goal: prefab enemy bundles users can drop in and tune.
+    - Initial packs:
+        - `melee-chaser` (pathfinding + combat + short cooldown ability).
+        - `ranged-kiter` (spacing behavior + projectile cadence contract).
+        - `tank-bruiser` (high HP/resistance + low mobility).
+        - `boss-phase` (entity state machine profile + phase transition hooks).
+    - Deliverables:
+        - `createEnemyPrefabPack(...)` and per-pack config presets.
+        - Shared enemy tuning schema for health/speed/damage/reward curves.
+
+- [Completed] Object/interaction prefab packs.
+    - Goal: reusable world-object prefabs for common RPG interactions.
+    - Initial packs:
+        - `loot-chest`, `shop-npc`, `quest-board`, `door-switch`, `checkpoint-statue`.
+    - Deliverables:
+        - `createObjectPrefabPack(...)` with interaction contracts and marker integration.
+        - Save/load-ready object state snapshots for opened/used/completed status.
+
+- [Completed] Spawn-ready prefab blueprint catalog.
+    - Goal: ship starter blueprint JSON that can be imported and modified.
+    - Deliverables:
+        - `src/prefabs/blueprints/*` catalog for player/enemy/object baseline templates.
+        - Validation CLI extension to verify prefab blueprint schema/version compatibility.
 
 ### P3 — Integration + tooling
 
-No open backlog items are currently tracked in the active Next section.
+- [Completed] Prefab starter wizard (tool mode).
+    - Goal: guided flow to generate an entity prefab from selected modules.
+    - Steps:
+        - Pick archetype (`player`, `enemy`, `object`).
+        - Pick base preset.
+        - Enable optional modules.
+        - Export blueprint JSON + generated integration snippet.
+    - Status (2026-03-01): delivered with starter wizard service (`src/services/prefabStarterWizard.ts`) plus standalone tool-mode shell via `?tool=prefab` in `src/App.tsx`, backed by `src/components/examples/PrefabStarterWizardToolExample.tsx` for archetype/preset selection, module selection, and blueprint/snippet export flow.
+
+- [Completed] “Promote from prefab” workflow docs.
+    - Goal: show users how to start simple and grow complexity safely.
+    - Deliverables:
+        - Quickstart path: base prefab -> tune overrides -> extract custom module.
+        - “When to fork vs when to override” decision guide.
+        - Troubleshooting guide for module conflicts and missing dependencies.
+    - Status (2026-03-01): delivered in `docs/prefabs/PREFAB_WORKFLOW.md` and linked from `docs/USAGE.md`.
+
+- [Completed] Prefab migration + compatibility policy.
+    - Goal: prevent breaking changes as prefab schema evolves.
+    - Deliverables:
+        - Versioned prefab schema + migration utility.
+        - Compatibility notes template for release artifacts.
+        - Gate checks in release verification for prefab schema-change safety.
+    - Status (2026-03-01): delivered via `src/services/prefabMigration.ts`, `scripts/prefabMigrationCheck.ts`, release gate wiring in `package.json` (`prefab:migration:check` included in `release:verify`), and compatibility notes template in `docs/prefabs/PREFAB_COMPATIBILITY_NOTES.md`.
+
+- [Completed] Prefab observability/dev diagnostics.
+    - Goal: make prefab composition failures easy to debug.
+    - Deliverables:
+        - Dev panel section showing attached modules and unresolved dependencies.
+        - Structured telemetry events for attach/override/migration failures.
+        - One-click “prefab health report” snapshot export.
+    - Status (2026-03-01): delivered with diagnostics service + telemetry (`src/services/prefabDiagnostics.ts`), one-click health report export, and dev panel diagnostics section/actions in `src/App.tsx` (`Capture Prefab Health`, `Export Prefab Health Report`) showing attached modules and unresolved dependencies.
+
+### P4 — Prefab variety expansion (next wave)
+
+- [Completed] Player prefab pack expansion (high variety).
+    - Goal: provide many ready-to-use player archetypes with minimal setup.
+    - Candidate packs:
+        - `arpg-player` (dash, stamina, i-frames, quick-slot actions).
+        - `jrpg-party-lead` (turn-order hooks, party commands, status resist).
+        - `survival-crafter` (hunger/thirst/stamina + gather/craft loops).
+        - `twin-stick-shooter` (aim channel + weapon swap + recoil profile).
+        - `stealth-infiltrator` (visibility/noise meters + takedown hooks).
+        - `platformer-mobility` (double jump, coyote time, wall slide/jump).
+    - Deliverables:
+        - `createPlayerPrefabPack(...)` variants + typed defaults.
+        - Profile cards documenting intended genre/use case + tuning knobs.
+    - Status (2026-03-01): delivered via expanded `createPlayerPrefabPack(...)` archetypes in `src/services/prefabPacks.ts` (`arpg-player`, `jrpg-party-lead`, `survival-crafter`, `twin-stick-shooter`, `stealth-infiltrator`, `platformer-mobility`) plus focused coverage in `src/tests/prefabPacks.test.ts` and runtime contract matrix coverage in `src/tests/contracts/fixtures/prefabBlueprintMatrix.ts`.
+
+- [Completed] Enemy prefab pack expansion (combat + AI roles).
+    - Goal: drop-in enemy role variety for encounters and progression loops.
+    - Candidate packs:
+        - `swarm-rusher`, `elite-affix`, `summoner-controller`, `shield-guard`, `support-healer`, `sniper-kiter`, `turret-stationary`, `phase-boss-scripted`.
+    - Deliverables:
+        - Role-oriented behavior defaults (`aggro`, `spacing`, `cadence`, `retreat`, `support-priority`).
+        - Reusable affix overlay modules (`enraged`, `vampiric`, `reflect`, `volatile`).
+    - Status (2026-03-01): delivered with expanded `createEnemyPrefabPack(...)` archetypes in `src/services/prefabPacks.ts` (`swarm-rusher`, `support-healer`, `shield-guard`, `sniper-kiter`) and role modules (`enemy.swarm-rush`, `enemy.support-aura`, `enemy.shield-guard`, `enemy.sniper-profile`), plus coverage in `src/tests/prefabPacks.test.ts`, `src/tests/contracts/fixtures/prefabBlueprintMatrix.ts`, `src/services/prefabStarterWizard.ts`, and `src/tests/prefabStarterWizard.test.ts`.
+
+- [Completed] Object/world prefab pack expansion (systems-rich objects).
+    - Goal: broad set of reusable world interactions and puzzle/economy props.
+    - Candidate packs:
+        - `breakable-container`, `resource-node`, `crafting-station`, `bank-stash`, `fast-travel-point`, `trap-floor`, `switch-network`, `locked-door`, `escort-cart`, `arena-trigger`.
+    - Deliverables:
+        - Persistent object-state contracts and save snapshot coverage.
+        - Interaction-prompt + marker + objective tracker integration defaults.
+    - Status (2026-03-01): delivered with expanded `createObjectPrefabPack(...)` archetypes in `src/services/prefabPacks.ts` covering `breakable-container`, `resource-node`, `crafting-station`, `bank-stash`, `fast-travel-point`, `trap-floor`, `switch-network`, `locked-door`, `escort-cart`, and `arena-trigger` (plus existing object presets), with coverage in `src/tests/prefabPacks.test.ts`, runtime fixture matrix in `src/tests/contracts/fixtures/prefabBlueprintMatrix.ts`, wizard preset integration in `src/services/prefabStarterWizard.ts`, and preset catalog tests in `src/tests/prefabStarterWizard.test.ts`.
+
+- [Completed] NPC/social prefab packs.
+    - Goal: richer non-combat prefab templates for quests and narrative.
+    - Candidate packs:
+        - `quest-giver`, `follower-companion`, `merchant-tiered`, `trainer-skill-tree`, `faction-rep-agent`, `town-ambient-npc`.
+    - Deliverables:
+        - Dialogue + objective + reward hooks prewired.
+        - Reputation/faction hook points with deterministic state transitions.
+    - Status (2026-03-01): delivered via expanded object-domain NPC/social archetypes in `src/services/prefabPacks.ts` (`quest-giver`, `follower-companion`, `merchant-tiered`, `trainer-skill-tree`, `faction-rep-agent`, `town-ambient-npc`) and modules (`object.npc.quest-giver`, `object.npc.follower-companion`, `object.npc.merchant-tiered`, `object.npc.trainer-skill-tree`, `object.npc.faction-rep-agent`, `object.npc.town-ambient`), plus coverage in `src/tests/prefabPacks.test.ts`, runtime contract fixture matrix additions in `src/tests/contracts/fixtures/prefabBlueprintMatrix.ts`, wizard preset integration in `src/services/prefabStarterWizard.ts`, and preset catalog tests in `src/tests/prefabStarterWizard.test.ts`.
+
+- [Completed] Encounter scenario prefab bundles.
+    - Goal: copy/paste encounter kits combining player/enemy/object prefabs.
+    - Candidate bundles:
+        - `starter-camp`, `dungeon-room-loop`, `boss-antechamber`, `survival-wave-field`, `town-social-hub`.
+    - Deliverables:
+        - Spawn-ready JSON bundle templates.
+        - One-command validation + simulation smoke checks.
+    - Status (2026-03-01): delivered with encounter bundle service + simulation runtime in `src/services/prefabEncounterBundles.ts`, spawn-ready templates in `src/prefabs/encounters/*.encounter.json` (`starter-camp`, `dungeon-room-loop`, `boss-antechamber`, `survival-wave-field`, `town-social-hub`), one-command smoke CLI `npm run prefab:encounter:smoke` via `scripts/prefabEncounterSmoke.ts`, and unit coverage in `src/tests/prefabEncounterBundles.test.ts`.
+
+- [Completed] Builder helper: prefab variant/inheritance workflow.
+    - Goal: derive variants without cloning full payloads.
+    - Deliverables:
+        - `extends`/`inherits` blueprint mechanism with override traceability.
+        - Conflict detection for deep variant chains.
+        - Resolved-view export for final flattened payloads.
+    - Status (2026-03-01): delivered with variant resolver service in `src/services/prefabVariantInheritance.ts` supporting `extends`/`inherits` resolution, override trace lineage (`moduleSources` + `lineage`), deep chain cycle/domain/composition issue reporting, and flattened export via `exportResolvedPrefabVariantBlueprint(...)`; covered by `src/tests/prefabVariantInheritance.test.ts`.
+
+- [Completed] Builder helper: batch tuning + balancing overlays.
+    - Goal: tune many prefabs quickly and safely.
+    - Deliverables:
+        - Batch patch utility for scalar knobs (hp/damage/speed/reward curves).
+        - Diff preview + rollback snapshots before apply.
+        - Preset-based tuning modes (`easy`, `normal`, `hard`, `nightmare`).
+    - Status (2026-03-01): delivered with `src/services/prefabBatchTuning.ts` (scalar knob overlay helper, diff preview reporting, in-memory snapshots + rollback, and preset modes), CLI command `npm run prefab:tuning:batch` via `scripts/prefabBatchTuning.ts` (preview-first flow with `--apply` filesystem rollback snapshots under `tmp/prefab-tuning-snapshots`), package script wiring in `package.json`, and focused coverage in `src/tests/prefabBatchTuning.test.ts`.
+
+- [Completed] Builder helper: prefab dependency advisor.
+    - Goal: help users discover missing modules and recommended add-ons.
+    - Deliverables:
+        - Recommendation engine for required/optional modules by archetype.
+        - Explainability output (`why this module is recommended`).
+        - Quick-fix actions in tool-mode wizard.
+    - Status (2026-03-01): delivered with advisor service `src/services/prefabDependencyAdvisor.ts` (required/optional recommendation engine with explainability and quick-fix application), starter wizard integration in `src/services/prefabStarterWizard.ts` (`recommendModulesForSelection(...)`, `applyModuleQuickFix(...)`), and tool-mode quick-fix UX in `src/components/examples/PrefabStarterWizardToolExample.tsx`; covered by `src/tests/prefabDependencyAdvisor.test.ts`, `src/tests/prefabStarterWizard.test.ts`, and `src/tests/PrefabStarterWizardToolExample.test.tsx`.
+
+- [Completed] Builder helper: prefab simulation sandbox.
+    - Goal: instant sanity tests before runtime integration.
+    - Deliverables:
+        - Simulate attach/detach/update loops with deterministic seed.
+        - Contract stress scenarios (conflicts, missing deps, migration edge cases).
+        - Exportable diagnostics snapshots for CI artifacts.
+    - Status (2026-03-01): delivered via simulation service `src/services/prefabSimulationSandbox.ts` with deterministic seeded scenarios, attach/detach/update-loop simulation, contract stress scenarios (`module-conflict`, `missing-dependency`), migration-edge scenarios (legacy + invalid payloads), and snapshot export (`um-prefab-simulation-sandbox-v1`); CLI command `npm run prefab:sandbox:simulate` in `scripts/prefabSimulationSandbox.ts`; focused coverage in `src/tests/prefabSimulationSandbox.test.ts`.
+
+- [Completed] Robust prefab example matrix (beyond happy path).
+    - Goal: ship usage examples that cover real-world integration depth.
+    - Deliverables:
+        - For each major prefab: `minimal`, `full-featured`, `override-heavy`, `migration/legacy` examples.
+        - App examples tab entries + focused tests for each variant.
+        - Example index docs linking source + expected outcomes.
+    - Status (2026-03-01): delivered with matrix catalog service `src/services/prefabExampleMatrix.ts` covering player/enemy/object domains and all four variants (`minimal`, `full-featured`, `override-heavy`, `migration-legacy`) including legacy-v0 migration checks; surfaced in dev examples tab via `src/components/examples/PrefabExampleMatrixExample.tsx` and `src/App.tsx`; focused coverage added in `src/tests/prefabExampleMatrix.test.ts` and `src/tests/PrefabExampleMatrixExample.test.tsx`; index documentation added at `docs/prefabs/PREFAB_EXAMPLE_INDEX.md` and linked from `docs/prefabs/PREFAB_WORKFLOW.md`.
+
+- [Completed] Copy-paste prefab cheatsheet pack.
+    - Goal: make prefab adoption fast with direct drop-in snippets.
+    - Deliverables:
+        - `docs/prefabs/CHEATSHEET.md` (top 30 copy/paste snippets).
+        - `docs/prefabs/PLAYER_PREFABS.md`, `ENEMY_PREFABS.md`, `OBJECT_PREFABS.md` quick-reference tables.
+        - “Start here in 5 minutes” snippet flow (wizard + runtime attach + export/import).
+    - Status (2026-03-01): delivered with snippet pack `docs/prefabs/CHEATSHEET.md` (30 copy/paste snippets, including 5-minute start flow from wizard build -> blueprint export/import -> runtime attach), plus domain reference tables in `docs/prefabs/PLAYER_PREFABS.md`, `docs/prefabs/ENEMY_PREFABS.md`, and `docs/prefabs/OBJECT_PREFABS.md`; linked from `docs/prefabs/PREFAB_WORKFLOW.md`.
+
+- [Completed] AI prefab usage docs + prompt recipes.
+    - Goal: make AI-assisted prefab authoring consistent and safe.
+    - Deliverables:
+        - `docs/ai/PREFAB_AI_QUICKSTART.md` (AI workflow entrypoint).
+        - `docs/ai/PREFAB_PROMPT_CHEATSHEET.md` (copy/paste prompts by goal).
+        - `docs/ai/PREFAB_PROMPT_RECIPES.md` (genre-specific prompt templates and expected outputs).
+        - `docs/ai/PREFAB_GENERATION_GUARDRAILS.md` (schema/version safety, validation commands, anti-hallucination constraints).
+        - `docs/ai/PREFAB_REVIEW_CHECKLIST.md` (AI output review rubric before merge).
+    - Status (2026-03-01): delivered under `docs/ai/` with quickstart, copy/paste prompt cheatsheet, genre recipes, generation guardrails, and merge review checklist.
+
+- [Completed] AI contract + verification flow for prefab generation.
+    - Goal: guarantee AI-generated prefab payloads are production-safe.
+    - Deliverables:
+        - Standard command sequence for AI outputs: `prefab:validate` -> `prefab:migration:check` -> `quality:prefab:contracts`.
+        - “Reject reasons” catalog for invalid AI output classes.
+        - CI artifact report summarizing AI-generated prefab validation outcomes.
+    - Status (2026-03-01): completed end-to-end with command sequence + reject-reasons catalog + artifact schema in `docs/ai/PREFAB_AI_VERIFICATION_FLOW.md`, automation script `scripts/prefabAiVerificationReport.ts`, npm command `npm run prefab:ai:verify`, and CI wiring in `.github/workflows/ci.yml` (artifact upload: `tmp/cert/prefab-ai-verification-report.json`).
+
+- [Completed] Prefab docs quality gate.
+    - Goal: ensure every new prefab ships with examples + docs parity.
+    - Deliverables:
+        - `npm run quality:prefab:docs` gate requiring: usage docs, cheatsheet snippet, and example test linkage.
+        - Contributor checklist update enforcing prefab docs + AI docs updates for prefab PRs.
+    - Status (2026-03-01): delivered with docs quality gate script `scripts/prefabDocsQuality.ts` and npm command `npm run quality:prefab:docs` (required prefab docs presence, cheatsheet snippet/5-minute flow checks, and example test linkage checks), plus PR checklist enforcement update in `docs/CONTRIBUTING.md`.
 
 ## Recently Completed
 

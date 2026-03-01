@@ -1,0 +1,33 @@
+{
+    "version": "um-prefab-encounter-bundle-v1",
+    "id": "town-social-hub",
+    "label": "Town Social Hub",
+    "spawns": [
+        {
+            "id": "party-lead",
+            "domain": "player",
+            "archetype": "jrpg-party-lead"
+        },
+        {
+            "id": "npc-merchant",
+            "domain": "object",
+            "archetype": "merchant-tiered"
+        },
+        {
+            "id": "npc-trainer",
+            "domain": "object",
+            "archetype": "trainer-skill-tree"
+        },
+        {
+            "id": "npc-faction",
+            "domain": "object",
+            "archetype": "faction-rep-agent"
+        },
+        {
+            "id": "npc-ambient",
+            "domain": "object",
+            "archetype": "town-ambient-npc",
+            "count": 2
+        }
+    ]
+}

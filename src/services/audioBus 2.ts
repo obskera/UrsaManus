@@ -49,7 +49,7 @@ export type AudioBusEvent =
 export type AudioBusListener = (event: AudioBusEvent) => void;
 export type AudioBusUnsubscribe = () => void;
 
-export class AudioBus {
+class AudioBus {
     private listeners = new Set<AudioBusListener>();
     private cues: Record<string, AudioCueDefinition> = {};
     private state: AudioBusState = {
@@ -151,4 +151,5 @@ export class AudioBus {
     }
 }
 
+export { AudioBus };
 export const audioBus = new AudioBus();

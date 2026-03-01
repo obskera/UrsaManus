@@ -1,0 +1,28 @@
+{
+    "version": "um-prefab-encounter-bundle-v1",
+    "id": "starter-camp",
+    "label": "Starter Camp",
+    "spawns": [
+        {
+            "id": "player-main",
+            "domain": "player",
+            "archetype": "arpg-player"
+        },
+        {
+            "id": "enemy-rushers",
+            "domain": "enemy",
+            "archetype": "melee-chaser",
+            "count": 2
+        },
+        {
+            "id": "camp-loot",
+            "domain": "object",
+            "archetype": "loot-chest"
+        },
+        {
+            "id": "camp-board",
+            "domain": "object",
+            "archetype": "quest-giver"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "version": "um-prefab-blueprint-v1",
+    "id": "object-loot-chest-starter",
+    "domain": "object",
+    "modules": [
+        {
+            "moduleId": "object.core",
+            "config": {
+                "markerCategory": "world-object",
+                "persistent": true
+            }
+        },
+        {
+            "moduleId": "object.interactable",
+            "config": {
+                "actionLabel": "E",
+                "radius": 2,
+                "cooldownMs": 0
+            }
+        },
+        {
+            "moduleId": "object.loot-state",
+            "config": {
+                "once": true,
+                "dropTableId": "starter-loot"
+            }
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "version": "um-prefab-encounter-bundle-v1",
+    "id": "survival-wave-field",
+    "label": "Survival Wave Field",
+    "spawns": [
+        {
+            "id": "survivor",
+            "domain": "player",
+            "archetype": "survival-crafter"
+        },
+        {
+            "id": "wave-rushers",
+            "domain": "enemy",
+            "archetype": "swarm-rusher",
+            "count": 3
+        },
+        {
+            "id": "resource-a",
+            "domain": "object",
+            "archetype": "resource-node",
+            "count": 2
+        },
+        {
+            "id": "field-trap",
+            "domain": "object",
+            "archetype": "trap-floor"
+        }
+    ]
+}

@@ -1,0 +1,33 @@
+{
+    "version": "um-prefab-encounter-bundle-v1",
+    "id": "dungeon-room-loop",
+    "label": "Dungeon Room Loop",
+    "spawns": [
+        {
+            "id": "player-main",
+            "domain": "player",
+            "archetype": "arpg-player"
+        },
+        {
+            "id": "guard-line",
+            "domain": "enemy",
+            "archetype": "shield-guard",
+            "count": 2
+        },
+        {
+            "id": "sniper-line",
+            "domain": "enemy",
+            "archetype": "sniper-kiter"
+        },
+        {
+            "id": "room-switch-net",
+            "domain": "object",
+            "archetype": "switch-network"
+        },
+        {
+            "id": "room-locked-door",
+            "domain": "object",
+            "archetype": "locked-door"
+        }
+    ]
+}

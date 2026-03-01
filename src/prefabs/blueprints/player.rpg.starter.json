@@ -1,0 +1,55 @@
+{
+    "version": "um-prefab-blueprint-v1",
+    "id": "player-rpg-starter",
+    "domain": "player",
+    "modules": [
+        {
+            "moduleId": "rpg.abilities",
+            "config": {
+                "resources": {
+                    "mana": 100,
+                    "stamina": 100
+                },
+                "abilities": []
+            }
+        },
+        {
+            "moduleId": "rpg.inventory-hotbar",
+            "config": {
+                "containerId": "backpack",
+                "inventoryCapacity": 24,
+                "hotbarSlotCount": 10,
+                "starterItems": []
+            }
+        },
+        {
+            "moduleId": "rpg.stats-equipment",
+            "config": {
+                "baseStats": {
+                    "maxHealth": 120,
+                    "attackPower": 12,
+                    "defense": 10,
+                    "moveSpeed": 100,
+                    "critChance": 0.05
+                },
+                "starterEquipment": []
+            }
+        },
+        {
+            "moduleId": "rpg.world-hooks",
+            "config": {
+                "interactionPrompt": {
+                    "label": "Interact",
+                    "actionLabel": "E",
+                    "radius": 2,
+                    "cooldownMs": 0
+                },
+                "initialCheckpoint": {
+                    "id": "spawn",
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        }
+    ]
+}

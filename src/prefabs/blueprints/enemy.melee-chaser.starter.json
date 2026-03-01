@@ -1,0 +1,35 @@
+{
+    "version": "um-prefab-blueprint-v1",
+    "id": "enemy-melee-chaser-starter",
+    "domain": "enemy",
+    "modules": [
+        {
+            "moduleId": "enemy.core",
+            "config": {
+                "health": 100,
+                "speed": 90,
+                "damage": 8,
+                "reward": {
+                    "xp": 12,
+                    "gold": 5
+                }
+            }
+        },
+        {
+            "moduleId": "enemy.melee-ability",
+            "config": {
+                "cadenceMs": 850,
+                "range": 1,
+                "abilityId": "enemy-melee"
+            }
+        },
+        {
+            "moduleId": "enemy.pathing",
+            "config": {
+                "behavior": "chase",
+                "preferredDistance": 1,
+                "leashDistance": 10
+            }
+        }
+    ]
+}

@@ -13,6 +13,8 @@ For system-level flow and responsibilities, see [ARCHITECTURE.md](ARCHITECTURE.m
 - [save/README.md](save/README.md) — save/load workflows and implementation snippets
 - [save/CHEATSHEET.md](save/CHEATSHEET.md) — quick save/load API and shortcut reference
 - [tools/README.md](tools/README.md) — tool operator quickstarts + plug-and-play builder guidance
+- [prefabs/PREFAB_WORKFLOW.md](prefabs/PREFAB_WORKFLOW.md) — prefab starter-to-custom workflow and troubleshooting
+- [prefabs/PREFAB_COMPATIBILITY_NOTES.md](prefabs/PREFAB_COMPATIBILITY_NOTES.md) — prefab schema compatibility and release template
 - [../src/services/save/README.md](../src/services/save/README.md) — contributor notes for save internals
 - [../README.md#manual-github-workflows-no-auto-runs](../README.md#manual-github-workflows-no-auto-runs) — how to manually run CI/release workflows on demand
 
@@ -80,6 +82,10 @@ Open standalone BGM composer tool mode:
 
 `http://localhost:5173/?tool=bgm`
 
+Open standalone prefab starter wizard tool mode:
+
+`http://localhost:5173/?tool=prefab`
+
 Run tests:
 
 `npm run test:run`
@@ -91,6 +97,10 @@ Run coverage:
 Run lint:
 
 `npm run lint`
+
+Validate prefab blueprint catalog:
+
+`npm run prefab:validate`
 
 Prototype split-file tilemap export:
 
@@ -123,11 +133,11 @@ If you started from this repository as a template, complete this once before fea
 
 ### Planned system stubs (TODO-aligned)
 
-These are implementation placeholders to keep usage docs aligned with active TODO items.
+This section tracks parity between roadmap intent and shipped systems.
 
 #### P1 — Core runtime + reliability
 
-- [ ] `Global world pause` controller
+- [x] `Global world pause` controller
     - Freeze simulation updates (physics/movement/AI/ticks) while paused.
     - Block gameplay controls while allowing pause-menu and cutscene-continue input.
     - Support scoped pause reasons (`pause-menu`, `cutscene`) with deterministic resume behavior.
@@ -486,11 +496,11 @@ These are implementation placeholders to keep usage docs aligned with active TOD
     - `enqueue(...)`, `dequeue()`, `remove(id)`, `peek()`, `clear()`, `size()`, `list()`
 - Dev example is available in `src/components/examples/ToastsExample.tsx` and rendered in the App example-components tab.
 
-- [ ] `Cutscene` sequence system
+- [x] `Cutscene` sequence system
     - Provide step runner with text/wait/signal/transition hooks.
     - Support per-step progression mode (`awaitInput` or timed auto-advance) and skip policy.
 
-- [ ] `Dialogue` JSON format + runtime bridge
+- [x] `Dialogue` JSON format + runtime bridge
     - Accept authored conversation payloads and validate them before runtime.
     - Convert dialogue nodes into cutscene steps consumable by the sequence system.
 

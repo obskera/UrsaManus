@@ -46,3 +46,7 @@ export { default as TileMapPlacementToolExample } from "./TileMapPlacementToolEx
 export type { TileMapPlacementToolExampleProps } from "./TileMapPlacementToolExample";
 export { default as BgmComposerToolExample } from "./BgmComposerToolExample";
 export type { BgmComposerToolExampleProps } from "./BgmComposerToolExample";
+export { default as PrefabStarterWizardToolExample } from "./PrefabStarterWizardToolExample";
+export type { PrefabStarterWizardToolExampleProps } from "./PrefabStarterWizardToolExample";
+export { default as PrefabExampleMatrixExample } from "./PrefabExampleMatrixExample";
+export type { PrefabExampleMatrixExampleProps } from "./PrefabExampleMatrixExample";

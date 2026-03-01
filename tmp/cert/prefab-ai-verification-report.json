@@ -1,0 +1,28 @@
+{
+  "artifactVersion": "um-prefab-ai-verification-v1",
+  "prefabId": "local-post-docs",
+  "generatedBy": "ai",
+  "commands": [
+    {
+      "name": "prefab:validate",
+      "status": "pass",
+      "durationMs": 288,
+      "outputExcerpt": "> ursamanus@0.0.0 prefab:validate\n> tsx scripts/prefabBlueprintValidate.ts\n\n✓ src/prefabs/blueprints/enemy.melee-chaser.starter.json\n✓ src/prefabs/blueprints/object.loot-chest.starter.json\n✓ src/prefabs/blueprints/player.rpg.starter.json\nPrefab blueprint validation passed (3/3 files)."
+    },
+    {
+      "name": "prefab:migration:check",
+      "status": "pass",
+      "durationMs": 278,
+      "outputExcerpt": "> ursamanus@0.0.0 prefab:migration:check\n> tsx scripts/prefabMigrationCheck.ts\n\n✓ src/prefabs/blueprints/enemy.melee-chaser.starter.json\n✓ src/prefabs/blueprints/object.loot-chest.starter.json\n✓ src/prefabs/blueprints/player.rpg.starter.json\nPrefab migration check passed (3/3 files)."
+    },
+    {
+      "name": "quality:prefab:contracts",
+      "status": "pass",
+      "durationMs": 1653,
+      "outputExcerpt": "> ursamanus@0.0.0 quality:prefab:contracts\n> npm run test:prefab:contracts && npm run prefab:migration:check && npm run prefab:validate\n\n\n> ursamanus@0.0.0 test:prefab:contracts\n> vitest run src/tests/prefabContractHarness.test.tsx src/tests/contracts/prefabRuntimeContractHarness.test.ts\n\n\n\u001b[1m\u001b[46m RUN \u001b[49m\u001b[22m \u001b[36mv4.0.18 \u001b[39m\u001b[90m/Users/robertothomasjr/Desktop/UrsaManus\u001b[39m\n\n \u001b[32m✓\u001b[39m src/tests/contracts/prefabRuntimeContractHarness.test.ts \u001b[2m(\u001b[22m\u001b[2m21 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 19\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/tests/prefabContractHarness.test.tsx \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 136\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m26 passed\u001b[39m\u001b[22m\u001b[90m (26)\u001b[39m\n\u001b[2m   Start at \u001b[22m 07:34:04\n\u001b[2m   Duration \u001b[22m 687ms\u001b[2m (transform 141ms, setup 80ms, import 267ms, tests 156ms, environment 603ms)\u001b[22m\n\n\n> ursamanus@0.0.0 prefab:migration:check\n> tsx scripts/prefabMigrationCheck.ts\n\n✓ src/prefabs/blueprints/enemy.melee-chaser.starter.json\n✓ src/prefabs/blueprints/object.loot-chest.starter.json\n✓ src/prefabs/blueprints/player.rpg.starter.json\nPrefab migration check passed (3/3 files).\n\n> ursamanus@0.0.0 prefab:validate\n> tsx scripts/prefabBlueprintValidate.ts\n\n✓ src/prefabs/blueprints/enemy.melee-chaser.starter.json\n✓ src/prefabs/blueprints/object.loot-chest.starter.json\n✓ src/prefabs/..."
+    }
+  ],
+  "rejectReasons": [],
+  "reviewer": "local-dev",
+  "timestamp": "2026-03-01T15:34:05.409Z"
+}

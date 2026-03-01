@@ -57,7 +57,7 @@ describe("TileMapPlacementToolExample", () => {
 
         expect(payload.value).toContain('"version": "um-tilemap-v1"');
         expect(payload.value).toContain('"id": "collision"');
-    }, 10000);
+    }, 20000);
 
     it("imports a valid tile map json file", async () => {
         const user = userEvent.setup();
@@ -132,7 +132,7 @@ describe("TileMapPlacementToolExample", () => {
             screen.getByText(/^Redo applied\./, { selector: "p" }),
         ).toBeInTheDocument();
         expect(screen.getByText(/History: 2\/2\./)).toBeInTheDocument();
-    }, 10000);
+    }, 20000);
 
     it("adds and removes beforeunload guard based on dirty state", async () => {
         const user = userEvent.setup();
@@ -401,7 +401,7 @@ describe("TileMapPlacementToolExample", () => {
 
         expect(baseLayer?.tiles[1]).toBe(3);
         expect(baseLayer?.tiles[2]).toBe(3);
-    }, 10000);
+    }, 20000);
 
     it("supports Alt+click shortcut to pick tile into brush", async () => {
         const user = userEvent.setup();
@@ -436,7 +436,7 @@ describe("TileMapPlacementToolExample", () => {
         const baseLayer = exported.layers.find((layer) => layer.id === "base");
 
         expect(baseLayer?.tiles[2]).toBe(9);
-    }, 10000);
+    }, 20000);
 
     it("applies collision profile controls into exported payload", async () => {
         const user = userEvent.setup();

@@ -35,6 +35,16 @@ jobs:
             - name: Tool certification contract gates
               run: npm run quality:tool:certification
 
+            - name: Prefab AI verification flow
+              run: npm run prefab:ai:verify -- --prefab-id ci-prefab-catalog --generated-by ai --reviewer ci-bot --out tmp/cert/prefab-ai-verification-report.json
+
+            - name: Upload prefab AI verification artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: prefab-ai-verification-report
+                  path: tmp/cert/prefab-ai-verification-report.json
+                  if-no-files-found: error
+
     verify:
         runs-on: ubuntu-latest
 

@@ -216,6 +216,7 @@ Before opening a PR:
 - [ ] Coverage still healthy (`npm run test:coverage` when relevant)
 - [ ] Strict coverage gate still passes (`npm run test:coverage:strict`) when behavior changed
 - [ ] Docs updated for behavioral/API changes
+- [ ] Prefab changes include docs parity (`npm run quality:prefab:docs`) and AI verification docs updates when applicable
 - [ ] New UI prefabs include both: demo wiring in `src/App.tsx` (`Show example components`) and copy/paste docs in `docs/USAGE.md`
 - [ ] Change is scoped to the stated objective
 - [ ] GitHub Actions CI (`.github/workflows/ci.yml`) is green
