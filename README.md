@@ -75,9 +75,11 @@ quickSave();
 Use this quick docs map when onboarding or jumping into a subsystem:
 
 - [README.md](README.md) — project overview and quick starts
+- [docs/README.md](docs/README.md) — central docs hub organized by task and audience
 - [docs/USAGE.md](docs/USAGE.md) — practical usage patterns and copy/paste examples
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system responsibilities and lifecycle flow
 - [docs/AI_SETUP.md](docs/AI_SETUP.md) — AI-assisted project bootstrap and configuration workflow
+- [docs/ai/ENGINE_AI_WORKFLOWS.md](docs/ai/ENGINE_AI_WORKFLOWS.md) — AI prompt templates for runtime/gameplay and docs sweep tasks
 - [docs/worldgen/CHEATSHEET.md](docs/worldgen/CHEATSHEET.md) — deterministic worldgen + spawn payload quick reference
 - [docs/save/README.md](docs/save/README.md) — save/load workflows and integration snippets
 - [docs/save/CHEATSHEET.md](docs/save/CHEATSHEET.md) — one-page save/load API reference

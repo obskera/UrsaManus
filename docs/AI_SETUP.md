@@ -21,11 +21,13 @@ Help the AI do three things reliably:
 ## Repo orientation (what AI should read in order)
 
 1. `README.md` (project overview + docs map)
-2. `docs/ARCHITECTURE.md` (module boundaries)
-3. `docs/USAGE.md` (copy/paste APIs)
-4. `docs/input/CHEATSHEET.md` (input mappings)
-5. `docs/worldgen/CHEATSHEET.md` (deterministic worldgen + spawn payload patterns)
-6. `docs/CONTRIBUTING.md` (guardrails and PR expectations)
+2. `docs/README.md` (docs hub: choose the right guide quickly)
+3. `docs/ARCHITECTURE.md` (module boundaries)
+4. `docs/USAGE.md` (copy/paste APIs)
+5. `docs/input/CHEATSHEET.md` (input mappings)
+6. `docs/worldgen/CHEATSHEET.md` (deterministic worldgen + spawn payload patterns)
+7. `docs/ai/ENGINE_AI_WORKFLOWS.md` (task-scoped prompt templates + validation workflows)
+8. `docs/CONTRIBUTING.md` (guardrails and PR expectations)
 
 Then inspect implementation entry points:
 
@@ -54,7 +56,7 @@ Hard constraints:
 - Update tests and docs for public behavior changes.
 
 Please do the following:
-1) Read README.md, docs/ARCHITECTURE.md, docs/USAGE.md, docs/input/CHEATSHEET.md, docs/CONTRIBUTING.md.
+1) Read README.md, docs/README.md, docs/ARCHITECTURE.md, docs/USAGE.md, docs/input/CHEATSHEET.md, docs/ai/ENGINE_AI_WORKFLOWS.md, docs/CONTRIBUTING.md.
 2) Propose a minimal implementation plan with exact files to edit.
 3) Implement in small patches.
 4) Run focused tests first, then broader tests.
@@ -209,6 +211,22 @@ When planning or implementing new features, align with these active roadmap docs
 - `docs/TODO.md` — source-of-truth priority list.
 - `docs/USAGE.md` (“Planned system stubs”) — implementation placeholder expectations.
 - `docs/AI_SETUP.md` — AI-agent workflow/source-of-truth for prompt templates and execution constraints.
+- `docs/ai/ENGINE_AI_WORKFLOWS.md` — gameplay/runtime/docs sweep execution templates and validation command bundles.
+
+## Validation command bundles for AI agents
+
+Use these command sets based on task size:
+
+- Focused change (single subsystem or targeted file set):
+    1. `npm run test:run -- src/tests/<target>.test.ts`
+    2. `npm run lint`
+- Cross-cutting runtime or multi-subsystem change:
+    1. `npm run lint`
+    2. `npm run test:run`
+- Release-readiness docs + behavior pass:
+    1. `npm run lint`
+    2. `npm run test:run`
+    3. `npm run test:coverage:strict`
 
 Recent implementation note (accessibility QA matrix):
 

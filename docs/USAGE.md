@@ -6,8 +6,10 @@ For system-level flow and responsibilities, see [ARCHITECTURE.md](ARCHITECTURE.m
 
 ### Documentation Map
 
+- [README.md](README.md) — docs hub with navigation by workflow and audience
 - [ARCHITECTURE.md](ARCHITECTURE.md) — system flow and module responsibilities
 - [AI_SETUP.md](AI_SETUP.md) — AI bootstrap/configuration guide for repo-based project setup
+- [ai/ENGINE_AI_WORKFLOWS.md](ai/ENGINE_AI_WORKFLOWS.md) — AI prompt templates for runtime/gameplay/docs updates
 - [input/CHEATSHEET.md](input/CHEATSHEET.md) — quick keyboard/pointer/gamepad input mapping reference
 - [worldgen/CHEATSHEET.md](worldgen/CHEATSHEET.md) — deterministic worldgen + spawn payload quick reference
 - [save/README.md](save/README.md) — save/load workflows and implementation snippets
