@@ -48,6 +48,7 @@ export type {
 } from "./inputActions";
 export type {
     DirectionalActions,
+    InputComponentAdapterOptions,
     InputComponentAdapters,
     InputDirection,
     InputDirectionAlias,

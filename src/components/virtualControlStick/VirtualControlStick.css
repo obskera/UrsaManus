@@ -1,0 +1,37 @@
+.um-virtual-control-stick {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    user-select: none;
+}
+
+.um-virtual-control-stick__base {
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    border: 1px solid var(--um-border-soft);
+    background: var(--um-surface);
+}
+
+.um-virtual-control-stick__thumb {
+    position: absolute;
+    width: 42%;
+    height: 42%;
+    border-radius: 999px;
+    border: 1px solid var(--um-accent-border);
+    background: var(--um-accent-soft);
+    box-shadow: var(--um-shadow-sm);
+    transition: transform var(--um-duration-fast) var(--um-ease-standard);
+}
+
+.um-virtual-control-stick--disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.um-virtual-control-stick--disabled .um-virtual-control-stick__thumb {
+    border-color: var(--um-border-soft);
+    background: var(--um-surface-muted);
+}
