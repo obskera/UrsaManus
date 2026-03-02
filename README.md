@@ -82,6 +82,7 @@ Use this quick docs map when onboarding or jumping into a subsystem:
 - [docs/save/README.md](docs/save/README.md) — save/load workflows and integration snippets
 - [docs/save/CHEATSHEET.md](docs/save/CHEATSHEET.md) — one-page save/load API reference
 - [docs/tools/README.md](docs/tools/README.md) — authoring tool operator docs and builder guide
+- [docs/TODO.md](docs/TODO.md) — active TODO (current sprint + next up); completed history is archived in [docs/TODO_COMPLETED_2026-03-02.md](docs/TODO_COMPLETED_2026-03-02.md)
 
 ### Tool UX Update (Tilemap)
 
@@ -488,7 +489,7 @@ Test conventions:
 - Usage guide: [docs/USAGE.md](docs/USAGE.md)
 - Architecture and data flow: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Contributor quickstart: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
-- Current next items: [docs/TODO.md](docs/TODO.md)
+- Current planning: [docs/TODO.md](docs/TODO.md) (active) and [docs/TODO_COMPLETED_2026-03-02.md](docs/TODO_COMPLETED_2026-03-02.md) (completed archive)
 
 ## Getting Started
 

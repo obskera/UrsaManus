@@ -86,10 +86,11 @@ Update docs whenever architecture, APIs, or workflows change:
 - `docs/ARCHITECTURE.md` for system flow and responsibilities
 - `docs/AI_SETUP.md` for AI-agent guidance (see roadmap sync + entity state-machine planning notes)
 
-Local planning note:
+Planning docs note:
 
-- `docs/TODO.md` is intentionally local-only and git-ignored.
-- Do not include `docs/TODO.md` changes in pull requests.
+- `docs/TODO.md` is the active tracker and should stay short.
+- Move completed items into the dated archive file (current archive: `docs/TODO_COMPLETED_2026-03-02.md`).
+- Keep planning updates in PRs when they are part of the shipped work scope.
 
 Prefab demo note:
 
