@@ -15,6 +15,9 @@ For system-level flow and responsibilities, see [ARCHITECTURE.md](ARCHITECTURE.m
 - [tools/README.md](tools/README.md) — tool operator quickstarts + plug-and-play builder guidance
 - [prefabs/PREFAB_WORKFLOW.md](prefabs/PREFAB_WORKFLOW.md) — prefab starter-to-custom workflow and troubleshooting
 - [prefabs/PREFAB_COMPATIBILITY_NOTES.md](prefabs/PREFAB_COMPATIBILITY_NOTES.md) — prefab schema compatibility and release template
+- [prefabs/GAME_STARTER_PACKS.md](prefabs/GAME_STARTER_PACKS.md) — copy/paste game starter packs aligned to roadmap brainstorm items
+- [tutorials/GAME_BUILDING_TUTORIAL.md](tutorials/GAME_BUILDING_TUTORIAL.md) — end-to-end movement/control/projectile/weapon/spell integration walkthrough
+- [tutorials/GAME_BUILDING_WORKFLOW_CHEATSHEET.md](tutorials/GAME_BUILDING_WORKFLOW_CHEATSHEET.md) — quick build-order and troubleshooting cheatsheet
 - [../src/services/save/README.md](../src/services/save/README.md) — contributor notes for save internals
 - [../README.md#manual-github-workflows-no-auto-runs](../README.md#manual-github-workflows-no-auto-runs) — how to manually run CI/release workflows on demand
 

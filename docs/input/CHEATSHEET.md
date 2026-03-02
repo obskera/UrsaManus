@@ -152,3 +152,24 @@ Profiles included by default:
 - `default`
 - `left-handed`
 - `gamepad-first`
+
+## Virtual Control Stick (touch joystick)
+
+```tsx
+import { VirtualControlStick } from "@/components/virtualControlStick";
+import { createInputComponentAdapters } from "@/components/screenController";
+
+const adapters = createInputComponentAdapters(actions, {
+    analogDirectionThreshold: 0.35,
+});
+
+<VirtualControlStick
+    deadzone={0.18}
+    sensitivity={1}
+    snapToCardinal
+    onVectorChange={adapters.virtualControlStick.onVectorChange}
+    onRelease={adapters.virtualControlStick.onRelease}
+/>;
+```
+
+Use `analogDirectionThreshold` to tune when stick direction should trigger movement actions.

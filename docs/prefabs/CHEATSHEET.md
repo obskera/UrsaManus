@@ -294,6 +294,78 @@ npm run prefab:tuning:batch -- --preset hard --preview
 npm run prefab:sandbox:simulate -- --json
 ```
 
+## Gameplay loop prefab snippets (movement + combat)
+
+### 31) Grid movement + projectile + weapon prefab starter
+
+```ts
+import { createGridMovementService } from "@/services/gridMovement";
+import { createProjectileService } from "@/services/projectiles";
+import {
+    createSingleShotWeaponPrefab,
+    createWeaponPrefabRuntime,
+} from "@/services/weaponPrefabs";
+
+const grid = createGridMovementService();
+const projectiles = createProjectileService();
+const weapon = createWeaponPrefabRuntime({
+    prefab: createSingleShotWeaponPrefab(),
+    projectileService: projectiles,
+});
+```
+
+### 32) Burst/auto weapon prefab variants
+
+```ts
+import {
+    createAutoWeaponPrefab,
+    createBurstWeaponPrefab,
+    createWeaponPrefabRuntime,
+} from "@/services/weaponPrefabs";
+
+const burstWeapon = createWeaponPrefabRuntime({
+    prefab: createBurstWeaponPrefab(),
+    projectileService: projectiles,
+});
+
+const autoWeapon = createWeaponPrefabRuntime({
+    prefab: createAutoWeaponPrefab(),
+    projectileService: projectiles,
+});
+```
+
+### 33) Spell prefab suite starter
+
+```ts
+import { createSpellPrefabService } from "@/services/spellPrefabs";
+
+const spells = createSpellPrefabService({ projectileService: projectiles });
+
+spells.cast("projectile-spell", {
+    casterId: "player-1",
+    x: 24,
+    y: 24,
+    directionX: 1,
+    directionY: 0,
+});
+```
+
+### 34) List and validate game starter packs
+
+```ts
+import {
+    listGameStarterPacks,
+    simulateGameStarterPack,
+} from "@/services/gameStarterPacks";
+
+const packs = listGameStarterPacks();
+const report = simulateGameStarterPack(packs[0].id);
+
+if (!report.ok) {
+    console.error(report.issues);
+}
+```
+
 ## See also
 
 - `docs/prefabs/PLAYER_PREFABS.md`
@@ -301,3 +373,4 @@ npm run prefab:sandbox:simulate -- --json
 - `docs/prefabs/OBJECT_PREFABS.md`
 - `docs/prefabs/PREFAB_WORKFLOW.md`
 - `docs/prefabs/PREFAB_EXAMPLE_INDEX.md`
+- `docs/prefabs/GAME_STARTER_PACKS.md`
