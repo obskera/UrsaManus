@@ -36,6 +36,7 @@ import {
     TileMapPlacementToolExample,
     BgmComposerToolExample,
     PrefabStarterWizardToolExample,
+    SpritePackGeneratorToolExample,
     PrefabExampleMatrixExample,
 } from "./components/examples";
 import { setupDevEffectHotkeys } from "./components/effects/dev";
@@ -87,7 +88,7 @@ type DevPrefabSnapshot = {
     healthJson: string;
 };
 
-type DevToolMode = "tilemap" | "bgm" | "prefab";
+type DevToolMode = "tilemap" | "bgm" | "prefab" | "spritepack";
 
 const GAME_MODE_QUERY_KEY = "mode";
 const DEV_TOOL_QUERY_KEY = "tool";
@@ -104,7 +105,12 @@ function normalizeGameMode(value: string | null): GameMode | null {
 }
 
 function normalizeDevToolMode(value: string | null): DevToolMode | null {
-    if (value === "tilemap" || value === "bgm" || value === "prefab") {
+    if (
+        value === "tilemap" ||
+        value === "bgm" ||
+        value === "prefab" ||
+        value === "spritepack"
+    ) {
         return value;
     }
 
@@ -1230,6 +1236,8 @@ export default function App() {
                             ? "Tile map placement tool"
                             : devToolMode === "bgm"
                               ? "BGM composer tool"
+                                                            : devToolMode === "spritepack"
+                                                                ? "Sprite pack generator tool"
                               : "Prefab starter wizard"}
                     </h1>
                     <p className="AppSubtitle">
@@ -1249,6 +1257,8 @@ export default function App() {
                                 <TileMapPlacementToolExample title="TileMap placement tool MVP" />
                             ) : devToolMode === "bgm" ? (
                                 <BgmComposerToolExample title="BGM composer tool MVP" />
+                            ) : devToolMode === "spritepack" ? (
+                                <SpritePackGeneratorToolExample title="Sprite pack generator tool MVP" />
                             ) : (
                                 <PrefabStarterWizardToolExample title="Prefab starter wizard MVP" />
                             )}

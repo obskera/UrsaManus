@@ -48,5 +48,7 @@ export { default as BgmComposerToolExample } from "./BgmComposerToolExample";
 export type { BgmComposerToolExampleProps } from "./BgmComposerToolExample";
 export { default as PrefabStarterWizardToolExample } from "./PrefabStarterWizardToolExample";
 export type { PrefabStarterWizardToolExampleProps } from "./PrefabStarterWizardToolExample";
+export { default as SpritePackGeneratorToolExample } from "./SpritePackGeneratorToolExample";
+export type { SpritePackGeneratorToolExampleProps } from "./SpritePackGeneratorToolExample";
 export { default as PrefabExampleMatrixExample } from "./PrefabExampleMatrixExample";
 export type { PrefabExampleMatrixExampleProps } from "./PrefabExampleMatrixExample";

@@ -75,6 +75,30 @@ Output:
 - final validation command results
 ```
 
+## Prompt: Build/Extend Sprite Pack Tool
+
+```txt
+Implement or extend the sprite pack generator tool in this UrsaManus repo.
+
+Requirements:
+- Support pixel-size frame dimensions: 8px, 16px, 32px, 64px.
+- Support genre-driven output presets (top-down, dungeon, sidescroller, rpg).
+- Generate character + enemy animation clips (`idle`, `move`, `atk`, `def`, `hurt`).
+- Generate environment/interactable variants (walls, decorations, chests/props).
+- Export PNG spritesheet plus JSON metadata compatible with sprite atlas clip contracts.
+- Keep generation deterministic for the same seed/options.
+
+Deliverables:
+1) Service-layer generator + pack metadata contract.
+2) Tool-mode UI for generation preview/export.
+3) Focused tests for determinism and output coverage.
+4) docs/USAGE.md and docs/tools/README updates for tool-mode URL + usage.
+
+Validation:
+- npm run test:run -- src/tests/spritePackGenerator.test.ts
+- npm run lint
+```
+
 ## Validation Command Sets
 
 Focused gameplay loop set:

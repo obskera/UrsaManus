@@ -46,12 +46,13 @@ This section covers tool operator usage and plug-and-play tool authoring standar
 
 - Tile map tool: `http://localhost:5173/?tool=tilemap`
 - BGM composer tool: `http://localhost:5173/?tool=bgm`
+- Sprite pack generator tool: `http://localhost:5173/?tool=spritepack`
 
 ## Common Troubleshooting
 
 - Tool page not loading:
     - confirm dev server is running on `localhost:5173`.
-    - verify query key is exactly `?tool=tilemap` or `?tool=bgm`.
+    - verify query key is exactly `?tool=tilemap`, `?tool=bgm`, or `?tool=spritepack`.
 - Import failing:
     - ensure JSON file is valid UTF-8 text and matches expected schema.
     - run in-tool validation before import when available.

@@ -511,6 +511,10 @@ Open standalone BGM composer tool (dev mode):
 
 `http://localhost:5173/?tool=bgm`
 
+Open standalone sprite pack generator tool (dev mode):
+
+`http://localhost:5173/?tool=spritepack`
+
 Run tests:
 
 `npm run test:run`

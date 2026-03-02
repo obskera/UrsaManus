@@ -91,6 +91,10 @@ Open standalone prefab starter wizard tool mode:
 
 `http://localhost:5173/?tool=prefab`
 
+Open standalone sprite pack generator tool mode:
+
+`http://localhost:5173/?tool=spritepack`
+
 Run tests:
 
 `npm run test:run`
