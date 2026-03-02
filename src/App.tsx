@@ -69,6 +69,8 @@ import "./App.css";
 type GameMode = "side-scroller" | "top-down";
 type DevSaveStatusTone = "neutral" | "success" | "error";
 type InteractBehaviorMode = "attack" | "dodge";
+type MainAppTab = "example-game" | "prefab-examples" | "tools";
+type ExampleGameView = "runtime" | "top-down-mini" | "side-scroller-mini";
 
 type CanvasTapMarker = {
     x: number;
@@ -122,8 +124,10 @@ export default function App() {
     const [hasProgress, setHasProgress] = useState(false);
     const isDevMode = import.meta.env.DEV;
     const [showDebugOutlines, setShowDebugOutlines] = useState(isDevMode);
-    const [showDevControls, setShowDevControls] = useState(false);
-    const [showExamplesTab, setShowExamplesTab] = useState(false);
+    const [activeMainTab, setActiveMainTab] =
+        useState<MainAppTab>("example-game");
+    const [exampleGameView, setExampleGameView] =
+        useState<ExampleGameView>("runtime");
     const [devToolMode] = useState<DevToolMode | null>(() => {
         if (!isDevMode) {
             return null;
@@ -133,6 +137,9 @@ export default function App() {
             new URLSearchParams(window.location.search).get(DEV_TOOL_QUERY_KEY),
         );
     });
+    const [selectedToolView, setSelectedToolView] = useState<DevToolMode>(
+        devToolMode ?? "tilemap",
+    );
     const [devInteractBehavior, setDevInteractBehavior] =
         useState<InteractBehaviorMode>("attack");
     const [devBossTargetIndex, setDevBossTargetIndex] = useState(0);
@@ -1283,568 +1290,265 @@ export default function App() {
             </header>
 
             <div className="GameSurface">
-                <div className="GameControlsRow">
+                <div className="GameControlsRow TabChoiceRow">
                     <div
                         className="GameModeSwitcher"
-                        role="group"
-                        aria-label="Game mode"
+                        role="tablist"
+                        aria-label="App sections"
                     >
                         <button
                             type="button"
+                            role="tab"
+                            aria-selected={activeMainTab === "example-game"}
                             className={
-                                gameMode === "side-scroller"
-                                    ? "game-mode-button game-mode-button--side-scroller is-active"
-                                    : "game-mode-button game-mode-button--side-scroller"
+                                activeMainTab === "example-game"
+                                    ? "game-mode-button is-active"
+                                    : "game-mode-button"
                             }
-                            onClick={switchToSideScroller}
+                            onClick={() => {
+                                setActiveMainTab("example-game");
+                            }}
                         >
-                            Side Scroller
+                            Example Game
                         </button>
                         <button
                             type="button"
+                            role="tab"
+                            aria-selected={activeMainTab === "prefab-examples"}
                             className={
-                                gameMode === "top-down"
-                                    ? "game-mode-button game-mode-button--top-down is-active"
-                                    : "game-mode-button game-mode-button--top-down"
+                                activeMainTab === "prefab-examples"
+                                    ? "game-mode-button is-active"
+                                    : "game-mode-button"
                             }
-                            onClick={switchToTopDown}
+                            onClick={() => {
+                                setActiveMainTab("prefab-examples");
+                            }}
                         >
-                            Top Down
+                            Prefab Examples
+                        </button>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={activeMainTab === "tools"}
+                            className={
+                                activeMainTab === "tools"
+                                    ? "game-mode-button is-active"
+                                    : "game-mode-button"
+                            }
+                            onClick={() => {
+                                setActiveMainTab("tools");
+                            }}
+                        >
+                            Tools
                         </button>
                     </div>
-                    <div
-                        className="DevToolsGroup"
-                        role="group"
-                        aria-label="Audio controls"
-                    >
-                        <button
-                            type="button"
-                            className={
-                                isAudioMuted
-                                    ? "DebugToggle DebugToggle--active"
-                                    : "DebugToggle"
-                            }
-                            aria-pressed={isAudioMuted}
-                            onClick={(event) => {
-                                toggleAudioMuted();
-                                event.currentTarget.blur();
-                            }}
-                        >
-                            {isAudioMuted ? "Unmute audio" : "Mute audio"}
-                        </button>
-                        <button
-                            type="button"
-                            className={
-                                isMusicMuted
-                                    ? "DebugToggle DebugToggle--active"
-                                    : "DebugToggle"
-                            }
-                            aria-pressed={isMusicMuted}
-                            onClick={(event) => {
-                                toggleMusicMuted();
-                                event.currentTarget.blur();
-                            }}
-                        >
-                            {isMusicMuted ? "Unmute music" : "Mute music"}
-                        </button>
-                        <button
-                            type="button"
-                            className={
-                                isSfxMuted
-                                    ? "DebugToggle DebugToggle--active"
-                                    : "DebugToggle"
-                            }
-                            aria-pressed={isSfxMuted}
-                            onClick={(event) => {
-                                toggleSfxMuted();
-                                event.currentTarget.blur();
-                            }}
-                        >
-                            {isSfxMuted ? "Unmute SFX" : "Mute SFX"}
-                        </button>
-                    </div>
-                    {isDevMode ? (
-                        <div className="DevToolsGroup">
-                            <button
-                                type="button"
-                                className={
-                                    showDebugOutlines
-                                        ? "DebugToggle DebugToggle--active"
-                                        : "DebugToggle"
-                                }
-                                aria-pressed={showDebugOutlines}
-                                onClick={(event) => {
-                                    setShowDebugOutlines((current) => !current);
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                {showDebugOutlines
-                                    ? "Hide debug outlines"
-                                    : "Show debug outlines"}
-                            </button>
-
-                            <button
-                                type="button"
-                                className={
-                                    showDevControls
-                                        ? "DebugToggle DebugToggle--active"
-                                        : "DebugToggle"
-                                }
-                                aria-pressed={showDevControls}
-                                onClick={(event) => {
-                                    setShowDevControls((current) => !current);
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                {showDevControls
-                                    ? "Hide dev controls"
-                                    : "Show dev controls"}
-                            </button>
-
-                            <button
-                                type="button"
-                                className={
-                                    showExamplesTab
-                                        ? "DebugToggle DebugToggle--active"
-                                        : "DebugToggle"
-                                }
-                                aria-pressed={showExamplesTab}
-                                onClick={(event) => {
-                                    setShowExamplesTab((current) => !current);
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                {showExamplesTab
-                                    ? "Hide example components"
-                                    : "Show example components"}
-                            </button>
-                        </div>
-                    ) : null}
                 </div>
 
-                {isDevMode && showDevControls ? (
-                    <aside
-                        className="DevControlsTab"
-                        aria-label="Default dev controls"
-                    >
-                        <p className="DevControlsTitle">Default dev controls</p>
-                        <div
-                            className="DevSaveActionRow"
-                            role="group"
-                            aria-label="Save and load actions"
-                        >
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    runQuickSaveAction();
-                                    event.currentTarget.blur();
-                                }}
+                {activeMainTab === "example-game" ? (
+                    <>
+                        <div className="GameControlsRow TabChoiceRow">
+                            <div
+                                className="DevToolsGroup"
+                                role="group"
+                                aria-label="Example game selector"
                             >
-                                Quick Save
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    runQuickLoadAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Quick Load
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    runExportSaveAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Export Save
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    triggerImportPicker();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Import Save
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    confirmSanitizeStateAction("save-only");
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Sanitize Save State
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    confirmSanitizeStateAction(
-                                        "input-profiles",
-                                    );
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Sanitize Input Profiles
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    confirmSanitizeStateAction("all");
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Sanitize Local Ursa State
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    capturePrefabHealthReportAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Capture Prefab Health
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    exportPrefabHealthReportAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Export Prefab Health Report
-                            </button>
-                            <button
-                                type="button"
-                                className={
-                                    isWorldPaused
-                                        ? "DebugToggle DebugToggle--active"
-                                        : "DebugToggle"
-                                }
-                                aria-pressed={isWorldPaused}
-                                onClick={(event) => {
-                                    toggleWorldPauseAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                {isWorldPaused ? "Resume World" : "Pause World"}
-                            </button>
-                            <button
-                                type="button"
-                                className={
-                                    devInteractBehavior === "dodge"
-                                        ? "DebugToggle DebugToggle--active"
-                                        : "DebugToggle"
-                                }
-                                aria-pressed={devInteractBehavior === "dodge"}
-                                onClick={(event) => {
-                                    toggleInteractBehaviorAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Interact Mode: {interactModeLabel}
-                            </button>
-                            <span className="DevActionLabel" role="note">
-                                Boss Phase
-                            </span>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    cycleBossTargetAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Cycle Boss Target
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    cycleBossTargetReverseAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Cycle Boss Target (Prev)
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    triggerBossPhaseAction("phase-1");
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Boss Phase 1
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    triggerBossPhaseAction("phase-2");
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Boss Phase 2
-                            </button>
-                            <span className="DevActionLabel" role="note">
-                                Player Timed Triggers
-                            </span>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    triggerPlayerAttackAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Player Attack
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    triggerPlayerDodgeAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Player Dodge
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    triggerPlayerBlockAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Player Block
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    triggerPlayerDamagedAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Player Damaged
-                            </button>
-                            <button
-                                type="button"
-                                className="DebugToggle"
-                                onClick={(event) => {
-                                    triggerPlayerStunnedAction();
-                                    event.currentTarget.blur();
-                                }}
-                            >
-                                Player Stunned
-                            </button>
-                            <input
-                                ref={saveImportInputRef}
-                                type="file"
-                                accept="application/json,.json"
-                                className="DevHiddenFileInput"
-                                onChange={(event) => {
-                                    void onImportFileChange(event);
-                                }}
-                            />
+                                <button
+                                    type="button"
+                                    className={
+                                        exampleGameView === "runtime"
+                                            ? "DebugToggle DebugToggle--active"
+                                            : "DebugToggle"
+                                    }
+                                    onClick={() => {
+                                        setExampleGameView("runtime");
+                                    }}
+                                >
+                                    Engine Runtime
+                                </button>
+                                <button
+                                    type="button"
+                                    className={
+                                        exampleGameView === "top-down-mini"
+                                            ? "DebugToggle DebugToggle--active"
+                                            : "DebugToggle"
+                                    }
+                                    onClick={() => {
+                                        setExampleGameView("top-down-mini");
+                                    }}
+                                >
+                                    Top-Down Mini
+                                </button>
+                                <button
+                                    type="button"
+                                    className={
+                                        exampleGameView === "side-scroller-mini"
+                                            ? "DebugToggle DebugToggle--active"
+                                            : "DebugToggle"
+                                    }
+                                    onClick={() => {
+                                        setExampleGameView("side-scroller-mini");
+                                    }}
+                                >
+                                    Side-Scroller Mini
+                                </button>
+                            </div>
                         </div>
-                        {devSaveStatus ? (
-                            <p
-                                className={`DevSaveStatus DevSaveStatus--${devSaveStatus.tone}`}
-                                role="status"
-                                aria-live="polite"
-                            >
-                                {devSaveStatus.message}
-                            </p>
-                        ) : null}
-                        <p className="DevSaveStatus DevSaveStatus--neutral">
-                            Audio status: {audioStatusLabel}
-                        </p>
-                        <p className="DevSaveStatus DevSaveStatus--neutral">
-                            World pause: {isWorldPaused ? "Paused" : "Running"}
-                        </p>
-                        <p className="DevSaveStatus DevSaveStatus--neutral">
-                            Interact Mode: {interactModeLabel}
-                        </p>
-                        <p className="DevSaveStatus DevSaveStatus--neutral">
-                            Boss Target: {devBossTargetLabel} [
-                            {devBossTargetSlotLabel}] ({devBossPhaseLabel})
-                        </p>
-                        <p className="DevSaveStatus DevSaveStatus--neutral">
-                            Perf: {devPerfStats.fps.toFixed(1)} fps (
-                            {devPerfStats.frameMs.toFixed(1)}ms)
-                        </p>
-                        <p className="DevSaveStatus DevSaveStatus--neutral">
-                            Entities: {totalEntityCount} total /{" "}
-                            {enemyEntityCount} enemy
-                        </p>
-                        <p className="DevSaveStatus DevSaveStatus--neutral">
-                            Prefab diagnostics:{" "}
-                            {devPrefabSnapshot?.eventsCaptured ?? 0} events /{" "}
-                            {devPrefabSnapshot?.failedCount ?? 0} failed
-                        </p>
-                        <p className="DevSaveStatus DevSaveStatus--neutral">
-                            Prefab attached modules:{" "}
-                            {devPrefabSnapshot?.attachedModuleIds.length ?? 0}
-                        </p>
-                        <p className="DevSaveStatus DevSaveStatus--neutral">
-                            Prefab unresolved dependencies:{" "}
-                            {devPrefabSnapshot?.unresolvedDependencies.length ??
-                                0}
-                        </p>
-                        {devPrefabSnapshot?.attachedModuleIds.length ? (
-                            <p className="DevSaveStatus DevSaveStatus--neutral">
-                                Modules:{" "}
-                                {devPrefabSnapshot.attachedModuleIds.join(", ")}
-                            </p>
-                        ) : null}
-                        {devPrefabSnapshot?.unresolvedDependencies.length ? (
-                            <p className="DevSaveStatus DevSaveStatus--neutral">
-                                Unresolved:{" "}
-                                {devPrefabSnapshot.unresolvedDependencies.join(
-                                    " | ",
-                                )}
-                            </p>
-                        ) : null}
-                        <ul className="DevControlsList">
-                            <li>
-                                <span className="DevKey">Alt + Shift + S</span>
-                                Quick Save
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + L</span>
-                                Quick Load
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + E</span>
-                                Export Save File
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + I</span>
-                                Import Save File
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + M</span>
-                                Toggle Audio Mute
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + N</span>
-                                Toggle Music Mute
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + B</span>
-                                Toggle SFX Mute
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + P</span>
-                                Toggle World Pause (Dev Reason)
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + D</span>
-                                Toggle Interact Mode (Attack/Dodge)
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + A</span>
-                                Trigger Player Attack State
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + Z</span>
-                                Trigger Player Dodge State
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + X</span>
-                                Trigger Player Block State
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + C</span>
-                                Trigger Player Damaged State
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + V</span>
-                                Trigger Player Stunned State
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + G</span>
-                                Trigger Boss Phase-1 on Selected Enemy
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + H</span>
-                                Trigger Boss Phase-2 on Selected Enemy
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + J</span>
-                                Cycle Boss Target Enemy
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + K</span>
-                                Cycle Boss Target Enemy (Reverse)
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + Q</span>
-                                Sanitize Quick-Save State
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + Y</span>
-                                Sanitize Input Profiles
-                            </li>
-                            <li>
-                                <span className="DevKey">Alt + Shift + R</span>
-                                Sanitize Local Ursa State
-                            </li>
-                            <li>
-                                <span className="DevKey">T</span>
-                                Cycle screen transition previews
-                            </li>
-                            <li>
-                                <span className="DevKey">P</span>
-                                Spawn particle presets
-                            </li>
-                            <li>
-                                <span className="DevKey">F</span>
-                                Start torch flame at mouse position
-                            </li>
-                            <li>
-                                <span className="DevKey">Shift + F</span>
-                                Stop torch flame emitter
-                            </li>
-                            <li>
-                                <span className="DevKey">I / J / K / L</span>
-                                Pan camera in manual mode
-                            </li>
-                            <li>
-                                <span className="DevKey">
-                                    Shift + I / J / K / L
-                                </span>
-                                Pan camera faster in manual mode
-                            </li>
-                            <li>
-                                <span className="DevKey">Arrows / WASD</span>
-                                Move player
-                            </li>
-                            <li>
-                                <span className="DevKey">Space / ↑</span>
-                                Jump in side-scroller mode
-                            </li>
-                        </ul>
-                    </aside>
+
+                        {exampleGameView === "runtime" ? (
+                            <>
+                                <div className="GameControlsRow">
+                                    <div
+                                        className="GameModeSwitcher"
+                                        role="group"
+                                        aria-label="Game mode"
+                                    >
+                                        <button
+                                            type="button"
+                                            className={
+                                                gameMode === "side-scroller"
+                                                    ? "game-mode-button game-mode-button--side-scroller is-active"
+                                                    : "game-mode-button game-mode-button--side-scroller"
+                                            }
+                                            onClick={switchToSideScroller}
+                                        >
+                                            Side Scroller
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={
+                                                gameMode === "top-down"
+                                                    ? "game-mode-button game-mode-button--top-down is-active"
+                                                    : "game-mode-button game-mode-button--top-down"
+                                            }
+                                            onClick={switchToTopDown}
+                                        >
+                                            Top Down
+                                        </button>
+                                    </div>
+                                    <div
+                                        className="DevToolsGroup"
+                                        role="group"
+                                        aria-label="Audio controls"
+                                    >
+                                        <button
+                                            type="button"
+                                            className={
+                                                isAudioMuted
+                                                    ? "DebugToggle DebugToggle--active"
+                                                    : "DebugToggle"
+                                            }
+                                            aria-pressed={isAudioMuted}
+                                            onClick={(event) => {
+                                                toggleAudioMuted();
+                                                event.currentTarget.blur();
+                                            }}
+                                        >
+                                            {isAudioMuted
+                                                ? "Unmute audio"
+                                                : "Mute audio"}
+                                        </button>
+                                        {isDevMode ? (
+                                            <button
+                                                type="button"
+                                                className={
+                                                    showDebugOutlines
+                                                        ? "DebugToggle DebugToggle--active"
+                                                        : "DebugToggle"
+                                                }
+                                                aria-pressed={showDebugOutlines}
+                                                onClick={(event) => {
+                                                    setShowDebugOutlines(
+                                                        (current) => !current,
+                                                    );
+                                                    event.currentTarget.blur();
+                                                }}
+                                            >
+                                                {showDebugOutlines
+                                                    ? "Hide debug outlines"
+                                                    : "Show debug outlines"}
+                                            </button>
+                                        ) : null}
+                                    </div>
+                                </div>
+
+                                <div className="CanvasPanel">
+                                    <div
+                                        className="CanvasMetaRow"
+                                        aria-label="Canvas details"
+                                    >
+                                        <span
+                                            className={`CanvasMetaPill CanvasMetaPill--mode CanvasMetaPill--${gameMode}`}
+                                        >
+                                            Mode: {modeLabel}
+                                        </span>
+                                        <span className="CanvasMetaPill">
+                                            Resolution: {width}×{height}
+                                        </span>
+                                        <span className="CanvasMetaPill">
+                                            Audio: {audioStatusLabel}
+                                        </span>
+                                        {isDevMode ? (
+                                            <>
+                                                <span className="CanvasMetaPill">
+                                                    World: {state.worldSize.width}
+                                                    ×{state.worldSize.height}
+                                                </span>
+                                                <span className="CanvasMetaPill">
+                                                    Viewport: {camera.viewport.width}
+                                                    ×{camera.viewport.height}
+                                                </span>
+                                                <span className="CanvasMetaPill">
+                                                    Camera: {cameraModeLabel} (
+                                                    {Math.round(camera.x)},
+                                                    {Math.round(camera.y)})
+                                                </span>
+                                                <span className="CanvasMetaPill">
+                                                    Player State: {playerBehaviorState}
+                                                </span>
+                                                <span className="CanvasMetaPill">
+                                                    Player Trail: {playerBehaviorTrail || "—"}
+                                                </span>
+                                            </>
+                                        ) : null}
+                                    </div>
+                                    {isDevMode && npcBehaviorStates.length > 0 ? (
+                                        <p
+                                            className="DevSaveStatus DevSaveStatus--neutral"
+                                            title={npcBehaviorTooltip}
+                                        >
+                                            NPC Behaviors:{" "}
+                                            {npcBehaviorStates
+                                                .map((entry) =>
+                                                    entry.trail
+                                                        ? `${entry.id.slice(0, 8)}:${entry.state} [${entry.trail}]`
+                                                        : `${entry.id.slice(0, 8)}:${entry.state}`,
+                                                )
+                                                .join(" | ")}
+                                        </p>
+                                    ) : null}
+                                    {canvas}
+                                </div>
+                                <div className="ControlsPanel">{controls}</div>
+                            </>
+                        ) : exampleGameView === "top-down-mini" ? (
+                            <aside className="DevControlsTab DevExamplesTab">
+                                <div className="DevExamplesArea DevExamplesStack">
+                                    <TopDownMiniGameExample title="Top-down mini game MVP" />
+                                </div>
+                            </aside>
+                        ) : (
+                            <aside className="DevControlsTab DevExamplesTab">
+                                <div className="DevExamplesArea DevExamplesStack">
+                                    <SideScrollerMiniGameExample title="Sidescroller mini game MVP" />
+                                </div>
+                            </aside>
+                        )}
+                    </>
                 ) : null}
 
-                {isDevMode && showExamplesTab ? (
+                {activeMainTab === "prefab-examples" ? (
                     <aside className="DevControlsTab DevExamplesTab">
-                        <p className="DevControlsTitle">Example components</p>
+                        <p className="DevControlsTitle">Prefab component examples</p>
                         <div className="DevExamplesArea DevExamplesStack">
                             <LifeGaugeExample title="LifeGauge preview" />
                             <ActionButtonExample title="ActionButton preview" />
@@ -1858,93 +1562,193 @@ export default function App() {
                             <QuickHUDLayoutExample title="QuickHUDLayout preview" />
                             <PlatformerHUDPresetExample title="PlatformerHUDPreset preview" />
                             <TopDownHUDPresetExample title="TopDownHUDPreset preview" />
-                            <TopDownMiniGameExample title="Top-down mini game MVP" />
-                            <SideScrollerMiniGameExample title="Sidescroller mini game MVP" />
                             <MainMenuExample title="MainMenu preview" />
                             <PauseMenuExample title="PauseMenu preview" />
                             <GameOverScreenExample title="GameOverScreen preview" />
                             <TextBoxExample title="TextBox preview" />
                             <ToastsExample title="Toasts preview" />
                             <PrefabExampleMatrixExample title="Prefab example matrix" />
-                            <TileMapPlacementToolExample title="TileMap placement tool MVP" />
                         </div>
                     </aside>
                 ) : null}
 
-                <div className="CanvasPanel">
-                    <div className="CanvasMetaRow" aria-label="Canvas details">
-                        <span
-                            className={`CanvasMetaPill CanvasMetaPill--mode CanvasMetaPill--${gameMode}`}
-                        >
-                            Mode: {modeLabel}
-                        </span>
-                        <span className="CanvasMetaPill">
-                            Resolution: {width}×{height}
-                        </span>
-                        <span className="CanvasMetaPill">
-                            Audio: {audioStatusLabel}
-                        </span>
+                {activeMainTab === "tools" ? (
+                    <>
+                        <div className="GameControlsRow TabChoiceRow">
+                            <div
+                                className="DevToolsGroup"
+                                role="group"
+                                aria-label="Tool selector"
+                            >
+                                <button
+                                    type="button"
+                                    className={
+                                        selectedToolView === "tilemap"
+                                            ? "DebugToggle DebugToggle--active"
+                                            : "DebugToggle"
+                                    }
+                                    onClick={() => {
+                                        setSelectedToolView("tilemap");
+                                    }}
+                                >
+                                    TileMap Tool
+                                </button>
+                                <button
+                                    type="button"
+                                    className={
+                                        selectedToolView === "bgm"
+                                            ? "DebugToggle DebugToggle--active"
+                                            : "DebugToggle"
+                                    }
+                                    onClick={() => {
+                                        setSelectedToolView("bgm");
+                                    }}
+                                >
+                                    BGM Tool
+                                </button>
+                                <button
+                                    type="button"
+                                    className={
+                                        selectedToolView === "prefab"
+                                            ? "DebugToggle DebugToggle--active"
+                                            : "DebugToggle"
+                                    }
+                                    onClick={() => {
+                                        setSelectedToolView("prefab");
+                                    }}
+                                >
+                                    Prefab Tool
+                                </button>
+                                <button
+                                    type="button"
+                                    className={
+                                        selectedToolView === "spritepack"
+                                            ? "DebugToggle DebugToggle--active"
+                                            : "DebugToggle"
+                                    }
+                                    onClick={() => {
+                                        setSelectedToolView("spritepack");
+                                    }}
+                                >
+                                    SpritePack Tool
+                                </button>
+                            </div>
+                        </div>
+
                         {isDevMode ? (
-                            <>
-                                <span className="CanvasMetaPill">
-                                    World: {state.worldSize.width}×
-                                    {state.worldSize.height}
-                                </span>
-                                <span className="CanvasMetaPill">
-                                    Viewport: {camera.viewport.width}×
-                                    {camera.viewport.height}
-                                </span>
-                                <span className="CanvasMetaPill">
-                                    Camera: {cameraModeLabel} (
-                                    {Math.round(camera.x)},
-                                    {Math.round(camera.y)})
-                                </span>
-                                <span className="CanvasMetaPill">
-                                    Player State: {playerBehaviorState}
-                                </span>
-                                <span className="CanvasMetaPill">
-                                    Player Trail: {playerBehaviorTrail || "—"}
-                                </span>
-                                <span className="CanvasMetaPill">
-                                    Interact Mode: {interactModeLabel}
-                                </span>
-                                <span className="CanvasMetaPill">
-                                    Boss Target: {devBossTargetLabel} [
-                                    {devBossTargetSlotLabel}] (
-                                    {devBossPhaseLabel})
-                                </span>
-                                <span className="CanvasMetaPill">
-                                    Perf: {devPerfStats.fps.toFixed(1)} fps (
-                                    {devPerfStats.frameMs.toFixed(1)}ms)
-                                </span>
-                                <span className="CanvasMetaPill">
-                                    Entities: {totalEntityCount} total /{" "}
-                                    {enemyEntityCount} enemy
-                                </span>
-                                <span className="CanvasMetaPill">
-                                    NPC States: {npcBehaviorStates.length}
-                                </span>
-                            </>
+                            <aside className="DevControlsTab" aria-label="Engine quick controls">
+                                <p className="DevControlsTitle">Engine quick controls</p>
+                                <div
+                                    className="DevSaveActionRow"
+                                    role="group"
+                                    aria-label="Quick engine actions"
+                                >
+                                    <button
+                                        type="button"
+                                        className="DebugToggle"
+                                        onClick={(event) => {
+                                            runQuickSaveAction();
+                                            event.currentTarget.blur();
+                                        }}
+                                    >
+                                        Quick Save
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="DebugToggle"
+                                        onClick={(event) => {
+                                            runQuickLoadAction();
+                                            event.currentTarget.blur();
+                                        }}
+                                    >
+                                        Quick Load
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="DebugToggle"
+                                        onClick={(event) => {
+                                            runExportSaveAction();
+                                            event.currentTarget.blur();
+                                        }}
+                                    >
+                                        Export Save
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="DebugToggle"
+                                        onClick={(event) => {
+                                            triggerImportPicker();
+                                            event.currentTarget.blur();
+                                        }}
+                                    >
+                                        Import Save
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="DebugToggle"
+                                        onClick={(event) => {
+                                            capturePrefabHealthReportAction();
+                                            event.currentTarget.blur();
+                                        }}
+                                    >
+                                        Capture Prefab Health
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="DebugToggle"
+                                        onClick={(event) => {
+                                            exportPrefabHealthReportAction();
+                                            event.currentTarget.blur();
+                                        }}
+                                    >
+                                        Export Prefab Health
+                                    </button>
+                                </div>
+                                <input
+                                    ref={saveImportInputRef}
+                                    type="file"
+                                    accept="application/json,.json"
+                                    className="DevHiddenFileInput"
+                                    onChange={(event) => {
+                                        void onImportFileChange(event);
+                                    }}
+                                />
+                                {devSaveStatus ? (
+                                    <p
+                                        className={`DevSaveStatus DevSaveStatus--${devSaveStatus.tone}`}
+                                        role="status"
+                                        aria-live="polite"
+                                    >
+                                        {devSaveStatus.message}
+                                    </p>
+                                ) : null}
+                                <p className="DevSaveStatus DevSaveStatus--neutral">
+                                    Audio: {audioStatusLabel} · Perf: {devPerfStats.fps.toFixed(1)} fps ({devPerfStats.frameMs.toFixed(1)}ms)
+                                </p>
+                                <p className="DevSaveStatus DevSaveStatus--neutral">
+                                    World: {isWorldPaused ? "Paused" : "Running"} · Entities: {totalEntityCount} total / {enemyEntityCount} enemy
+                                </p>
+                                <p className="DevSaveStatus DevSaveStatus--neutral">
+                                    Interact: {interactModeLabel} · Boss: {devBossTargetLabel} [{devBossTargetSlotLabel}] ({devBossPhaseLabel})
+                                </p>
+                            </aside>
                         ) : null}
-                    </div>
-                    {isDevMode && npcBehaviorStates.length > 0 ? (
-                        <p
-                            className="DevSaveStatus DevSaveStatus--neutral"
-                            title={npcBehaviorTooltip}
-                        >
-                            NPC Behaviors:{" "}
-                            {npcBehaviorStates
-                                .map((entry) =>
-                                    entry.trail
-                                        ? `${entry.id.slice(0, 8)}:${entry.state} [${entry.trail}]`
-                                        : `${entry.id.slice(0, 8)}:${entry.state}`,
-                                )
-                                .join(" | ")}
-                        </p>
-                    ) : null}
-                    {canvas}
-                </div>
-                <div className="ControlsPanel">{controls}</div>
+
+                        <aside className="DevControlsTab DevExamplesTab">
+                            <div className="DevExamplesArea DevExamplesStack">
+                                {selectedToolView === "tilemap" ? (
+                                    <TileMapPlacementToolExample title="TileMap placement tool MVP" />
+                                ) : selectedToolView === "bgm" ? (
+                                    <BgmComposerToolExample title="BGM composer tool MVP" />
+                                ) : selectedToolView === "spritepack" ? (
+                                    <SpritePackGeneratorToolExample title="Sprite pack generator tool MVP" />
+                                ) : (
+                                    <PrefabStarterWizardToolExample title="Prefab starter wizard MVP" />
+                                )}
+                            </div>
+                        </aside>
+                    </>
+                ) : null}
             </div>
         </div>
     );
