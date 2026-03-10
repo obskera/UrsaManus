@@ -9,11 +9,9 @@ export const GAME_MODE_AUDIO_CUES: Record<string, AudioCueDefinition> = {
         waveform: "triangle",
     },
     "scene:top-down:music": {
-        kind: "tone",
-        frequencyHz: 220,
-        durationMs: 380,
-        gain: 0.08,
-        waveform: "sine",
+        kind: "file",
+        src: "/Ninja%20Adventure%20-%20Asset%20Pack/Audio/Musics/1%20-%20Adventure%20Begin.ogg",
+        gain: 0.5,
     },
     "player:step": {
         kind: "tone",

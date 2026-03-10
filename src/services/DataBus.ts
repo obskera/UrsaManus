@@ -33,7 +33,177 @@ import {
     type StatusEffectInput,
     type StatusEffectInstance,
 } from "@/logic/simulation";
-import spriteSheetUrl from "@/assets/spriteSheet.png";
+import { TOP_DOWN_PLAYER_TUNING } from "@/config/playerTuning";
+
+const NINJA_GREEN_ANIMATION_SHEETS = {
+    attack: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Attack.png",
+    dead: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Dead.png",
+    idle: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Idle.png",
+    item: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Item.png",
+    jump: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Jump.png",
+    special1:
+        "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Special1.png",
+    special2:
+        "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Special2.png",
+    walk: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Walk.png",
+} as const;
+
+const NINJA_DIRECTIONAL_WALK_FRAMES = {
+    south: [
+        [0, 0],
+        [0, 1],
+        [0, 2],
+        [0, 3],
+    ],
+    north: [
+        [1, 0],
+        [1, 1],
+        [1, 2],
+        [1, 3],
+    ],
+    west: [
+        [2, 0],
+        [2, 1],
+        [2, 2],
+        [2, 3],
+    ],
+    east: [
+        [3, 0],
+        [3, 1],
+        [3, 2],
+        [3, 3],
+    ],
+} as const;
+
+const NINJA_DIRECTIONAL_IDLE_FRAME: Record<
+    PlayerFacingDirection,
+    readonly [number, number]
+> = {
+    south: [0, 0],
+    north: [1, 0],
+    west: [2, 0],
+    east: [3, 0],
+} as const;
+
+const NINJA_SINGLE_ROW_FRAMES = [
+    [0, 0],
+    [1, 0],
+    [2, 0],
+    [3, 0],
+] as const;
+
+type PlayerFacingDirection = keyof typeof NINJA_DIRECTIONAL_WALK_FRAMES;
+
+type PlayerAnimationClipKey =
+    | "idle"
+    | "moving"
+    | "attacking"
+    | "dodge"
+    | "block"
+    | "damaged"
+    | "stunned"
+    | "dead";
+
+type PlayerAnimationClip = {
+    spriteImageSheet: string;
+    spriteSheetTileWidth: number;
+    spriteSheetTileHeight: number;
+    frames: readonly (readonly [number, number])[];
+    fps: number;
+    directional?: boolean;
+};
+
+const NINJA_GREEN_PLAYER_ANIMATION_CLIPS: Record<
+    PlayerAnimationClipKey,
+    PlayerAnimationClip
+> = {
+    idle: {
+        spriteImageSheet: NINJA_GREEN_ANIMATION_SHEETS.idle,
+        spriteSheetTileWidth: 4,
+        spriteSheetTileHeight: 1,
+        frames: [[0, 0]],
+        fps: 1,
+    },
+    moving: {
+        spriteImageSheet: NINJA_GREEN_ANIMATION_SHEETS.walk,
+        spriteSheetTileWidth: 4,
+        spriteSheetTileHeight: 4,
+        frames: NINJA_SINGLE_ROW_FRAMES,
+        fps: TOP_DOWN_PLAYER_TUNING.walkAnimationFps,
+        directional: true,
+    },
+    attacking: {
+        spriteImageSheet: NINJA_GREEN_ANIMATION_SHEETS.attack,
+        spriteSheetTileWidth: 4,
+        spriteSheetTileHeight: 1,
+        frames: NINJA_SINGLE_ROW_FRAMES,
+        fps: 10,
+    },
+    dodge: {
+        spriteImageSheet: NINJA_GREEN_ANIMATION_SHEETS.jump,
+        spriteSheetTileWidth: 4,
+        spriteSheetTileHeight: 1,
+        frames: NINJA_SINGLE_ROW_FRAMES,
+        fps: 10,
+    },
+    block: {
+        spriteImageSheet: NINJA_GREEN_ANIMATION_SHEETS.item,
+        spriteSheetTileWidth: 1,
+        spriteSheetTileHeight: 1,
+        frames: [[0, 0]],
+        fps: 1,
+    },
+    damaged: {
+        spriteImageSheet: NINJA_GREEN_ANIMATION_SHEETS.special1,
+        spriteSheetTileWidth: 1,
+        spriteSheetTileHeight: 1,
+        frames: [[0, 0]],
+        fps: 1,
+    },
+    stunned: {
+        spriteImageSheet: NINJA_GREEN_ANIMATION_SHEETS.special2,
+        spriteSheetTileWidth: 1,
+        spriteSheetTileHeight: 1,
+        frames: [[0, 0]],
+        fps: 1,
+    },
+    dead: {
+        spriteImageSheet: NINJA_GREEN_ANIMATION_SHEETS.dead,
+        spriteSheetTileWidth: 1,
+        spriteSheetTileHeight: 1,
+        frames: [[0, 0]],
+        fps: 1,
+    },
+};
+
+const resolvePlayerAnimationClipKey = (
+    state: EntityBehaviorState,
+): PlayerAnimationClipKey => {
+    switch (state) {
+        case "moving":
+        case "patrol":
+        case "chase":
+        case "flee":
+            return "moving";
+        case "attacking":
+        case "phase-1":
+        case "phase-2":
+            return "attacking";
+        case "dodge":
+            return "dodge";
+        case "block":
+            return "block";
+        case "damaged":
+            return "damaged";
+        case "stunned":
+            return "stunned";
+        case "dead":
+            return "dead";
+        case "idle":
+        default:
+            return "idle";
+    }
+};
 
 export type CameraMode = "follow-player" | "manual";
 
@@ -192,6 +362,7 @@ class DataBus {
     private collisionSystem = new CollisionSystem();
     private physicsConfig: GravityConfig = { ...DEFAULT_GRAVITY_CONFIG };
     private playerMoveInputX: number = 0;
+    private playerMoveInputY: number = 0;
     private simulationTimeMs: number = 0;
     private playerLastGroundedAtMs: number = Number.NEGATIVE_INFINITY;
     private playerJumpRequestedAtMs: number = Number.NEGATIVE_INFINITY;
@@ -222,10 +393,58 @@ class DataBus {
     private npcWaypointIndices = new Map<string, number>();
     private environmentalForceZones = new Map<string, EnvironmentalForceZone>();
     private statusEffects = createStatusEffectsSimulation();
+    private playerFacingDirection: PlayerFacingDirection = "south";
     private entityInteractionContracts = new Map<
         string,
         EntityInteractionContract
     >();
+
+    private updatePlayerDirectionalSprites(dx: number, dy: number) {
+        const player = this.getPlayer();
+        const previousFacingDirection = this.playerFacingDirection;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            this.playerFacingDirection = dx >= 0 ? "east" : "west";
+        } else if (Math.abs(dy) > 0) {
+            this.playerFacingDirection = dy >= 0 ? "south" : "north";
+        }
+
+        if (this.playerFacingDirection !== previousFacingDirection) {
+            this.applyPlayerAnimationFromState(player.behaviorState ?? "idle");
+        }
+    }
+
+    private applyPlayerAnimationFromState(state: EntityBehaviorState) {
+        const player = this.getPlayer();
+        const clip =
+            NINJA_GREEN_PLAYER_ANIMATION_CLIPS[
+                resolvePlayerAnimationClipKey(state)
+            ];
+
+        player.spriteImageSheet = clip.spriteImageSheet;
+        player.spriteSheetTileWidth = clip.spriteSheetTileWidth;
+        player.spriteSheetTileHeight = clip.spriteSheetTileHeight;
+        player.fps = clip.fps;
+
+        if (clip.directional) {
+            const directionalFrames =
+                NINJA_DIRECTIONAL_WALK_FRAMES[this.playerFacingDirection];
+            player.characterSpriteTiles = directionalFrames.map(([x, y]) => [
+                x,
+                y,
+            ]);
+            return;
+        }
+
+        if (state === "idle") {
+            const [idleX, idleY] =
+                NINJA_DIRECTIONAL_IDLE_FRAME[this.playerFacingDirection];
+            player.characterSpriteTiles = [[idleX, idleY]];
+            return;
+        }
+
+        player.characterSpriteTiles = clip.frames.map(([x, y]) => [x, y]);
+    }
 
     private state: GameState = (() => {
         const player: Entity = {
@@ -235,14 +454,14 @@ class DataBus {
             animations: [],
             currentAnimation: "idle",
             updateState: () => {},
-            spriteImageSheet: spriteSheetUrl,
+            spriteImageSheet: NINJA_GREEN_ANIMATION_SHEETS.idle,
             spriteSize: 16,
-            spriteSheetTileWidth: 49,
-            spriteSheetTileHeight: 22,
-            characterSpriteTiles: [[7, 19]],
+            spriteSheetTileWidth: 4,
+            spriteSheetTileHeight: 1,
+            characterSpriteTiles: [[0, 0]],
             scaler: 5,
             position: { x: 10, y: 10 },
-            fps: 10,
+            fps: 1,
             collider: createRectangleCollider({
                 size: { width: 16, height: 16 },
                 offset: { x: 0, y: 0 },
@@ -253,35 +472,9 @@ class DataBus {
             }),
         };
 
-        const testBox: Entity = {
-            id: generateId(),
-            type: "object",
-            name: "testBox",
-            animations: [],
-            currentAnimation: "idle",
-            updateState: () => {},
-            spriteImageSheet: spriteSheetUrl,
-            spriteSize: 16,
-            spriteSheetTileWidth: 49,
-            spriteSheetTileHeight: 22,
-            characterSpriteTiles: [[4, 19]],
-            scaler: 3,
-            position: { x: 120, y: 10 },
-            fps: 10,
-            collider: createRectangleCollider({
-                size: { width: 16, height: 16 },
-                offset: { x: 0, y: 0 },
-                collisionResponse: "block",
-                layer: CollisionLayer.object,
-                collidesWith: CollisionLayer.player,
-                debugDraw: true,
-            }),
-        };
-
         return {
             entitiesById: {
                 [player.id]: player,
-                [testBox.id]: testBox,
             },
             playerId: player.id,
 
@@ -413,8 +606,9 @@ class DataBus {
 
     private setEntityBehaviorState(entity: Entity, state: EntityBehaviorState) {
         const previousState = this.entityBehaviorStates.get(entity.id);
+        const didStateChange = previousState !== state;
 
-        if (previousState && previousState !== state) {
+        if (previousState && didStateChange) {
             this.entityBehaviorTransitions.push({
                 entityId: entity.id,
                 from: previousState,
@@ -432,6 +626,10 @@ class DataBus {
         entity.behaviorState = state;
         this.entityBehaviorStates.set(entity.id, state);
         entity.currentAnimation = state;
+
+        if (entity.id === this.state.playerId && didStateChange) {
+            this.applyPlayerAnimationFromState(state);
+        }
     }
 
     private getActiveTimedState(entityId: string): TimedEntityState | null {
@@ -451,10 +649,12 @@ class DataBus {
     private updatePlayerBehaviorState(player: Entity) {
         const timedState = this.getActiveTimedState(player.id);
         const speedX = player.physicsBody?.velocity.x ?? 0;
+        const hasMoveIntent =
+            this.playerMoveInputX !== 0 || this.playerMoveInputY !== 0;
         const nextBehaviorState = resolveEntityBehaviorState({
             nowMs: this.simulationTimeMs,
             timedState,
-            hasMoveIntent: this.playerMoveInputX !== 0,
+            hasMoveIntent,
             speedX,
         });
 
@@ -726,6 +926,8 @@ class DataBus {
         if (this.isWorldPaused()) return false;
         if (dx === 0 && dy === 0) return false;
 
+        this.updatePlayerDirectionalSprites(dx, dy);
+
         const player = this.getPlayer();
         const startX = player.position.x;
         const startY = player.position.y;
@@ -765,6 +967,7 @@ class DataBus {
     setState(updater: (prev: GameState) => GameState) {
         this.state = updater(this.state);
         this.playerMoveInputX = 0;
+        this.playerMoveInputY = 0;
         this.clearEntityTimedStates();
         this.clearEntityStatusEffects();
         this.syncEntityStateStores();
@@ -884,15 +1087,51 @@ class DataBus {
     public setPlayerMoveInput(inputX: number) {
         if (this.isWorldPaused()) {
             this.playerMoveInputX = 0;
+            this.playerMoveInputY = 0;
             return;
         }
 
         if (!Number.isFinite(inputX)) {
             this.playerMoveInputX = 0;
+            this.playerMoveInputY = 0;
             return;
         }
 
         this.playerMoveInputX = Math.max(-1, Math.min(1, inputX));
+        this.playerMoveInputY = 0;
+    }
+
+    public setPlayerTopDownMoveInput(inputX: number, inputY: number) {
+        if (this.isWorldPaused()) {
+            this.playerMoveInputX = 0;
+            this.playerMoveInputY = 0;
+            this.updatePlayerBehaviorState(this.getPlayer());
+            return;
+        }
+
+        const safeInputX = Number.isFinite(inputX) ? inputX : 0;
+        const safeInputY = Number.isFinite(inputY) ? inputY : 0;
+
+        this.playerMoveInputX = Math.max(-1, Math.min(1, safeInputX));
+        this.playerMoveInputY = Math.max(-1, Math.min(1, safeInputY));
+
+        const player = this.getPlayer();
+        if (!this.getActiveTimedState(player.id)) {
+            const hasMoveIntent =
+                this.playerMoveInputX !== 0 || this.playerMoveInputY !== 0;
+
+            if (hasMoveIntent) {
+                this.updatePlayerDirectionalSprites(
+                    this.playerMoveInputX,
+                    this.playerMoveInputY,
+                );
+            }
+
+            this.setEntityBehaviorState(
+                player,
+                hasMoveIntent ? "moving" : "idle",
+            );
+        }
     }
 
     public setPlayerMovementConfig(config: Partial<PlayerMovementConfig>) {
@@ -1527,6 +1766,17 @@ class DataBus {
         return state ?? "idle";
     }
 
+    public getPlayerFacingDirection(): PlayerFacingDirection {
+        return this.playerFacingDirection;
+    }
+
+    public getPlayerMoveIntent() {
+        return {
+            x: this.playerMoveInputX,
+            y: this.playerMoveInputY,
+        };
+    }
+
     public getEntityBehaviorTransitions(
         entityId: string,
         limit: number = 3,
@@ -1563,6 +1813,7 @@ class DataBus {
         const normalizedReason = reason.trim() || "manual";
         this.worldPauseReasons.add(normalizedReason);
         this.playerMoveInputX = 0;
+        this.playerMoveInputY = 0;
 
         if (!wasPaused && this.isWorldPaused()) {
             const event: WorldPauseChange = {
@@ -1582,6 +1833,7 @@ class DataBus {
         const normalizedReason = reason.trim() || "manual";
         this.worldPauseReasons.delete(normalizedReason);
         this.playerMoveInputX = 0;
+        this.playerMoveInputY = 0;
 
         if (wasPaused && !this.isWorldPaused()) {
             const event: WorldPauseChange = {
@@ -1600,6 +1852,7 @@ class DataBus {
         const wasPaused = this.isWorldPaused();
         this.worldPauseReasons.clear();
         this.playerMoveInputX = 0;
+        this.playerMoveInputY = 0;
 
         if (wasPaused) {
             const event: WorldPauseChange = {

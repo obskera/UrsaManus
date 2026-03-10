@@ -13,6 +13,18 @@ Quick order of operations for a playable loop.
 7. Add spell prefab runtime (`createSpellPrefabService`).
 8. Update everything in your main tick.
 
+## Default app composition (current)
+
+- App-level tabs + game shell are composed from `src/components/app/`:
+    - `AppMainTabs`
+    - `ExampleGameToolbar`
+    - `ExampleGameCanvasPanel`
+- Runtime side effects are extracted into `src/hooks/`:
+    - `useTopDownGameLoop`
+    - `useStartScreenWorldPause`
+    - `useAudioChannelState`
+- `src/App.tsx` should stay orchestration-focused (state + wiring), not long inline UI/effect blocks.
+
 ## Copy/paste starter
 
 ```ts

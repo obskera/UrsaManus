@@ -292,7 +292,11 @@ function applyOverlayToModules(input: {
         for (const [knob, scalar] of Object.entries(input.scalars) as Array<
             [PrefabBatchTuningKnob, number | undefined]
         >) {
-            if (!Number.isFinite(scalar) || scalar === 1) {
+            if (typeof scalar !== "number" || !Number.isFinite(scalar)) {
+                continue;
+            }
+
+            if (scalar === 1) {
                 continue;
             }
 

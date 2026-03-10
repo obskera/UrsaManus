@@ -94,7 +94,7 @@ Planning docs note:
 
 Prefab demo note:
 
-- Mount new UI prefab demos in the default app examples panel (`Show example components` in `src/App.tsx`).
+- Mount new UI prefab demos in `Example Prefabs` (rendered by `ExamplePrefabsPanel` in `src/components/examples/ExamplePrefabsPanel.tsx`).
 - Keep demo components under `src/components/examples/` and re-export from `src/components/examples/index.ts`.
 
 ---
@@ -218,7 +218,7 @@ Before opening a PR:
 - [ ] Strict coverage gate still passes (`npm run test:coverage:strict`) when behavior changed
 - [ ] Docs updated for behavioral/API changes
 - [ ] Prefab changes include docs parity (`npm run quality:prefab:docs`) and AI verification docs updates when applicable
-- [ ] New UI prefabs include both: demo wiring in `src/App.tsx` (`Show example components`) and copy/paste docs in `docs/USAGE.md`
+- [ ] New UI prefabs include both: demo wiring in `src/components/examples/ExamplePrefabsPanel.tsx` and copy/paste docs in `docs/USAGE.md`
 - [ ] Change is scoped to the stated objective
 - [ ] GitHub Actions CI (`.github/workflows/ci.yml`) is green
 

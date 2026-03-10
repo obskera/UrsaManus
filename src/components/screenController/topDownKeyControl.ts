@@ -15,12 +15,14 @@ const TopDownKeyControl = ({
     speedPxPerSec = 220,
     allowDiagonal = true,
 }: TopDownKeyControlProps) => {
+    const isDev = import.meta.env.DEV;
     const inputStateRef = useRef({
         left: false,
         right: false,
         up: false,
         down: false,
     });
+    const keyboardOwnsIntentRef = useRef(false);
 
     useEffect(() => {
         if (!enabled) return;
@@ -33,6 +35,25 @@ const TopDownKeyControl = ({
         const isUp = (key: string) => key === "arrowup" || key === "w";
         const isDown = (key: string) => key === "arrowdown" || key === "s";
 
+        const resolveDebugSnapshot = () => {
+            const bus = dataBus as unknown as {
+                getState?: () => { playerId: string };
+                getEntityBehaviorState?: (entityId: string) => unknown;
+                getPlayerFacingDirection?: () => unknown;
+                getPlayerMoveIntent?: () => unknown;
+            };
+
+            const playerId = bus.getState?.().playerId;
+
+            return {
+                currentBehaviorState: playerId
+                    ? bus.getEntityBehaviorState?.(playerId)
+                    : undefined,
+                facingDirection: bus.getPlayerFacingDirection?.(),
+                moveIntent: bus.getPlayerMoveIntent?.(),
+            };
+        };
+
         const tick = (now: number) => {
             const deltaMs = now - lastTime;
             lastTime = now;
@@ -40,6 +61,14 @@ const TopDownKeyControl = ({
             const { left, right, up, down } = inputStateRef.current;
             const dxInput = (right ? 1 : 0) + (left ? -1 : 0);
             const dyInput = (down ? 1 : 0) + (up ? -1 : 0);
+
+            if (dxInput !== 0 || dyInput !== 0) {
+                keyboardOwnsIntentRef.current = true;
+                dataBus.setPlayerTopDownMoveInput(dxInput, dyInput);
+            } else if (keyboardOwnsIntentRef.current) {
+                keyboardOwnsIntentRef.current = false;
+                dataBus.setPlayerTopDownMoveInput(0, 0);
+            }
 
             if (dxInput !== 0 || dyInput !== 0) {
                 let dx = dxInput;
@@ -82,13 +111,50 @@ const TopDownKeyControl = ({
                 event.preventDefault();
             }
 
+            if (event.repeat) {
+                return;
+            }
+
             if (isLeft(key) || isRight(key) || isUp(key) || isDown(key)) {
+                const previousState = inputStateRef.current;
                 inputStateRef.current = {
-                    left: inputStateRef.current.left || isLeft(key),
-                    right: inputStateRef.current.right || isRight(key),
-                    up: inputStateRef.current.up || isUp(key),
-                    down: inputStateRef.current.down || isDown(key),
+                    left: previousState.left || isLeft(key),
+                    right: previousState.right || isRight(key),
+                    up: previousState.up || isUp(key),
+                    down: previousState.down || isDown(key),
                 };
+
+                const didChange =
+                    previousState.left !== inputStateRef.current.left ||
+                    previousState.right !== inputStateRef.current.right ||
+                    previousState.up !== inputStateRef.current.up ||
+                    previousState.down !== inputStateRef.current.down;
+
+                if (!didChange) {
+                    return;
+                }
+
+                const immediateDxInput =
+                    (inputStateRef.current.right ? 1 : 0) +
+                    (inputStateRef.current.left ? -1 : 0);
+                const immediateDyInput =
+                    (inputStateRef.current.down ? 1 : 0) +
+                    (inputStateRef.current.up ? -1 : 0);
+
+                keyboardOwnsIntentRef.current =
+                    immediateDxInput !== 0 || immediateDyInput !== 0;
+                dataBus.setPlayerTopDownMoveInput(
+                    immediateDxInput,
+                    immediateDyInput,
+                );
+
+                if (isDev) {
+                    console.log("[TopDownKeyControl] keydown", {
+                        key,
+                        inputState: inputStateRef.current,
+                        ...resolveDebugSnapshot(),
+                    });
+                }
             }
         };
 
@@ -102,6 +168,28 @@ const TopDownKeyControl = ({
                     up: isUp(key) ? false : inputStateRef.current.up,
                     down: isDown(key) ? false : inputStateRef.current.down,
                 };
+
+                const immediateDxInput =
+                    (inputStateRef.current.right ? 1 : 0) +
+                    (inputStateRef.current.left ? -1 : 0);
+                const immediateDyInput =
+                    (inputStateRef.current.down ? 1 : 0) +
+                    (inputStateRef.current.up ? -1 : 0);
+
+                keyboardOwnsIntentRef.current =
+                    immediateDxInput !== 0 || immediateDyInput !== 0;
+                dataBus.setPlayerTopDownMoveInput(
+                    immediateDxInput,
+                    immediateDyInput,
+                );
+
+                if (isDev) {
+                    console.log("[TopDownKeyControl] keyup", {
+                        key,
+                        inputState: inputStateRef.current,
+                        ...resolveDebugSnapshot(),
+                    });
+                }
             }
         };
 
@@ -111,10 +199,12 @@ const TopDownKeyControl = ({
 
         return () => {
             if (rafId) cancelAnimationFrame(rafId);
+            keyboardOwnsIntentRef.current = false;
+            dataBus.setPlayerTopDownMoveInput(0, 0);
             window.removeEventListener("keydown", onKeyDown);
             window.removeEventListener("keyup", onKeyUp);
         };
-    }, [allowDiagonal, enabled, onMove, speedPxPerSec]);
+    }, [allowDiagonal, enabled, isDev, onMove, speedPxPerSec]);
 
     useEffect(() => {
         const resetState = () => {
@@ -124,6 +214,8 @@ const TopDownKeyControl = ({
                 up: false,
                 down: false,
             };
+            keyboardOwnsIntentRef.current = false;
+            dataBus.setPlayerTopDownMoveInput(0, 0);
         };
 
         const onWindowBlur = () => {

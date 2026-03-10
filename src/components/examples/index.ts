@@ -32,6 +32,8 @@ export { default as TopDownMiniGameExample } from "./TopDownMiniGameExample";
 export type { TopDownMiniGameExampleProps } from "./TopDownMiniGameExample";
 export { default as SideScrollerMiniGameExample } from "./SideScrollerMiniGameExample";
 export type { SideScrollerMiniGameExampleProps } from "./SideScrollerMiniGameExample";
+export { default as PachinkoMiniGameExample } from "./PachinkoMiniGameExample";
+export type { PachinkoMiniGameExampleProps } from "./PachinkoMiniGameExample";
 export { default as MainMenuExample } from "./MainMenuExample";
 export type { MainMenuExampleProps } from "./MainMenuExample";
 export { default as PauseMenuExample } from "./PauseMenuExample";
@@ -52,3 +54,4 @@ export { default as SpritePackGeneratorToolExample } from "./SpritePackGenerator
 export type { SpritePackGeneratorToolExampleProps } from "./SpritePackGeneratorToolExample";
 export { default as PrefabExampleMatrixExample } from "./PrefabExampleMatrixExample";
 export type { PrefabExampleMatrixExampleProps } from "./PrefabExampleMatrixExample";
+export { default as ExamplePrefabsPanel } from "./ExamplePrefabsPanel";

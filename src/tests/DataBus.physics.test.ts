@@ -956,10 +956,9 @@ describe("DataBus physics integration", () => {
 
     it("zeros horizontal velocity when physics movement collides on x", () => {
         const player = dataBus.getPlayer();
+        dataBus.setWorldBoundsEnabled(true);
         const state = dataBus.getState();
-        const blocker = Object.values(state.entitiesById).find(
-            (entity) => entity.name === "testBox",
-        );
+        const blocker = state.entitiesById[state.worldBoundsIds[1]];
 
         expect(blocker).toBeDefined();
 

@@ -72,11 +72,11 @@ Checklist:
 
 ## 5) Standalone Route Wiring
 
-In `src/App.tsx`:
+In the current app shell wiring (`src/App.tsx` + `src/components/app/`):
 
-- add `<tool-key>` to `DevToolMode`
+- add `<tool-key>` to the active tool-mode contract
 - include normalize helper case
-- render tool in standalone branch
+- render tool in the standalone branch/component responsible for tool routing
 
 Checklist:
 

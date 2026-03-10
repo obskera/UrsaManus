@@ -47,6 +47,10 @@ const OBJECTIVE_ZONES: ObjectiveZone[] = [
 ];
 
 const ROUND_DURATION_MS = 25_000;
+const NINJA_CHARACTER_SPRITESHEET =
+    "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaBlue/SpriteSheet.png";
+const NINJA_ENV_PREVIEW =
+    "/Ninja%20Adventure%20-%20Asset%20Pack/preview-part-1.png";
 
 function resolveObjectiveZoneId(x: number, y: number): string | null {
     const matched = OBJECTIVE_ZONES.find(
@@ -60,7 +64,7 @@ function resolveObjectiveZoneId(x: number, y: number): string | null {
 }
 
 const TopDownMiniGameExample = ({
-    title = "Top-down mini game MVP",
+    title = "Ninja top-down game example",
 }: TopDownMiniGameExampleProps) => {
     const [missionState, setMissionState] = useState<MissionState>("playing");
     const [objectivesDone, setObjectivesDone] = useState<string[]>([]);
@@ -159,9 +163,26 @@ const TopDownMiniGameExample = ({
         <section className="um-container um-stack" aria-label={title}>
             <h3 className="um-title">{title}</h3>
             <p className="um-help">
-                MVP loop: move through three relay zones before time runs out,
-                then restart the run.
+                Starting point for a Ninja Adventure-style top-down loop: move
+                through three relay zones before time runs out, then restart the
+                run.
             </p>
+            <p className="um-help">
+                Visual references use the Ninja Adventure Asset Pack (CC0) by
+                Pixel-boy and AAA.
+            </p>
+
+            <div className="um-panel um-stack" aria-label="Ninja asset preview">
+                <p className="um-text">Ninja Adventure asset preview</p>
+                <img
+                    src={NINJA_ENV_PREVIEW}
+                    alt="Ninja Adventure environment preview"
+                />
+                <img
+                    src={NINJA_CHARACTER_SPRITESHEET}
+                    alt="Ninja Adventure NinjaBlue character spritesheet"
+                />
+            </div>
 
             <TopDownHUDPreset
                 healthValue={missionState === "lost" ? "0/100" : "100/100"}

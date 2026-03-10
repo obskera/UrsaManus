@@ -126,7 +126,7 @@ export async function loadSpriteSheetImages(
 }
 
 export class SpriteBatch {
-    private readonly items: SpriteBatchItem[];
+    private items: SpriteBatchItem[];
     private readonly imagesByUrl: Map<string, HTMLImageElement>;
     private readonly animationStartMs: number;
 
@@ -138,6 +138,22 @@ export class SpriteBatch {
         this.items = items;
         this.imagesByUrl = imagesByUrl;
         this.animationStartMs = animationStartMs;
+    }
+
+    setItems(items: SpriteBatchItem[]): void {
+        this.items = items;
+    }
+
+    getAnimationStartMs(): number {
+        return this.animationStartMs;
+    }
+
+    hasSheetImage(url: string): boolean {
+        return this.imagesByUrl.has(url);
+    }
+
+    setSheetImage(url: string, image: HTMLImageElement): void {
+        this.imagesByUrl.set(url, image);
     }
 
     draw({

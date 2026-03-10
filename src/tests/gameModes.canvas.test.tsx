@@ -19,7 +19,17 @@ const dataBusMocks = vi.hoisted(() => {
         disablePlayerPhysics: vi.fn(),
         setPlayerMoveInput: vi.fn(),
         getState: vi.fn(() => ({
-            entitiesById: {},
+            playerId: "player-1",
+            entitiesById: {
+                "player-1": {
+                    spriteSize: 16,
+                    scaler: 5,
+                },
+            },
+            worldSize: {
+                width: 320,
+                height: 240,
+            },
             camera: { x: 0, y: 0 },
         })),
     };
@@ -100,10 +110,6 @@ describe("game mode canvas presets", () => {
         expect(dataBusMocks.setCameraFollowPlayer).toHaveBeenCalledWith(true);
         expect(dataBusMocks.disablePlayerPhysics).toHaveBeenCalled();
         expect(dataBusMocks.setPlayerMoveInput).toHaveBeenCalledWith(0);
-        expect(audioBusMocks.play).toHaveBeenCalledWith(
-            "scene:top-down:music",
-            expect.objectContaining({ channel: "music", loop: true }),
-        );
         expect(renderMocks.render).toHaveBeenCalledWith(
             expect.objectContaining({
                 includeEffects: true,

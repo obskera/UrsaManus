@@ -10,6 +10,34 @@ Use this page as the primary entrypoint for docs navigation.
 - Active planning scope: [TODO.md](TODO.md)
 - Completed planning archive: [TODO_COMPLETED_2026-03-02.md](TODO_COMPLETED_2026-03-02.md)
 
+## Current App File Map
+
+Use this when navigating the default app shell after recent extraction refactors:
+
+- App orchestrator: [../src/App.tsx](../src/App.tsx)
+- App shell components: [../src/components/app/](../src/components/app/)
+    - [../src/components/app/AppMainTabs.tsx](../src/components/app/AppMainTabs.tsx)
+    - [../src/components/app/ExampleGameToolbar.tsx](../src/components/app/ExampleGameToolbar.tsx)
+    - [../src/components/app/ExampleGameCanvasPanel.tsx](../src/components/app/ExampleGameCanvasPanel.tsx)
+- App runtime hooks: [../src/hooks/](../src/hooks/)
+    - [../src/hooks/useTopDownGameLoop.ts](../src/hooks/useTopDownGameLoop.ts)
+    - [../src/hooks/useStartScreenWorldPause.ts](../src/hooks/useStartScreenWorldPause.ts)
+    - [../src/hooks/useAudioChannelState.ts](../src/hooks/useAudioChannelState.ts)
+
+## Example Asset Attribution
+
+Examples may use sprites from `public/Ninja Adventure - Asset Pack/`.
+
+- Asset creators:
+    - [Pixel-boy](https://pixel-boy.itch.io/)
+    - [AAA](https://www.instagram.com/challenger.aaa/?hl=fr)
+- License: CC0 1.0 Universal (`public/Ninja Adventure - Asset Pack/LICENSE.txt`)
+- Attribution requirement: not required by CC0, but appreciated by the creators
+
+Suggested attribution text for docs/videos/showcases:
+
+`Ninja Adventure Asset Pack by Pixel-boy and AAA (CC0 1.0). Source: https://pixel-boy.itch.io/ninja-adventure-asset-pack`
+
 ## By Task
 
 - Build a playable loop quickly:
@@ -24,8 +52,6 @@ Use this page as the primary entrypoint for docs navigation.
 - Save/load setup:
     - [save/README.md](save/README.md)
     - [save/CHEATSHEET.md](save/CHEATSHEET.md)
-- Tooling/operator workflows:
-    - [tools/README.md](tools/README.md)
 
 ## AI Workflow Docs
 

@@ -115,7 +115,7 @@ function createLegacyBlueprintEntry(input: {
 
     if (!migrationResult.ok || !migratedBlueprint) {
         throw new Error(
-            `Legacy migration failed for ${input.id}: ${migrationResult.message ?? "unknown"}`,
+            `Legacy migration failed for ${input.id}: ${migrationResult.ok ? "unknown" : migrationResult.message}`,
         );
     }
 
@@ -128,7 +128,7 @@ function createLegacyBlueprintEntry(input: {
             sourceVersion: 0,
             requiresMigration: preflight.requiresMigration,
             ok: migrationResult.ok,
-            message: migrationResult.message,
+            message: null,
         },
     };
 }

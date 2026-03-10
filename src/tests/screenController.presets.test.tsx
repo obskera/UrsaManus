@@ -158,7 +158,7 @@ describe("screen controller presets", () => {
         );
         expect(screen.getByTestId("topdown-key-control")).toHaveAttribute(
             "data-speed",
-            "220",
+            "190",
         );
         expect(screen.getByTestId("topdown-on-screen-control")).toHaveAttribute(
             "data-allow-diagonal",
@@ -166,7 +166,7 @@ describe("screen controller presets", () => {
         );
         expect(screen.getByTestId("topdown-on-screen-control")).toHaveAttribute(
             "data-speed",
-            "220",
+            "190",
         );
         expect(
             screen.getByTestId("compass-direction-control"),

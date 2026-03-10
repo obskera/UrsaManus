@@ -5,6 +5,7 @@ import ScreenController from "./screenController";
 import TopDownKeyControl from "./topDownKeyControl";
 import TopDownOnScreenControl from "./topDownOnScreenControl";
 import type { CreatePlayerInputActionsOptions } from "./inputActions";
+import { TOP_DOWN_PLAYER_TUNING } from "@/config/playerTuning";
 
 export type TopDownControlsProps = {
     onMove?: () => void;
@@ -16,7 +17,7 @@ export type TopDownControlsProps = {
 const TopDownControls = ({
     onMove,
     allowDiagonal = true,
-    speedPxPerSec = 220,
+    speedPxPerSec = TOP_DOWN_PLAYER_TUNING.moveSpeedPxPerSec,
     interactBehavior,
 }: TopDownControlsProps) => {
     return createElement(

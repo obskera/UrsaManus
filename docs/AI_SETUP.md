@@ -32,8 +32,10 @@ Help the AI do three things reliably:
 Then inspect implementation entry points:
 
 - `src/App.tsx`
+- `src/components/app/`
 - `src/components/gameModes/`
 - `src/components/screenController/`
+- `src/hooks/`
 - `src/services/`
 
 ## AI bootstrap prompt template (copy/paste)

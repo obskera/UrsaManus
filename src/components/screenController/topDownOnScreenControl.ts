@@ -26,6 +26,7 @@ const TopDownOnScreenControl = ({
         up: false,
         down: false,
     });
+    const onScreenOwnsIntentRef = useRef(false);
     const [heldDirection, setHeldDirection] = useState<
         "north" | "south" | "east" | "west" | null
     >(null);
@@ -45,6 +46,14 @@ const TopDownOnScreenControl = ({
             const { left, right, up, down } = inputStateRef.current;
             const dxInput = (right ? 1 : 0) + (left ? -1 : 0);
             const dyInput = (down ? 1 : 0) + (up ? -1 : 0);
+
+            if (dxInput !== 0 || dyInput !== 0) {
+                onScreenOwnsIntentRef.current = true;
+                dataBus.setPlayerTopDownMoveInput(dxInput, dyInput);
+            } else if (onScreenOwnsIntentRef.current) {
+                onScreenOwnsIntentRef.current = false;
+                dataBus.setPlayerTopDownMoveInput(0, 0);
+            }
 
             if (dxInput !== 0 || dyInput !== 0) {
                 let dx = dxInput;
@@ -74,6 +83,8 @@ const TopDownOnScreenControl = ({
 
         return () => {
             if (rafId) cancelAnimationFrame(rafId);
+            onScreenOwnsIntentRef.current = false;
+            dataBus.setPlayerTopDownMoveInput(0, 0);
         };
     }, [allowDiagonal, onMove, speedPxPerSec]);
 
@@ -86,6 +97,8 @@ const TopDownOnScreenControl = ({
                 down: false,
             });
             setHeldDirection(null);
+            onScreenOwnsIntentRef.current = false;
+            dataBus.setPlayerTopDownMoveInput(0, 0);
         };
 
         const onWindowBlur = () => resetState();

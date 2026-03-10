@@ -37,14 +37,16 @@ flowchart LR
 
 ## 2) Module Responsibilities
 
-### UI composition (`App.tsx`)
+### UI composition (`App.tsx` + `src/components/app/*`)
 
-- Selects active game mode (`side-scroller` / `top-down`) via local state.
-- Syncs active mode to URL query (`?mode=...`) for shareable demos.
-- Mounts matching prebuilt canvas + controls presets for the active mode.
-- In development, exposes capsule toggles for:
-    - `Show/Hide debug outlines`
-    - `Show/Hide dev controls` (in-page cheat sheet panel)
+- `App.tsx` orchestrates app-level state and delegates most UI rendering to focused components.
+- Main view tabs are composed through `AppMainTabs` (`Example Game` / `Example Prefabs`).
+- Example-game toolbar controls are composed through `ExampleGameToolbar`.
+- Example-game canvas/start-overlay/meta panel is composed through `ExampleGameCanvasPanel`.
+- Runtime side effects are extracted into hooks under `src/hooks/`:
+    - `useTopDownGameLoop`
+    - `useStartScreenWorldPause`
+    - `useAudioChannelState`
 
 ### Game mode presets (`src/components/gameModes/`)
 
@@ -57,6 +59,7 @@ flowchart LR
     - Configures world + disables player gravity/physics.
     - Starts/stops top-down scene music through `AudioBus`.
     - Passes scene/camera/entity inputs to `Render`.
+    - Configures patterned floor background tiles from Ninja Adventure `TilesetFloor`.
     - Enables runtime effects via `includeEffects` and transition effects via `enableTransitionEffects`.
 - `SoundManager`
     - Registers scene cue maps and subscribes to `AudioBus` events.

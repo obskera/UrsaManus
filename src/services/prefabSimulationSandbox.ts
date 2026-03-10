@@ -236,17 +236,18 @@ export function createPrefabSimulationSandboxService(options?: {
             }
 
             const health = diagnostics.getHealthReport();
+            const summary: Record<string, number | string | boolean> = {
+                loops,
+                updateStepsPerLoop: updateSteps,
+                updatesSimulated,
+                modulesRequested: requests.length,
+            };
             return {
                 scenarioId: scenario.id,
                 scenarioType: scenario.type,
                 ok: issues.length <= 0,
                 issues,
-                summary: {
-                    loops,
-                    updateStepsPerLoop: updateSteps,
-                    updatesSimulated,
-                    modulesRequested: requests.length,
-                },
+                summary,
                 health,
             };
         }
@@ -285,17 +286,18 @@ export function createPrefabSimulationSandboxService(options?: {
             const health = diagnostics.getHealthReport();
             const runtimeFailureCount =
                 report.failed.length + report.skipped.length;
+            const summary: Record<string, number | string | boolean> = {
+                moduleIds: requests.length,
+                compositionIssues: composition.issues.length,
+                runtimeFailures: runtimeFailureCount,
+            };
 
             return {
                 scenarioId: scenario.id,
                 scenarioType: scenario.type,
                 ok: issues.length <= 0,
                 issues,
-                summary: {
-                    moduleIds: requests.length,
-                    compositionIssues: composition.issues.length,
-                    runtimeFailures: runtimeFailureCount,
-                },
+                summary,
                 health,
             };
         }
@@ -322,18 +324,19 @@ export function createPrefabSimulationSandboxService(options?: {
         }
 
         const health = diagnostics.getHealthReport();
+        const summary: Record<string, number | string | boolean> = {
+            migrateOk: migration.ok,
+            migrationApplied,
+            appliedVersionCount: migration.ok
+                ? migration.appliedVersions.length
+                : 0,
+        };
         return {
             scenarioId: scenario.id,
             scenarioType: scenario.type,
             ok: issues.length <= 0,
             issues,
-            summary: {
-                migrateOk: migration.ok,
-                migrationApplied,
-                appliedVersionCount: migration.ok
-                    ? migration.appliedVersions.length
-                    : 0,
-            },
+            summary,
             health,
         };
     };

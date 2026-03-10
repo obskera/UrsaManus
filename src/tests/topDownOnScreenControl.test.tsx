@@ -4,11 +4,13 @@ import TopDownOnScreenControl from "@/components/screenController/topDownOnScree
 
 const dataBusMocks = vi.hoisted(() => ({
     movePlayerBy: vi.fn(),
+    setPlayerTopDownMoveInput: vi.fn(),
 }));
 
 vi.mock("@/services/DataBus", () => ({
     dataBus: {
         movePlayerBy: dataBusMocks.movePlayerBy,
+        setPlayerTopDownMoveInput: dataBusMocks.setPlayerTopDownMoveInput,
     },
 }));
 

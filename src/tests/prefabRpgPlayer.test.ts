@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createRpgPlayerPrefabPreset } from "@/services/prefabRpgPlayer";
+import {
+    createRpgPlayerPrefabPreset,
+    type RpgPlayerPrefabContext,
+} from "@/services/prefabRpgPlayer";
 
 describe("prefabRpgPlayer", () => {
     it("builds a starter RPG player blueprint with expected modules", () => {
@@ -109,15 +112,17 @@ describe("prefabRpgPlayer", () => {
 
     it("detaches RPG player modules and cleans interaction prompt entry", () => {
         const preset = createRpgPlayerPrefabPreset();
-        const context = {
+        const context: RpgPlayerPrefabContext = {
             interactionPromptsByEntityId: {},
         };
 
         preset.attachPlayer("hero-2", context);
-        expect(context.interactionPromptsByEntityId["hero-2"]).toBeDefined();
+        expect(context.interactionPromptsByEntityId?.["hero-2"]).toBeDefined();
 
         const detached = preset.detachPlayer("hero-2", context);
         expect(detached.failed).toHaveLength(0);
-        expect(context.interactionPromptsByEntityId["hero-2"]).toBeUndefined();
+        expect(
+            context.interactionPromptsByEntityId?.["hero-2"],
+        ).toBeUndefined();
     });
 });

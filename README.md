@@ -12,7 +12,7 @@ UrsaManus is intentionally small at its core:
 - Structured enough to remain maintainable
 - Flexible enough to grow without hard resets
 
-The goal is to give React/TypeScript developers an engine-style foundation they can extend indefinitely with their own gameplay modules, systems, and tooling.
+The goal is to give React/TypeScript developers an engine-style foundation they can extend indefinitely with their own gameplay modules and systems.
 
 ## Core Principles
 
@@ -26,7 +26,7 @@ The goal is to give React/TypeScript developers an engine-style foundation they 
 
 UrsaManus is a micro-engine architecture for browser-based interactive projects.
 
-It is not trying to replace full-scale AAA engines. Instead, it provides a practical, extensible base for smaller games/tools that can grow in sophistication as needed.
+It is not trying to replace full-scale AAA engines. Instead, it provides a practical, extensible base for smaller games that can grow in sophistication as needed.
 
 ## Architecture Snapshot
 
@@ -83,14 +83,19 @@ Use this quick docs map when onboarding or jumping into a subsystem:
 - [docs/worldgen/CHEATSHEET.md](docs/worldgen/CHEATSHEET.md) — deterministic worldgen + spawn payload quick reference
 - [docs/save/README.md](docs/save/README.md) — save/load workflows and integration snippets
 - [docs/save/CHEATSHEET.md](docs/save/CHEATSHEET.md) — one-page save/load API reference
-- [docs/tools/README.md](docs/tools/README.md) — authoring tool operator docs and builder guide
 - [docs/TODO.md](docs/TODO.md) — active TODO (current sprint + next up); completed history is archived in [docs/TODO_COMPLETED_2026-03-02.md](docs/TODO_COMPLETED_2026-03-02.md)
 
-### Tool UX Update (Tilemap)
+## Example Asset Attribution
 
-- Tile map tool now supports `Pick mode` for eyedropper selection and auto-returns to `Paint mode` after a pick.
-- Shortcut: hold `Alt` and click a tile to pick into the brush without switching modes.
-- Operator details: [docs/tools/TILEMAP_TOOL.md](docs/tools/TILEMAP_TOOL.md).
+Some examples use assets from `public/Ninja Adventure - Asset Pack/`.
+
+- Creators: [Pixel-boy](https://pixel-boy.itch.io/) and [AAA](https://www.instagram.com/challenger.aaa/?hl=fr)
+- License: CC0 1.0 Universal (see `public/Ninja Adventure - Asset Pack/LICENSE.txt`)
+- Attribution: not required by license, appreciated by the creators
+
+Suggested credit line:
+
+`Ninja Adventure Asset Pack by Pixel-boy and AAA (CC0 1.0). Source: https://pixel-boy.itch.io/ninja-adventure-asset-pack`
 
 ## Current Direction
 
@@ -110,7 +115,7 @@ Run workflows only when needed:
 
 - Workflow: `CI`
 - Required input: none
-- Runs quality gates (content, balance, accessibility, recovery-contract, tool-certification contracts), lint, tests, and coverage checks.
+- Runs quality gates (content, balance, accessibility, recovery-contract), lint, tests, and coverage checks.
 
 ### Manual Release
 
@@ -502,18 +507,6 @@ Install dependencies:
 Start development:
 
 `npm run dev`
-
-Open standalone tile map tool (dev mode):
-
-`http://localhost:5173/?tool=tilemap`
-
-Open standalone BGM composer tool (dev mode):
-
-`http://localhost:5173/?tool=bgm`
-
-Open standalone sprite pack generator tool (dev mode):
-
-`http://localhost:5173/?tool=spritepack`
 
 Run tests:
 

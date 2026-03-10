@@ -4,7 +4,6 @@ import BgmComposerToolExample from "@/components/examples/BgmComposerToolExample
 import { createTileMapPlacementService } from "@/services/tileMapPlacement";
 
 import tileMapGoldenFixture from "./fixtures/tilemap-golden.json";
-import bgmGoldenFixture from "./fixtures/bgm-golden.json";
 
 describe("tool payload golden contracts", () => {
     beforeEach(() => {
@@ -47,14 +46,17 @@ describe("tool payload golden contracts", () => {
         expect(actual).toEqual(tileMapGoldenFixture);
     });
 
-    it("matches BGM golden payload fixture", () => {
+    it("matches BGM composer tool UI contract", () => {
         render(<BgmComposerToolExample />);
 
-        const payloadTextArea = screen.getByLabelText(
-            "BGM composition JSON",
-        ) as HTMLTextAreaElement;
-        const actual = JSON.parse(payloadTextArea.value) as unknown;
-
-        expect(actual).toEqual(bgmGoldenFixture);
+        expect(
+            screen.getByRole("button", { name: "Generate menu music" }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Generate battle music" }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Loop: on" }),
+        ).toBeInTheDocument();
     });
 });

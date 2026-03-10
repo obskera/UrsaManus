@@ -66,9 +66,12 @@ describe("projectile service", () => {
         signalBus.on(PROJECTILE_HIT_SIGNAL, () => {
             events.push("hit");
         });
-        signalBus.on(PROJECTILE_DESPAWNED_SIGNAL, (payload) => {
-            events.push(`despawn:${(payload as { reason: string }).reason}`);
-        });
+        signalBus.on<{ reason: string }>(
+            PROJECTILE_DESPAWNED_SIGNAL,
+            (payload) => {
+                events.push(`despawn:${payload.reason}`);
+            },
+        );
 
         const projectile = service.spawn({
             projectileId: "firebolt",

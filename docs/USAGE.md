@@ -7,6 +7,7 @@ For system-level flow and responsibilities, see [ARCHITECTURE.md](ARCHITECTURE.m
 ### Documentation Map
 
 - [README.md](README.md) — docs hub with navigation by workflow and audience
+- [README.md#example-asset-attribution](README.md#example-asset-attribution) — Ninja Adventure example asset attribution and CC0 license note
 - [ARCHITECTURE.md](ARCHITECTURE.md) — system flow and module responsibilities
 - [AI_SETUP.md](AI_SETUP.md) — AI bootstrap/configuration guide for repo-based project setup
 - [ai/ENGINE_AI_WORKFLOWS.md](ai/ENGINE_AI_WORKFLOWS.md) — AI prompt templates for runtime/gameplay/docs updates
@@ -14,7 +15,6 @@ For system-level flow and responsibilities, see [ARCHITECTURE.md](ARCHITECTURE.m
 - [worldgen/CHEATSHEET.md](worldgen/CHEATSHEET.md) — deterministic worldgen + spawn payload quick reference
 - [save/README.md](save/README.md) — save/load workflows and implementation snippets
 - [save/CHEATSHEET.md](save/CHEATSHEET.md) — quick save/load API and shortcut reference
-- [tools/README.md](tools/README.md) — tool operator quickstarts + plug-and-play builder guidance
 - [prefabs/PREFAB_WORKFLOW.md](prefabs/PREFAB_WORKFLOW.md) — prefab starter-to-custom workflow and troubleshooting
 - [prefabs/PREFAB_COMPATIBILITY_NOTES.md](prefabs/PREFAB_COMPATIBILITY_NOTES.md) — prefab schema compatibility and release template
 - [prefabs/GAME_STARTER_PACKS.md](prefabs/GAME_STARTER_PACKS.md) — copy/paste game starter packs aligned to roadmap brainstorm items
@@ -73,28 +73,6 @@ Start dev server:
 
 `npm run dev`
 
-Open standalone tile map tool mode:
-
-`http://localhost:5173/?tool=tilemap`
-
-Tile map authoring shortcuts:
-
-- `Pick mode` samples tile id from the clicked cell and then returns to `Paint mode`.
-- Hold `Alt` while clicking a tile to pick it into the brush without changing modes.
-- Full operator guide: [tools/TILEMAP_TOOL.md](tools/TILEMAP_TOOL.md).
-
-Open standalone BGM composer tool mode:
-
-`http://localhost:5173/?tool=bgm`
-
-Open standalone prefab starter wizard tool mode:
-
-`http://localhost:5173/?tool=prefab`
-
-Open standalone sprite pack generator tool mode:
-
-`http://localhost:5173/?tool=spritepack`
-
 Run tests:
 
 `npm run test:run`
@@ -122,10 +100,8 @@ Prototype tilemap assemble from split files:
 ### Manual Workflow Quality Gates
 
 - Manual `CI` runs `quality:content`, `quality:balance`, `quality:accessibility`, and `quality:recovery` before verification steps.
-- Manual `CI` also runs `quality:tool:certification` for golden payload contract coverage.
 - Manual `Release Pipeline` preflight also runs `quality:recovery` as part of release readiness gates.
 - Local equivalent for the recovery gate: `npm run quality:recovery`.
-- Local equivalent for tool certification contracts: `npm run quality:tool:certification`.
 
 ### Template Post-Clone Checklist
 
@@ -2221,10 +2197,9 @@ function MyHUDPreset({
 
 #### Dev tab location (default app)
 
-In the default app (`src/App.tsx`), both component demos are grouped under one expandable dev section:
+In the default app, component demos are grouped under the **Example Prefabs** tab (rendered by `ExamplePrefabsPanel`):
 
-- toggle button: **Show example components**
-- panel title: **Example components**
+- app tabs: **Example Game** / **Example Prefabs**
 - included demos:
     - `LifeGaugeExample` (`src/components/examples/LifeGaugeExample.tsx`)
     - `ActionButtonExample` (`src/components/examples/ActionButtonExample.tsx`)
@@ -2513,12 +2488,18 @@ return mode === "side-scroller" ? (
 );
 ```
 
-### URL mode query in the default app
+### Default app composition
 
-`App.tsx` supports mode selection via URL query:
+The current default app composes extracted app components and hooks:
 
-- `?mode=side-scroller`
-- `?mode=top-down`
+- UI components (`src/components/app/`):
+    - `AppMainTabs`
+    - `ExampleGameToolbar`
+    - `ExampleGameCanvasPanel`
+- Runtime hooks (`src/hooks/`):
+    - `useTopDownGameLoop`
+    - `useStartScreenWorldPause`
+    - `useAudioChannelState`
 
 ### Timer signal helper (`once` / `interval` / `cooldown`)
 
@@ -2937,61 +2918,7 @@ In development mode, the default landing page includes capsule toggles for debug
 <TopDownControls onMove={handleMove} allowDiagonal speedPxPerSec={240} />
 ```
 
-- Shareable start-mode links:
-    - side scroller: `?mode=side-scroller`
-    - top down: `?mode=top-down`
-
-### Full starter file: `App.tsx` (side scroller)
-
-```tsx
-import { useCallback, useEffect, useRef, useState } from "react";
-import { SideScrollerControls } from "@/components/screenController";
-import { SideScrollerCanvas } from "@/components/gameModes";
-import { dataBus } from "@/services/DataBus";
-import "./App.css";
-
-export default function App() {
-    const [, force] = useState(0);
-    const gameScreenRef = useRef<HTMLDivElement | null>(null);
-
-    const handleMove = useCallback(() => {
-        force((n) => n + 1);
-    }, []);
-
-    useEffect(() => {
-        let rafId = 0;
-        let lastFrame = performance.now();
-
-        const tick = (now: number) => {
-            const deltaMs = now - lastFrame;
-            lastFrame = now;
-
-            if (dataBus.stepPhysics(deltaMs)) {
-                force((n) => n + 1);
-            }
-
-            rafId = requestAnimationFrame(tick);
-        };
-
-        rafId = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(rafId);
-    }, []);
-
-    return (
-        <div className="GameContainer">
-            <SideScrollerCanvas
-                width={400}
-                height={300}
-                containerRef={gameScreenRef}
-                showDebugOutlines={import.meta.env.DEV}
-            />
-            <SideScrollerControls onMove={handleMove} />
-        </div>
-    );
-}
-```
-
-### Full starter file: `App.tsx` (top down)
+### Full starter file: `App.tsx` (top down module host)
 
 ```tsx
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -3035,11 +2962,7 @@ export default function App() {
                 containerRef={gameScreenRef}
                 showDebugOutlines={import.meta.env.DEV}
             />
-            <TopDownControls
-                onMove={handleMove}
-                allowDiagonal={true}
-                speedPxPerSec={220}
-            />
+            <TopDownControls onMove={handleMove} allowDiagonal />
         </div>
     );
 }

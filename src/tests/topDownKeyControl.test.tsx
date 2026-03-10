@@ -7,6 +7,7 @@ let frameCallbacks: FrameRequestCallback[] = [];
 const dataBusMocks = vi.hoisted(() => {
     return {
         movePlayerBy: vi.fn(() => true),
+        setPlayerTopDownMoveInput: vi.fn(),
     };
 });
 
@@ -14,6 +15,7 @@ vi.mock("@/services/DataBus", () => {
     return {
         dataBus: {
             movePlayerBy: dataBusMocks.movePlayerBy,
+            setPlayerTopDownMoveInput: dataBusMocks.setPlayerTopDownMoveInput,
         },
     };
 });

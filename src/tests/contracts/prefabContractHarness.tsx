@@ -135,7 +135,8 @@ export function runPrefabModuleContractSuite<TContext>(
             ).toEqual([]);
         });
 
-        if (options.assertOverride) {
+        const assertOverride = options.assertOverride;
+        if (assertOverride) {
             it("passes module override contract assertions", () => {
                 const fixture = options.createFixture();
                 fixture.runtime.attachPrefabModules(
@@ -150,7 +151,7 @@ export function runPrefabModuleContractSuite<TContext>(
                     fixture.context as Record<string, unknown>,
                 );
 
-                options.assertOverride({
+                assertOverride({
                     fixture,
                     report,
                 });

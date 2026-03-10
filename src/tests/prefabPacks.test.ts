@@ -4,6 +4,7 @@ import {
     createObjectPrefabPack,
     createPlayerPrefabPack,
     type EnemyArchetype,
+    type ObjectPrefabContext,
     type ObjectArchetype,
     type PlayerArchetype,
     exportObjectPrefabStateSnapshot,
@@ -249,27 +250,16 @@ describe("prefabPacks", () => {
         const report = pack.attachObject("chest-a", context);
         expect(report.failed).toHaveLength(0);
 
-        const typedContext = context as {
-            objectPrefabsByEntityId: Record<
-                string,
-                {
-                    state: {
-                        opened?: boolean;
-                    };
-                }
-            >;
-        };
+        const typedContext = context as ObjectPrefabContext;
 
         expect(
-            typedContext.objectPrefabsByEntityId["chest-a"]?.state.opened,
+            typedContext.objectPrefabsByEntityId?.["chest-a"]?.state.opened,
         ).toBe(false);
 
         const exported = exportObjectPrefabStateSnapshot(typedContext);
         expect(exported["chest-a"]?.entityId).toBe("chest-a");
 
-        const restoredContext = {} as {
-            objectPrefabsByEntityId?: Record<string, unknown>;
-        };
+        const restoredContext: ObjectPrefabContext = {};
         expect(importObjectPrefabStateSnapshot(restoredContext, exported)).toBe(
             true,
         );

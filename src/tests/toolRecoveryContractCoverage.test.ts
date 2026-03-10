@@ -21,11 +21,15 @@ describe("tool recovery contract coverage", () => {
         render(createElement(BgmComposerToolExample));
 
         expect(
-            screen.getByRole("button", { name: "Recover autosave" }),
+            screen.getByRole("button", { name: "Generate menu music" }),
         ).toBeInTheDocument();
         expect(
-            screen.getByRole("button", { name: "Clear autosave" }),
+            screen.getByRole("button", { name: "Generate battle music" }),
         ).toBeInTheDocument();
-        expect(screen.getByText(/Last autosave:/)).toBeInTheDocument();
+        expect(
+            screen.getByText(
+                /Select public files, then generate menu or battle music\./,
+            ),
+        ).toBeInTheDocument();
     });
 });

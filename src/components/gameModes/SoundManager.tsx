@@ -24,9 +24,24 @@ type FilePlayback = {
     kind: "file";
     channel: string;
     audio: HTMLAudioElement;
+    pausedByMute: boolean;
 };
 
 type Playback = TonePlayback | FilePlayback;
+
+function resolveAudioSrcCandidates(src: string): string[] {
+    const trimmed = src.trim();
+    if (!trimmed) {
+        return [src];
+    }
+
+    const encoded = encodeURI(trimmed);
+    if (encoded === trimmed) {
+        return [trimmed];
+    }
+
+    return [trimmed, encoded];
+}
 
 function toOscillatorType(waveform: ToneWaveform): OscillatorType {
     return waveform;
@@ -180,24 +195,63 @@ const SoundManager = ({ bus = audioBus, cues }: SoundManagerProps) => {
                 1,
                 Math.max(0, state.masterVolume * request.volume * cueGain),
             );
-            const audio = new Audio(cue.src);
+            const sources = resolveAudioSrcCandidates(cue.src);
+            const audio = new Audio(sources[0]);
             audio.loop = request.loop;
             audio.volume = outputGain;
+            audio.preload = "auto";
 
-            const playResult = audio.play();
-            if (playResult && typeof playResult.catch === "function") {
-                void playResult.catch(() => {
+            const clearIfActive = () => {
+                const active = playbackByCueRef.current.get(cueId);
+                if (active?.kind === "file" && active.audio === audio) {
+                    playbackByCueRef.current.delete(cueId);
+                }
+            };
+
+            audio.onended = () => {
+                clearIfActive();
+            };
+
+            playbackByCueRef.current.set(cueId, {
+                kind: "file",
+                channel: request.channel,
+                audio,
+                pausedByMute: false,
+            });
+
+            const playWithFallback = async () => {
+                try {
+                    await audio.play();
                     return;
-                });
-            }
+                } catch {
+                    if (sources.length <= 1) {
+                        clearIfActive();
+                        return;
+                    }
+                }
 
-            if (request.loop) {
-                playbackByCueRef.current.set(cueId, {
-                    kind: "file",
-                    channel: request.channel,
-                    audio,
-                });
-            }
+                for (
+                    let sourceIndex = 1;
+                    sourceIndex < sources.length;
+                    sourceIndex += 1
+                ) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.src = sources[sourceIndex];
+                    audio.load();
+
+                    try {
+                        await audio.play();
+                        return;
+                    } catch {
+                        continue;
+                    }
+                }
+
+                clearIfActive();
+            };
+
+            void playWithFallback();
         },
         [bus, stopPlayback],
     );
@@ -209,6 +263,37 @@ const SoundManager = ({ bus = audioBus, cues }: SoundManagerProps) => {
     }, [bus, cues]);
 
     useEffect(() => {
+        const pauseFilePlaybackForMute = (cueId: string) => {
+            const playback = playbackByCueRef.current.get(cueId);
+            if (!playback || playback.kind !== "file") {
+                return;
+            }
+
+            playback.audio.pause();
+            playback.pausedByMute = true;
+        };
+
+        const resumeFilePlaybackAfterMute = (cueId: string) => {
+            const playback = playbackByCueRef.current.get(cueId);
+            if (
+                !playback ||
+                playback.kind !== "file" ||
+                !playback.pausedByMute
+            ) {
+                return;
+            }
+
+            const channel = playback.channel as "music" | "sfx" | "ui";
+            if (isMutedForChannel(bus, channel)) {
+                return;
+            }
+
+            playback.pausedByMute = false;
+            void playback.audio.play().catch(() => {
+                playback.pausedByMute = true;
+            });
+        };
+
         const unsubscribe = bus.subscribe((event) => {
             if (event.type === "play") {
                 const definition = bus.getCue(event.request.cueId);
@@ -244,7 +329,14 @@ const SoundManager = ({ bus = audioBus, cues }: SoundManagerProps) => {
                 const shouldSilenceAll =
                     !event.state.enabled || event.state.masterMuted;
                 if (shouldSilenceAll) {
-                    stopPlayback();
+                    for (const [cueId, playback] of playbackByCueRef.current) {
+                        if (playback.kind === "file") {
+                            pauseFilePlaybackForMute(cueId);
+                            continue;
+                        }
+
+                        stopPlayback(cueId);
+                    }
                     return;
                 }
 
@@ -254,8 +346,16 @@ const SoundManager = ({ bus = audioBus, cues }: SoundManagerProps) => {
                 ] of playbackByCueRef.current.entries()) {
                     const channel = playback.channel as "music" | "sfx" | "ui";
                     if (event.state.channelMuted[channel]) {
+                        if (playback.kind === "file") {
+                            pauseFilePlaybackForMute(cueId);
+                            continue;
+                        }
+
                         stopPlayback(cueId);
+                        continue;
                     }
+
+                    resumeFilePlaybackAfterMute(cueId);
                 }
             }
         });

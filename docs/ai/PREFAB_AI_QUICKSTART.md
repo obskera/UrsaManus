@@ -71,3 +71,11 @@ Require AI responses to include:
 - `Validation plan` (the three commands above)
 
 This keeps AI output reviewable and immediately actionable.
+
+## 8) Default app integration (current)
+
+When AI suggests wiring prefab demos into the default app:
+
+- Mount demo entries in `src/components/examples/ExamplePrefabsPanel.tsx`.
+- Keep app-level shell composition in `src/components/app/` components (`AppMainTabs`, `ExampleGameToolbar`, `ExampleGameCanvasPanel`).
+- Keep side-effect logic in `src/hooks/` (`useTopDownGameLoop`, `useStartScreenWorldPause`, `useAudioChannelState`) instead of adding large inline effects to `src/App.tsx`.
