@@ -290,6 +290,51 @@
     z-index: 3;
 }
 
+.CanvasHudTopLeft {
+    position: absolute;
+    top: 0.35rem;
+    left: 0.35rem;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.CanvasHudBottomRight {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.35rem;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.CanvasLivesRow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+}
+
+.CanvasLifeSprite {
+    width: 24px;
+    height: 24px;
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: 96px 24px;
+    image-rendering: pixelated;
+}
+
+.GameScreenViewport {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.CanvasGameOverOverlay {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(8, 12, 20, 0.6);
+    z-index: 5;
+}
+
 .CanvasStartCard {
     width: min(92%, 320px);
 }
@@ -309,6 +354,31 @@
     gap: 0.5rem;
     flex-wrap: wrap;
     align-items: center;
+}
+
+.CanvasControlsHelp {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0.05rem 0;
+    font-size: 0.8rem;
+    color: rgba(226, 232, 240, 0.88);
+}
+
+.CanvasControlsHelp__title {
+    font-weight: 700;
+    color: rgba(191, 219, 254, 0.96);
+}
+
+.CanvasControlsHelp__item {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 999px;
+    padding: 0.18rem 0.55rem;
+    background: rgba(15, 23, 42, 0.3);
 }
 
 .CanvasMetaPill {
@@ -334,6 +404,15 @@
 
 .ControlsPanel {
     justify-self: center;
+}
+
+.ControlsHelpPanel {
+    width: min(100%, 720px);
+    justify-self: center;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: rgba(15, 23, 42, 0.42);
+    padding: 0.55rem 0.75rem;
 }
 
 .GameScreen {

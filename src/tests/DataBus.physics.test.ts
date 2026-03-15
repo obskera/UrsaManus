@@ -893,6 +893,33 @@ describe("DataBus physics integration", () => {
         expect(camera.mode).toBe("follow-player");
     });
 
+    it("special attack defeats only on-screen enemies and matches explosion scale to the hit enemy", () => {
+        const player = dataBus.getPlayer();
+        player.position.x = 100;
+        player.position.y = 100;
+        dataBus.setCameraViewport(300, 200);
+        dataBus.setCameraPosition(0, 0);
+
+        const nearbyEnemyId = dataBus.spawnCyclops(150, 100);
+        const distantEnemyId = dataBus.spawnCyclops(420, 100);
+        const nearbyEnemy = dataBus.getState().entitiesById[nearbyEnemyId];
+
+        dataBus.playerSpecialAttack();
+
+        const state = dataBus.getState();
+        const explosion = Object.values(state.entitiesById).find((entity) =>
+            entity.name.startsWith("explosion:"),
+        );
+
+        expect(state.entitiesById[nearbyEnemyId]).toBeUndefined();
+        expect(state.entitiesById[distantEnemyId]).toBeDefined();
+        expect(state.playerScore).toBe(1);
+        expect(explosion?.scaler).toBe(nearbyEnemy.scaler);
+        expect(dataBus.getPlayerSpecialCooldownRemainingMs()).toBeGreaterThan(
+            0,
+        );
+    });
+
     it("ignores enable/disable velocity operations for missing entities", () => {
         expect(() => {
             dataBus.enableEntityPhysics("missing");

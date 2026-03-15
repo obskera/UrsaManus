@@ -40,7 +40,7 @@ const AppMainTabs = ({
                     }
                     onClick={onSelectExampleGameTab}
                 >
-                    Example Game
+                    Example Mini Game
                 </button>
             </div>
         </div>

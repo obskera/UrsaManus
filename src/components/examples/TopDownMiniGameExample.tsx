@@ -3,6 +3,7 @@ import { TopDownCanvas } from "@/components/gameModes";
 import { TopDownHUDPreset } from "@/components/hudAnchor";
 import { TopDownControls } from "@/components/screenController";
 import { dataBus } from "@/services/DataBus";
+import { resolvePublicAssetPath } from "@/utils/assetPaths";
 
 export type TopDownMiniGameExampleProps = {
     title?: string;
@@ -48,9 +49,11 @@ const OBJECTIVE_ZONES: ObjectiveZone[] = [
 
 const ROUND_DURATION_MS = 25_000;
 const NINJA_CHARACTER_SPRITESHEET =
-    "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaBlue/SpriteSheet.png";
+    resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaBlue/SpriteSheet.png",
+    );
 const NINJA_ENV_PREVIEW =
-    "/Ninja%20Adventure%20-%20Asset%20Pack/preview-part-1.png";
+    resolvePublicAssetPath("Ninja%20Adventure%20-%20Asset%20Pack/preview-part-1.png");
 
 function resolveObjectiveZoneId(x: number, y: number): string | null {
     const matched = OBJECTIVE_ZONES.find(

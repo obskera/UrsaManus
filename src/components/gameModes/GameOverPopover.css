@@ -1,0 +1,24 @@
+.um-game-over-popover {
+    width: min(92%, 320px);
+    display: grid;
+    gap: 0.55rem;
+    justify-items: center;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    background: rgba(2, 6, 23, 0.9);
+    box-shadow: 0 12px 24px rgba(2, 6, 23, 0.45);
+}
+
+.um-game-over-popover__title {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.um-game-over-popover__score {
+    margin: 0;
+    color: rgba(226, 232, 240, 0.95);
+    font-size: 0.9rem;
+}

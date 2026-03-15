@@ -9,6 +9,8 @@ export { default as SideScrollerControls } from "./SideScrollerControls";
 export { default as TopDownControls } from "./TopDownControls";
 export { default as TopDownKeyControl } from "./topDownKeyControl";
 export { default as TopDownOnScreenControl } from "./topDownOnScreenControl";
+export { default as HjklKeyControl } from "./hjklKeyControl";
+export { default as HjklOnScreenControl } from "./hjklOnScreenControl";
 export { createPlayerInputActions } from "./inputActions";
 export {
     createInputComponentAdapters,
@@ -59,6 +61,8 @@ export type { SideScrollerControlsProps } from "./SideScrollerControls";
 export type { TopDownControlsProps } from "./TopDownControls";
 export type { TopDownKeyControlProps } from "./topDownKeyControl";
 export type { TopDownOnScreenControlProps } from "./topDownOnScreenControl";
+export type { HjklButtonKey, HjklKeyControlProps } from "./hjklKeyControl";
+export type { HjklOnScreenControlProps } from "./hjklOnScreenControl";
 export type {
     InputKeyMap,
     UseActionKeyBindingsOptions,

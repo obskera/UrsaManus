@@ -32,6 +32,8 @@ export function useTopDownGameLoop(
                 gameState.playerId,
             );
             const nextPlayerFacing = dataBus.getPlayerFacingDirection();
+            const hasActiveSpecialCooldown =
+                dataBus.getPlayerSpecialCooldownRemainingMs() > 0;
             const didStateChange =
                 nextPlayerState !== lastPlayerStateRef.current ||
                 nextPlayerFacing !== lastPlayerFacingRef.current;
@@ -41,7 +43,7 @@ export function useTopDownGameLoop(
                 lastPlayerFacingRef.current = nextPlayerFacing;
             }
 
-            if (didStepPhysics || didStateChange) {
+            if (didStepPhysics || didStateChange || hasActiveSpecialCooldown) {
                 onTickStateChanged();
             }
 

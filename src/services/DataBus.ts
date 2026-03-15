@@ -1,7 +1,9 @@
 // src/services/DataBus.ts
 import { generateId, type Entity } from "@/logic/entity/Entity";
+import { audioBus } from "@/services/audioBus";
 import { CollisionSystem } from "@/logic/collision/CollisionSystem";
 import { createRectangleCollider, CollisionLayer } from "@/logic/collision";
+import type { CollisionEvent } from "@/logic/collision/collisionEvents";
 import { getEntityById } from "@/logic/entity/getEntityById";
 import { isBlockedBySolid } from "@/logic/collision/isBlockedBySolid";
 import { createWorldBounds } from "@/logic/collision/worldBoundsFactory";
@@ -34,18 +36,134 @@ import {
     type StatusEffectInstance,
 } from "@/logic/simulation";
 import { TOP_DOWN_PLAYER_TUNING } from "@/config/playerTuning";
+import { resolvePublicAssetPath } from "@/utils/assetPaths";
 
 const NINJA_GREEN_ANIMATION_SHEETS = {
-    attack: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Attack.png",
-    dead: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Dead.png",
-    idle: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Idle.png",
-    item: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Item.png",
-    jump: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Jump.png",
+    attack: resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Attack.png",
+    ),
+    dead: resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Dead.png",
+    ),
+    idle: resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Idle.png",
+    ),
+    item: resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Item.png",
+    ),
+    jump: resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Jump.png",
+    ),
     special1:
-        "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Special1.png",
+        resolvePublicAssetPath(
+            "Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Special1.png",
+        ),
     special2:
-        "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Special2.png",
-    walk: "/Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Walk.png",
+        resolvePublicAssetPath(
+            "Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Special2.png",
+        ),
+    walk: resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/Actor/Characters/NinjaGreen/SeparateAnim/Walk.png",
+    ),
+} as const;
+
+const FIREBALL_ANIMATION_SHEET =
+    resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/FX/Projectile/Fireball.png",
+    );
+const FIREBALL_FRAMES = [
+    [0, 0],
+    [1, 0],
+    [2, 0],
+    [3, 0],
+] as const;
+const FIREBALL_SPEED_PX_PER_SEC = Math.round(
+    TOP_DOWN_PLAYER_TUNING.moveSpeedPxPerSec * 2.5,
+);
+const FIREBALL_SPAWN_OFFSET_PX = 48;
+const FIREBALL_LIFETIME_MS = 1600;
+const FIREBALL_SCALER = 4;
+const FIREBALL_HITBOX_SIZE_PX = 8;
+const FIREBALL_HITBOX_OFFSET_PX = 4;
+const PLAYER_ATTACK_COOLDOWN_MS = 250;
+
+const SMOKE_ANIMATION_SHEET =
+    resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/FX/Smoke/Smoke/SpriteSheet.png",
+    );
+const SMOKE_FRAMES = [
+    [0, 0],
+    [1, 0],
+    [2, 0],
+    [3, 0],
+    [4, 0],
+    [5, 0],
+] as const;
+const SMOKE_SPRITE_SIZE = 32;
+const SMOKE_SCALER = 2;
+const SMOKE_FPS = 14;
+const SMOKE_LIFETIME_MS = 430;
+
+const EXPLOSION_ANIMATION_SHEET =
+    resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/FX/Elemental/Explosion/SpriteSheet.png",
+    );
+const EXPLOSION_FRAMES = [
+    [0, 0],
+    [1, 0],
+    [2, 0],
+    [3, 0],
+    [4, 0],
+    [5, 0],
+    [6, 0],
+    [7, 0],
+    [8, 0],
+] as const;
+const EXPLOSION_SPRITE_SIZE = 40;
+const EXPLOSION_FPS = 18;
+const EXPLOSION_LIFETIME_MS = 500;
+const PLAYER_SPECIAL_ATTACK_COOLDOWN_MS = 9000;
+
+const CYCLOPS_ANIMATION_SHEET =
+    resolvePublicAssetPath(
+        "Ninja%20Adventure%20-%20Asset%20Pack/Actor/Monsters/Cyclope/SpriteSheet.png",
+    );
+const CYCLOPS_SPRITE_SIZE = 16;
+const CYCLOPS_SCALER = 3;
+const CYCLOPS_FPS = 8;
+const PLAYER_MAX_LIVES = 3;
+const DEFAULT_PLAYER_START_POSITION = { x: 10, y: 10 } as const;
+const CYCLOPS_DIRECTIONAL_WALK_FRAMES = {
+    south: [
+        [0, 0],
+        [0, 1],
+        [0, 2],
+        [0, 3],
+    ],
+    north: [
+        [1, 0],
+        [1, 1],
+        [1, 2],
+        [1, 3],
+    ],
+    west: [
+        [2, 0],
+        [2, 1],
+        [2, 2],
+        [2, 3],
+    ],
+    east: [
+        [3, 0],
+        [3, 1],
+        [3, 2],
+        [3, 3],
+    ],
+} as const;
+const CYCLOPS_DIRECTIONAL_IDLE_FRAME = {
+    south: [0, 0],
+    north: [1, 0],
+    west: [2, 0],
+    east: [3, 0],
 } as const;
 
 const NINJA_DIRECTIONAL_WALK_FRAMES = {
@@ -76,6 +194,16 @@ const NINJA_DIRECTIONAL_WALK_FRAMES = {
 } as const;
 
 const NINJA_DIRECTIONAL_IDLE_FRAME: Record<
+    PlayerFacingDirection,
+    readonly [number, number]
+> = {
+    south: [0, 0],
+    north: [1, 0],
+    west: [2, 0],
+    east: [3, 0],
+} as const;
+
+const NINJA_DIRECTIONAL_ATTACK_FRAME: Record<
     PlayerFacingDirection,
     readonly [number, number]
 > = {
@@ -219,6 +347,9 @@ export type CameraState = {
 export type GameState = {
     entitiesById: Record<string, Entity>;
     playerId: string;
+    playerLives: number;
+    playerScore: number;
+    isGameOver: boolean;
 
     worldSize: { width: number; height: number };
     camera: CameraState;
@@ -356,6 +487,9 @@ const DEFAULT_NPC_CHASE_STOP_DISTANCE_PX = 12;
 const DEFAULT_NPC_CHASE_SPEED_PX_PER_SEC = 130;
 const DEFAULT_NPC_FLEE_DISTANCE_PX = 72;
 const DEFAULT_NPC_FLEE_SPEED_PX_PER_SEC = 140;
+const DEFAULT_ENEMY_SPAWN_INTERVAL_MS = 5000;
+const DEFAULT_ENEMY_SPAWN_MIN_DISTANCE_FROM_PLAYER_PX = 200;
+const DEFAULT_ENEMY_SPAWN_MAX_ENEMIES = 256;
 
 class DataBus {
     private moveByAmount: number = 10;
@@ -398,6 +532,632 @@ class DataBus {
         string,
         EntityInteractionContract
     >();
+    private projectileVelocityById = new Map<
+        string,
+        { x: number; y: number }
+    >();
+    private projectileLifetimeById = new Map<string, number>();
+    private smokeLifetimeById = new Map<string, number>();
+    private explosionLifetimeById = new Map<string, number>();
+    private cyclopsFacingById = new Map<
+        string,
+        keyof typeof CYCLOPS_DIRECTIONAL_WALK_FRAMES
+    >();
+    private playerLastHurtAtMs = Number.NEGATIVE_INFINITY;
+    private playerHurtCooldownMs = 450;
+    private playerHurtFlashUntilMs = Number.NEGATIVE_INFINITY;
+    private playerHurtFlashDurationMs = 800;
+    private playerHurtAnimDurationMs = 150;
+    private enemySpawnerEnabled = false;
+    private enemySpawnIntervalMs = DEFAULT_ENEMY_SPAWN_INTERVAL_MS;
+    private enemySpawnAccumulatorMs = 0;
+    private enemySpawnWave = 0;
+    private playerNextAttackAtMs = 0;
+    private playerNextSpecialAttackAtMs = 0;
+
+    private canPlayerAttack(): boolean {
+        return this.simulationTimeMs >= this.playerNextAttackAtMs;
+    }
+    private canPlayerSpecialAttack(): boolean {
+        return this.simulationTimeMs >= this.playerNextSpecialAttackAtMs;
+    }
+
+    private updateCyclopsAnimation(entity: Entity) {
+        const vx = entity.physicsBody?.velocity.x ?? 0;
+        const vy = entity.physicsBody?.velocity.y ?? 0;
+        const speed = Math.hypot(vx, vy);
+
+        const facing = this.cyclopsFacingById.get(entity.id) ?? "south";
+
+        if (speed > 6) {
+            const absVx = Math.abs(vx);
+            const absVy = Math.abs(vy);
+
+            let nextFacing = facing;
+            if (absVx > absVy) {
+                nextFacing = vx >= 0 ? "east" : "west";
+            } else if (absVy > absVx) {
+                nextFacing = vy >= 0 ? "south" : "north";
+            }
+
+            this.cyclopsFacingById.set(entity.id, nextFacing);
+            entity.characterSpriteTiles = CYCLOPS_DIRECTIONAL_WALK_FRAMES[
+                nextFacing
+            ].map(([x, y]) => [x, y]);
+            entity.fps = CYCLOPS_FPS;
+        } else {
+            const [idleX, idleY] = CYCLOPS_DIRECTIONAL_IDLE_FRAME[facing];
+            entity.characterSpriteTiles = [[idleX, idleY]];
+            entity.fps = 1;
+        }
+    }
+
+    private handleEnemyPlayerCollisionEvents(events: CollisionEvent[]) {
+        for (const event of events) {
+            if (event.phase !== "enter") continue;
+
+            const a =
+                event.a ?? getEntityById(this.state.entitiesById, event.aId);
+            const b =
+                event.b ?? getEntityById(this.state.entitiesById, event.bId);
+            if (!a || !b) continue;
+
+            const isPlayerA = a.id === this.state.playerId;
+            const isPlayerB = b.id === this.state.playerId;
+            if (!isPlayerA && !isPlayerB) continue;
+
+            const enemy = isPlayerA
+                ? b.type === "enemy"
+                    ? b
+                    : null
+                : a.type === "enemy"
+                  ? a
+                  : null;
+            if (!enemy) continue;
+
+            this.playerHurt(enemy);
+        }
+    }
+
+    private getCyclopsCount() {
+        let count = 0;
+        for (const entity of this.getEntities()) {
+            if (entity.name.startsWith("cyclops:")) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    private getEnemySpawnPosition(): { x: number; y: number } {
+        const player = this.getPlayer();
+        const cyclopsDrawSize = CYCLOPS_SPRITE_SIZE * CYCLOPS_SCALER;
+        const margin = 24;
+        const minX = margin;
+        const minY = margin;
+        const maxX = Math.max(
+            minX,
+            this.state.worldSize.width - cyclopsDrawSize - margin,
+        );
+        const maxY = Math.max(
+            minY,
+            this.state.worldSize.height - cyclopsDrawSize - margin,
+        );
+
+        for (let attempt = 0; attempt < 24; attempt += 1) {
+            const x = minX + Math.random() * (maxX - minX || 1);
+            const y = minY + Math.random() * (maxY - minY || 1);
+            const distanceFromPlayer = Math.hypot(
+                x - player.position.x,
+                y - player.position.y,
+            );
+
+            if (
+                distanceFromPlayer <
+                DEFAULT_ENEMY_SPAWN_MIN_DISTANCE_FROM_PLAYER_PX
+            ) {
+                continue;
+            }
+
+            return { x, y };
+        }
+
+        return {
+            x: Math.max(
+                minX,
+                Math.min(
+                    maxX,
+                    player.position.x +
+                        DEFAULT_ENEMY_SPAWN_MIN_DISTANCE_FROM_PLAYER_PX,
+                ),
+            ),
+            y: Math.max(
+                minY,
+                Math.min(
+                    maxY,
+                    player.position.y +
+                        DEFAULT_ENEMY_SPAWN_MIN_DISTANCE_FROM_PLAYER_PX,
+                ),
+            ),
+        };
+    }
+
+    private spawnCyclopsFromSpawner() {
+        const position = this.getEnemySpawnPosition();
+        this.spawnCyclops(position.x, position.y);
+    }
+
+    private getDoublingEnemySpawnCount(wave: number) {
+        const exponent = Math.max(0, wave - 1);
+        return 2 ** exponent;
+    }
+
+    private stepEnemySpawning(deltaMs: number): boolean {
+        if (
+            !this.enemySpawnerEnabled ||
+            deltaMs <= 0 ||
+            this.state.isGameOver
+        ) {
+            return false;
+        }
+
+        this.enemySpawnAccumulatorMs += deltaMs;
+        let didSpawnEnemy = false;
+
+        while (this.enemySpawnAccumulatorMs >= this.enemySpawnIntervalMs) {
+            this.enemySpawnAccumulatorMs -= this.enemySpawnIntervalMs;
+            this.enemySpawnWave += 1;
+
+            const currentCyclopsCount = this.getCyclopsCount();
+            const remainingSlots =
+                DEFAULT_ENEMY_SPAWN_MAX_ENEMIES - currentCyclopsCount;
+            if (remainingSlots <= 0) {
+                continue;
+            }
+
+            const requestedSpawns = this.getDoublingEnemySpawnCount(
+                this.enemySpawnWave,
+            );
+            const spawnCount = Math.min(requestedSpawns, remainingSlots);
+            for (let i = 0; i < spawnCount; i += 1) {
+                this.spawnCyclopsFromSpawner();
+                didSpawnEnemy = true;
+            }
+        }
+
+        return didSpawnEnemy;
+    }
+
+    private getFacingUnitVector(direction: PlayerFacingDirection) {
+        switch (direction) {
+            case "north":
+                return { x: 0, y: -1 };
+            case "south":
+                return { x: 0, y: 1 };
+            case "west":
+                return { x: -1, y: 0 };
+            case "east":
+            default:
+                return { x: 1, y: 0 };
+        }
+    }
+
+    private getFacingRotationDeg(direction: PlayerFacingDirection): number {
+        switch (direction) {
+            case "east":
+                return 90;
+            case "south":
+                return 180;
+            case "west":
+                return -90;
+            case "north":
+            default:
+                return 0;
+        }
+    }
+
+    private isProjectileEntity(entityId: string) {
+        return this.projectileVelocityById.has(entityId);
+    }
+
+    private despawnProjectile(entityId: string) {
+        const entity = this.state.entitiesById[entityId];
+        if (entity) {
+            const drawSize = entity.spriteSize * entity.scaler;
+            this.spawnSmokeAt(
+                entity.position.x + drawSize / 2,
+                entity.position.y + drawSize / 2,
+            );
+        }
+
+        this.projectileVelocityById.delete(entityId);
+        this.projectileLifetimeById.delete(entityId);
+        delete this.state.entitiesById[entityId];
+    }
+
+    private despawnEnemy(entityId: string) {
+        delete this.state.entitiesById[entityId];
+        this.cyclopsFacingById.delete(entityId);
+        this.clearNpcArchetypeProfile(entityId);
+        this.entityBehaviorStates.delete(entityId);
+        this.entityTimedStates.delete(entityId);
+    }
+
+    private spawnSmokeAt(centerX: number, centerY: number) {
+        const smokeId = generateId();
+        const smokeDrawSize = SMOKE_SPRITE_SIZE * SMOKE_SCALER;
+
+        const smoke: Entity = {
+            id: smokeId,
+            type: "object",
+            name: `smoke:${smokeId}`,
+            animations: [],
+            currentAnimation: "burst",
+            updateState: () => {},
+            spriteImageSheet: SMOKE_ANIMATION_SHEET,
+            spriteSize: SMOKE_SPRITE_SIZE,
+            spriteSheetTileWidth: 6,
+            spriteSheetTileHeight: 1,
+            characterSpriteTiles: SMOKE_FRAMES.map(([x, y]) => [x, y]),
+            scaler: SMOKE_SCALER,
+            position: {
+                x: centerX - smokeDrawSize / 2,
+                y: centerY - smokeDrawSize / 2,
+            },
+            fps: SMOKE_FPS,
+        };
+
+        this.state.entitiesById[smoke.id] = smoke;
+        this.smokeLifetimeById.set(smoke.id, SMOKE_LIFETIME_MS);
+    }
+    private spawnExplosionAt(centerX: number, centerY: number, scaler: number) {
+        const explosionId = generateId();
+        const safeScaler = Math.max(0.5, scaler);
+        const explosionDrawSize = EXPLOSION_SPRITE_SIZE * safeScaler;
+
+        const explosion: Entity = {
+            id: explosionId,
+            type: "object",
+            name: `explosion:${explosionId}`,
+            animations: [],
+            currentAnimation: "burst",
+            updateState: () => {},
+            spriteImageSheet: EXPLOSION_ANIMATION_SHEET,
+            spriteSize: EXPLOSION_SPRITE_SIZE,
+            spriteSheetTileWidth: 9,
+            spriteSheetTileHeight: 1,
+            characterSpriteTiles: EXPLOSION_FRAMES.map(([x, y]) => [x, y]),
+            scaler: safeScaler,
+            position: {
+                x: centerX - explosionDrawSize / 2,
+                y: centerY - explosionDrawSize / 2,
+            },
+            fps: EXPLOSION_FPS,
+        };
+
+        this.state.entitiesById[explosion.id] = explosion;
+        this.explosionLifetimeById.set(explosion.id, EXPLOSION_LIFETIME_MS);
+    }
+
+    private stepSmokeEffects(deltaMs: number): boolean {
+        if (deltaMs <= 0 || this.smokeLifetimeById.size === 0) {
+            return false;
+        }
+
+        let didDespawn = false;
+        const expiredIds: string[] = [];
+
+        for (const [entityId, lifetime] of this.smokeLifetimeById) {
+            const entity = this.state.entitiesById[entityId];
+            if (!entity) {
+                expiredIds.push(entityId);
+                continue;
+            }
+
+            const remaining = Math.max(0, lifetime - deltaMs);
+            this.smokeLifetimeById.set(entityId, remaining);
+            if (remaining <= 0) {
+                expiredIds.push(entityId);
+            }
+        }
+
+        for (const entityId of expiredIds) {
+            this.smokeLifetimeById.delete(entityId);
+            if (this.state.entitiesById[entityId]) {
+                delete this.state.entitiesById[entityId];
+                didDespawn = true;
+            }
+        }
+
+        return didDespawn;
+    }
+    private stepExplosionEffects(deltaMs: number): boolean {
+        if (deltaMs <= 0 || this.explosionLifetimeById.size === 0) {
+            return false;
+        }
+
+        let didDespawn = false;
+        const expiredIds: string[] = [];
+
+        for (const [entityId, lifetime] of this.explosionLifetimeById) {
+            const entity = this.state.entitiesById[entityId];
+            if (!entity) {
+                expiredIds.push(entityId);
+                continue;
+            }
+
+            const remaining = Math.max(0, lifetime - deltaMs);
+            this.explosionLifetimeById.set(entityId, remaining);
+            if (remaining <= 0) {
+                expiredIds.push(entityId);
+            }
+        }
+
+        for (const entityId of expiredIds) {
+            this.explosionLifetimeById.delete(entityId);
+            if (this.state.entitiesById[entityId]) {
+                delete this.state.entitiesById[entityId];
+                didDespawn = true;
+            }
+        }
+
+        return didDespawn;
+    }
+
+    public playerHurt(source: Entity) {
+        if (this.state.isGameOver) {
+            return;
+        }
+
+        if (this.simulationTimeMs < this.playerHurtFlashUntilMs) {
+            return;
+        }
+
+        if (
+            this.simulationTimeMs - this.playerLastHurtAtMs <
+            this.playerHurtCooldownMs
+        ) {
+            return;
+        }
+
+        this.playerLastHurtAtMs = this.simulationTimeMs;
+        this.playerHurtFlashUntilMs =
+            this.simulationTimeMs + this.playerHurtFlashDurationMs;
+
+        const player = this.getPlayer();
+        this.setEntityTimedState(
+            player.id,
+            "damaged",
+            this.playerHurtAnimDurationMs,
+        );
+
+        const nextLives = Math.max(0, this.state.playerLives - 1);
+        this.state.playerLives = nextLives;
+
+        audioBus.play("player:hurt", {
+            channel: "sfx",
+            restartIfPlaying: true,
+        });
+
+        console.log(
+            `[PLAYER HURT] by ${source.name} (${Math.round(source.position.x)}, ${Math.round(source.position.y)}) -> ${nextLives}/${PLAYER_MAX_LIVES}`,
+        );
+
+        if (nextLives <= 0) {
+            this.state.isGameOver = true;
+            this.pauseWorld("game-over");
+            audioBus.play("ui:game-over", {
+                channel: "sfx",
+                restartIfPlaying: true,
+            });
+        }
+    }
+
+    public spawnCyclops(x: number, y: number): string {
+        const id = generateId();
+        const cyclops: Entity = {
+            id,
+            type: "enemy",
+            name: `cyclops:${id}`,
+            animations: [],
+            currentAnimation: "idle",
+            updateState: () => {},
+            spriteImageSheet: CYCLOPS_ANIMATION_SHEET,
+            spriteSize: CYCLOPS_SPRITE_SIZE,
+            spriteSheetTileWidth: 4,
+            spriteSheetTileHeight: 4,
+            characterSpriteTiles: [[0, 0]],
+            scaler: CYCLOPS_SCALER + Math.random() * (CYCLOPS_SCALER * 1.5),
+            fps: 1,
+            position: { x, y },
+            collider: createRectangleCollider({
+                size: {
+                    width: CYCLOPS_SPRITE_SIZE,
+                    height: CYCLOPS_SPRITE_SIZE,
+                },
+                offset: { x: 0, y: 0 },
+                collisionResponse: "overlap",
+                layer: CollisionLayer.enemy,
+                collidesWith: CollisionLayer.world | CollisionLayer.player,
+                debugDraw: false,
+            }),
+        };
+
+        this.state.entitiesById[cyclops.id] = cyclops;
+        this.cyclopsFacingById.set(cyclops.id, "south");
+        const cyclopsDrawSize = cyclops.spriteSize * cyclops.scaler;
+        this.setNpcArchetypeProfile(cyclops.id, {
+            mode: "chase",
+            chaseDistancePx: 300,
+            chaseSpeedPxPerSec: 80,
+            chaseStopDistancePx: cyclopsDrawSize * 0.5,
+            fleeDistancePx: 0,
+        });
+
+        return cyclops.id;
+    }
+
+    private classifyFireballCollisionTarget(entity: Entity): string {
+        const layer = entity.collider?.layer ?? CollisionLayer.none;
+
+        if (
+            entity.name.startsWith("worldBound") ||
+            layer === CollisionLayer.world
+        ) {
+            return "wall";
+        }
+
+        if (entity.type === "enemy" || layer === CollisionLayer.enemy) {
+            return "enemy";
+        }
+
+        if (entity.type === "object" || layer === CollisionLayer.object) {
+            return "entity";
+        }
+
+        return entity.type;
+    }
+
+    private handleProjectileCollisionEvents(events: CollisionEvent[]) {
+        for (const event of events) {
+            if (event.phase !== "enter") {
+                continue;
+            }
+
+            const a =
+                event.a ?? getEntityById(this.state.entitiesById, event.aId);
+            const b =
+                event.b ?? getEntityById(this.state.entitiesById, event.bId);
+            if (!a || !b) {
+                continue;
+            }
+
+            const aIsProjectile = this.isProjectileEntity(a.id);
+            const bIsProjectile = this.isProjectileEntity(b.id);
+
+            if (!aIsProjectile && !bIsProjectile) {
+                continue;
+            }
+
+            if (aIsProjectile && bIsProjectile) {
+                continue;
+            }
+
+            const projectile = aIsProjectile ? a : b;
+            const target = aIsProjectile ? b : a;
+
+            const hitKind = this.classifyFireballCollisionTarget(target);
+            console.log(
+                `[FIREBALL HIT] ${hitKind}: ${target.name} (${Math.round(target.position.x)}, ${Math.round(target.position.y)})`,
+            );
+
+            if (target.type === "enemy") {
+                this.state.playerScore += 1;
+                this.despawnEnemy(target.id);
+            }
+
+            this.despawnProjectile(projectile.id);
+        }
+    }
+
+    private spawnPlayerFireball() {
+        const player = this.getPlayer();
+        const direction = this.playerFacingDirection;
+        const facing = this.getFacingUnitVector(direction);
+        const playerDrawSize = player.spriteSize * player.scaler;
+        const centerX = player.position.x + playerDrawSize / 2;
+        const centerY = player.position.y + playerDrawSize / 2;
+
+        const projectileId = generateId();
+        const fireballDrawSize = 16 * FIREBALL_SCALER;
+        const fireball: Entity = {
+            id: projectileId,
+            type: "object",
+            name: `fireball:${projectileId}`,
+            animations: [],
+            currentAnimation: "travel",
+            updateState: () => {},
+            spriteImageSheet: FIREBALL_ANIMATION_SHEET,
+            spriteSize: 16,
+            spriteSheetTileWidth: 4,
+            spriteSheetTileHeight: 1,
+            characterSpriteTiles: FIREBALL_FRAMES.map(([x, y]) => [x, y]),
+            scaler: FIREBALL_SCALER,
+            position: {
+                x:
+                    centerX +
+                    facing.x * FIREBALL_SPAWN_OFFSET_PX -
+                    fireballDrawSize / 2,
+                y:
+                    centerY +
+                    facing.y * FIREBALL_SPAWN_OFFSET_PX -
+                    fireballDrawSize / 2,
+            },
+            rotationDeg: this.getFacingRotationDeg(direction),
+            fps: 16,
+            collider: createRectangleCollider({
+                size: {
+                    width: FIREBALL_HITBOX_SIZE_PX,
+                    height: FIREBALL_HITBOX_SIZE_PX,
+                },
+                offset: {
+                    x: FIREBALL_HITBOX_OFFSET_PX,
+                    y: FIREBALL_HITBOX_OFFSET_PX,
+                },
+                collisionResponse: "overlap",
+                layer: CollisionLayer.player,
+                collidesWith:
+                    CollisionLayer.world |
+                    CollisionLayer.object |
+                    CollisionLayer.enemy,
+                debugDraw: false,
+            }),
+        };
+
+        this.state.entitiesById[fireball.id] = fireball;
+        this.projectileVelocityById.set(fireball.id, {
+            x: facing.x * FIREBALL_SPEED_PX_PER_SEC,
+            y: facing.y * FIREBALL_SPEED_PX_PER_SEC,
+        });
+        this.projectileLifetimeById.set(fireball.id, FIREBALL_LIFETIME_MS);
+    }
+
+    private stepProjectiles(deltaMs: number): boolean {
+        if (deltaMs <= 0 || this.projectileVelocityById.size === 0) {
+            return false;
+        }
+
+        const dt = deltaMs / 1000;
+        let hasMovement = false;
+        const expiredIds: string[] = [];
+
+        for (const [entityId, velocity] of this.projectileVelocityById) {
+            const entity = this.state.entitiesById[entityId];
+            if (!entity) {
+                expiredIds.push(entityId);
+                continue;
+            }
+
+            entity.position.x += velocity.x * dt;
+            entity.position.y += velocity.y * dt;
+            hasMovement = true;
+
+            const remaining = Math.max(
+                0,
+                (this.projectileLifetimeById.get(entityId) ?? 0) - deltaMs,
+            );
+            this.projectileLifetimeById.set(entityId, remaining);
+            if (remaining <= 0) {
+                expiredIds.push(entityId);
+            }
+        }
+
+        for (const entityId of expiredIds) {
+            this.despawnProjectile(entityId);
+        }
+
+        return hasMovement;
+    }
 
     private updatePlayerDirectionalSprites(dx: number, dy: number) {
         const player = this.getPlayer();
@@ -443,6 +1203,13 @@ class DataBus {
             return;
         }
 
+        if (state === "attacking") {
+            const [atkX, atkY] =
+                NINJA_DIRECTIONAL_ATTACK_FRAME[this.playerFacingDirection];
+            player.characterSpriteTiles = [[atkX, atkY]];
+            return;
+        }
+
         player.characterSpriteTiles = clip.frames.map(([x, y]) => [x, y]);
     }
 
@@ -460,14 +1227,20 @@ class DataBus {
             spriteSheetTileHeight: 1,
             characterSpriteTiles: [[0, 0]],
             scaler: 5,
-            position: { x: 10, y: 10 },
+            position: {
+                x: DEFAULT_PLAYER_START_POSITION.x,
+                y: DEFAULT_PLAYER_START_POSITION.y,
+            },
             fps: 1,
             collider: createRectangleCollider({
-                size: { width: 16, height: 16 },
-                offset: { x: 0, y: 0 },
-                collisionResponse: "block",
+                size: { width: 10, height: 10 },
+                offset: { x: 3, y: 3 },
+                collisionResponse: "overlap",
                 layer: CollisionLayer.player,
-                collidesWith: CollisionLayer.object | CollisionLayer.world,
+                collidesWith:
+                    CollisionLayer.object |
+                    CollisionLayer.world |
+                    CollisionLayer.enemy,
                 debugDraw: true,
             }),
         };
@@ -477,6 +1250,9 @@ class DataBus {
                 [player.id]: player,
             },
             playerId: player.id,
+            playerLives: PLAYER_MAX_LIVES,
+            playerScore: 0,
+            isGameOver: false,
 
             worldSize: { width: 400, height: 300 },
             camera: {
@@ -586,6 +1362,12 @@ class DataBus {
         for (const id of this.entityInteractionContracts.keys()) {
             if (!validIds.has(id)) {
                 this.entityInteractionContracts.delete(id);
+            }
+        }
+
+        for (const id of this.cyclopsFacingById.keys()) {
+            if (!validIds.has(id)) {
+                this.cyclopsFacingById.delete(id);
             }
         }
 
@@ -892,7 +1674,7 @@ class DataBus {
         return Object.values(this.state.entitiesById);
     }
 
-    private runCollisions(): void {
+    private runCollisions(): CollisionEvent[] {
         const events = this.collisionSystem.update(this.getEntities());
         for (const e of events) {
             const a = e.a ?? getEntityById(this.state.entitiesById, e.aId);
@@ -901,6 +1683,10 @@ class DataBus {
                 `collision ${e.phase}: ${a?.name ?? e.aId} <-> ${b?.name ?? e.bId}`,
             );
         }
+
+        this.handleProjectileCollisionEvents(events);
+        this.handleEnemyPlayerCollisionEvents(events);
+        return events;
     }
 
     private tryMovePlayer(dx: number, dy: number): void {
@@ -966,12 +1752,54 @@ class DataBus {
 
     setState(updater: (prev: GameState) => GameState) {
         this.state = updater(this.state);
+        this.state.playerLives = Math.max(
+            0,
+            Math.min(
+                PLAYER_MAX_LIVES,
+                Number.isFinite(this.state.playerLives)
+                    ? this.state.playerLives
+                    : PLAYER_MAX_LIVES,
+            ),
+        );
+        this.state.playerScore = Math.max(
+            0,
+            Number.isFinite(this.state.playerScore)
+                ? Math.floor(this.state.playerScore)
+                : 0,
+        );
+        this.state.isGameOver = Boolean(this.state.isGameOver);
         this.playerMoveInputX = 0;
         this.playerMoveInputY = 0;
+        this.playerLastHurtAtMs = Number.NEGATIVE_INFINITY;
+        this.playerHurtFlashUntilMs = Number.NEGATIVE_INFINITY;
+        this.enemySpawnerEnabled = false;
+        this.enemySpawnAccumulatorMs = 0;
+        this.enemySpawnWave = 0;
+        this.playerNextAttackAtMs = 0;
+        this.playerNextSpecialAttackAtMs = 0;
         this.clearEntityTimedStates();
         this.clearEntityStatusEffects();
         this.syncEntityStateStores();
         this.syncCameraToState();
+
+        const validIds = new Set(Object.keys(this.state.entitiesById));
+        for (const entityId of this.projectileVelocityById.keys()) {
+            if (!validIds.has(entityId)) {
+                this.projectileVelocityById.delete(entityId);
+                this.projectileLifetimeById.delete(entityId);
+            }
+        }
+
+        for (const entityId of this.smokeLifetimeById.keys()) {
+            if (!validIds.has(entityId)) {
+                this.smokeLifetimeById.delete(entityId);
+            }
+        }
+        for (const entityId of this.explosionLifetimeById.keys()) {
+            if (!validIds.has(entityId)) {
+                this.explosionLifetimeById.delete(entityId);
+            }
+        }
     }
 
     public setWorldSize(width: number, height: number) {
@@ -1082,6 +1910,115 @@ class DataBus {
     }
     public setPlayerCanPassWorldBounds(canPass: boolean) {
         this.setEntityCanPassWorldBounds(this.state.playerId, canPass);
+    }
+
+    public startEnemySpawning(
+        intervalMs: number = DEFAULT_ENEMY_SPAWN_INTERVAL_MS,
+    ) {
+        if (Number.isFinite(intervalMs) && intervalMs > 250) {
+            this.enemySpawnIntervalMs = intervalMs;
+        } else {
+            this.enemySpawnIntervalMs = DEFAULT_ENEMY_SPAWN_INTERVAL_MS;
+        }
+
+        this.enemySpawnerEnabled = true;
+        this.enemySpawnAccumulatorMs = 0;
+        this.enemySpawnWave = 1;
+
+        if (this.getCyclopsCount() === 0) {
+            this.spawnCyclopsFromSpawner();
+        }
+    }
+
+    public stopEnemySpawning() {
+        this.enemySpawnerEnabled = false;
+        this.enemySpawnAccumulatorMs = 0;
+        this.enemySpawnWave = 0;
+    }
+
+    public isPlayerHurtFlashing() {
+        return this.simulationTimeMs < this.playerHurtFlashUntilMs;
+    }
+
+    public restartGame() {
+        const player = this.getPlayer();
+        const worldBoundsIds = new Set(this.state.worldBoundsIds);
+
+        for (const entity of this.getEntities()) {
+            if (entity.id === this.state.playerId) {
+                continue;
+            }
+
+            if (worldBoundsIds.has(entity.id)) {
+                continue;
+            }
+
+            delete this.state.entitiesById[entity.id];
+        }
+
+        this.projectileVelocityById.clear();
+        this.projectileLifetimeById.clear();
+        this.smokeLifetimeById.clear();
+        this.explosionLifetimeById.clear();
+        this.cyclopsFacingById.clear();
+        this.clearNpcArchetypeProfiles();
+        this.clearEntityTimedStates();
+        this.clearEntityStatusEffects();
+        this.clearEntityBehaviorTransitions();
+
+        player.position.x = DEFAULT_PLAYER_START_POSITION.x;
+        player.position.y = DEFAULT_PLAYER_START_POSITION.y;
+
+        if (player.physicsBody) {
+            player.physicsBody.velocity.x = 0;
+            player.physicsBody.velocity.y = 0;
+        }
+
+        this.playerFacingDirection = "south";
+        this.setEntityBehaviorState(player, "idle");
+
+        this.state.playerLives = PLAYER_MAX_LIVES;
+        this.state.playerScore = 0;
+        this.state.isGameOver = false;
+
+        this.playerMoveInputX = 0;
+        this.playerMoveInputY = 0;
+        this.playerLastHurtAtMs = Number.NEGATIVE_INFINITY;
+        this.playerHurtFlashUntilMs = Number.NEGATIVE_INFINITY;
+        this.playerNextAttackAtMs = 0;
+        this.playerNextSpecialAttackAtMs = 0;
+
+        this.clearWorldPause();
+        this.syncEntityStateStores();
+        this.syncCameraToState();
+        this.startEnemySpawning(this.enemySpawnIntervalMs);
+    }
+
+    public getPlayerLives() {
+        return this.state.playerLives;
+    }
+
+    public getPlayerScore() {
+        return this.state.playerScore;
+    }
+
+    public getPlayerSpecialCooldownRemainingMs() {
+        return Math.max(
+            0,
+            Math.ceil(this.playerNextSpecialAttackAtMs - this.simulationTimeMs),
+        );
+    }
+
+    public getPlayerMaxLives() {
+        return PLAYER_MAX_LIVES;
+    }
+
+    public getEnemySpawnWave() {
+        return this.enemySpawnWave;
+    }
+
+    public isGameOver() {
+        return this.state.isGameOver;
     }
 
     public setPlayerMoveInput(inputX: number) {
@@ -1250,6 +2187,86 @@ class DataBus {
     public jumpPlayer(jumpVelocity: number = 520) {
         if (this.isWorldPaused()) return false;
         return this.jumpEntity(this.state.playerId, jumpVelocity);
+    }
+
+    public playerAttack(durationMs: number = 85): void {
+        if (this.isWorldPaused()) return;
+
+        if (!this.canPlayerAttack()) {
+            const cooldownRemainingMs = Math.max(
+                0,
+                Math.ceil(this.playerNextAttackAtMs - this.simulationTimeMs),
+            );
+            console.log(`[ATTACK] onCooldown (${cooldownRemainingMs}ms)`);
+            return;
+        }
+
+        const player = this.getPlayer();
+        const dir = this.playerFacingDirection;
+        const { x, y } = player.position;
+        console.log(`[ATTACK] ${dir} @ (${Math.round(x)}, ${Math.round(y)})`);
+        audioBus.play("player:attack", {
+            channel: "sfx",
+            restartIfPlaying: true,
+        });
+        this.playerNextAttackAtMs =
+            this.simulationTimeMs + PLAYER_ATTACK_COOLDOWN_MS;
+        this.setEntityTimedState(player.id, "attacking", durationMs);
+        this.spawnPlayerFireball();
+    }
+
+    public playerSpecialAttack(durationMs: number = 180): void {
+        if (this.isWorldPaused()) return;
+
+        if (!this.canPlayerSpecialAttack()) {
+            const cooldownRemainingMs =
+                this.getPlayerSpecialCooldownRemainingMs();
+            console.log(`[SPECIAL] onCooldown (${cooldownRemainingMs}ms)`);
+            return;
+        }
+
+        const viewportLeft = this.state.camera.x;
+        const viewportTop = this.state.camera.y;
+        const viewportRight = viewportLeft + this.state.camera.viewport.width;
+        const viewportBottom = viewportTop + this.state.camera.viewport.height;
+
+        this.playerNextSpecialAttackAtMs =
+            this.simulationTimeMs + PLAYER_SPECIAL_ATTACK_COOLDOWN_MS;
+        this.setEntityTimedState(this.state.playerId, "attacking", durationMs);
+
+        const defeatedEnemyIds: string[] = [];
+
+        for (const entity of this.getEntities()) {
+            if (entity.type !== "enemy") {
+                continue;
+            }
+
+            const enemyDrawSize = entity.spriteSize * entity.scaler;
+            const enemyLeft = entity.position.x;
+            const enemyTop = entity.position.y;
+            const enemyRight = enemyLeft + enemyDrawSize;
+            const enemyBottom = enemyTop + enemyDrawSize;
+            const isEnemyVisibleOnScreen =
+                enemyRight > viewportLeft &&
+                enemyLeft < viewportRight &&
+                enemyBottom > viewportTop &&
+                enemyTop < viewportBottom;
+
+            if (!isEnemyVisibleOnScreen) {
+                continue;
+            }
+
+            const enemyCenterX = enemyLeft + enemyDrawSize / 2;
+            const enemyCenterY = enemyTop + enemyDrawSize / 2;
+
+            this.spawnExplosionAt(enemyCenterX, enemyCenterY, entity.scaler);
+            defeatedEnemyIds.push(entity.id);
+        }
+
+        for (const enemyId of defeatedEnemyIds) {
+            this.state.playerScore += 1;
+            this.despawnEnemy(enemyId);
+        }
     }
 
     public requestPlayerJump() {
@@ -1973,12 +2990,29 @@ class DataBus {
         if (deltaMs <= 0) return false;
         if (this.isWorldPaused()) return false;
 
-        const entities = this.getEntities();
         let hasPositionChanges = false;
         const clampedDeltaMs = Math.min(deltaMs, this.physicsConfig.maxDeltaMs);
         this.simulationTimeMs += clampedDeltaMs;
         this.statusEffects.tick(clampedDeltaMs);
         const dt = clampedDeltaMs / 1000;
+        const didSpawnEnemies = this.stepEnemySpawning(clampedDeltaMs);
+        if (didSpawnEnemies) {
+            hasPositionChanges = true;
+        }
+
+        const entities = this.getEntities();
+        const didMoveProjectiles = this.stepProjectiles(clampedDeltaMs);
+        if (didMoveProjectiles) {
+            hasPositionChanges = true;
+        }
+        const didDespawnSmoke = this.stepSmokeEffects(clampedDeltaMs);
+        if (didDespawnSmoke) {
+            hasPositionChanges = true;
+        }
+        const didDespawnExplosions = this.stepExplosionEffects(clampedDeltaMs);
+        if (didDespawnExplosions) {
+            hasPositionChanges = true;
+        }
 
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
@@ -1989,6 +3023,9 @@ class DataBus {
                 this.applyPlayerMotionAssists(entity, entities, dt, speedScale);
             } else if (entity.type === "enemy") {
                 this.applyNpcArchetypeProfile(entity);
+                if (entity.name.startsWith("cyclops:")) {
+                    this.updateCyclopsAnimation(entity);
+                }
             }
 
             const body = entity.physicsBody;

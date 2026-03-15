@@ -24,6 +24,7 @@ export interface RenderableItem {
     characterSpriteTiles: number[][];
     scaler: number;
     position: { x: number; y: number; z?: number };
+    rotationDeg?: number;
     fps?: number;
     spriteEffects?: SpritePseudoShaderEffect[];
 
@@ -62,6 +63,40 @@ export interface RenderProps {
 }
 
 export { getTilePixelPosition };
+
+function cloneRenderableItem(item: RenderableItem): RenderableItem {
+    return {
+        ...item,
+        characterSpriteTiles: item.characterSpriteTiles.map(([x, y]) => [x, y]),
+        position: {
+            x: item.position.x,
+            y: item.position.y,
+            ...(typeof item.position.z === "number"
+                ? { z: item.position.z }
+                : {}),
+        },
+        ...(typeof item.rotationDeg === "number"
+            ? { rotationDeg: item.rotationDeg }
+            : {}),
+        spriteEffects: item.spriteEffects?.map((effect) => ({ ...effect })),
+        collider: item.collider
+            ? {
+                  type: item.collider.type,
+                  size: {
+                      width: item.collider.size.width,
+                      height: item.collider.size.height,
+                  },
+                  offset: {
+                      x: item.collider.offset.x,
+                      y: item.collider.offset.y,
+                  },
+                  ...(typeof item.collider.debugDraw === "boolean"
+                      ? { debugDraw: item.collider.debugDraw }
+                      : {}),
+              }
+            : undefined,
+    };
+}
 
 const DEBUG_OUTLINE_COLOR = "#60a5fa";
 const RENDER_V2_EFFECTS =
@@ -610,23 +645,23 @@ const Render = ({
     }, [backgroundTile]);
 
     useEffect(() => {
+        const snapshotItems = items.map(cloneRenderableItem);
         const existingBatch = spriteBatchRef.current;
         if (existingBatch) {
-            existingBatch.setItems(items);
-
-            const hasAllImages = items.every((item) =>
+            const hasAllImages = snapshotItems.every((item) =>
                 existingBatch.hasSheetImage(item.spriteImageSheet),
             );
 
             if (hasAllImages) {
+                existingBatch.setItems(snapshotItems);
                 return;
             }
         }
 
         const itemsToLoad =
             existingBatch === null
-                ? items
-                : items.filter(
+                ? snapshotItems
+                : snapshotItems.filter(
                       (item) =>
                           !existingBatch.hasSheetImage(item.spriteImageSheet),
                   );
@@ -660,10 +695,10 @@ const Render = ({
                     for (const [url, image] of imagesByUrl) {
                         existingBatch.setSheetImage(url, image);
                     }
-                    existingBatch.setItems(items);
+                    existingBatch.setItems(snapshotItems);
                 } else {
                     spriteBatchRef.current = new SpriteBatch(
-                        items,
+                        snapshotItems,
                         imagesByUrl,
                         performance.now(),
                     );

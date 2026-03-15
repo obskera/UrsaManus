@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc -b && vite build",
+        "build:pages": "VITE_BASE_PATH=/UrsaManus/ tsc -b && vite build",
         "lint": "eslint .",
         "preview": "vite preview",
         "content:validate": "tsx scripts/contentValidate.ts",

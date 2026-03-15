@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SoundManager from "@/components/gameModes/SoundManager";
 import { audioBus, type AudioCueDefinition } from "@/services/audioBus";
+import { resolvePublicAssetPath } from "@/utils/assetPaths";
 
 export type BgmComposerToolExampleProps = {
     title?: string;
@@ -23,11 +24,22 @@ type GeneratedTrack = {
     events: GeneratedEvent[];
 };
 
-const DEFAULT_PUBLIC_FILES = ["/beep 1.wav", "/beep 2.wav", "/beep 3.wav"];
+const DEFAULT_PUBLIC_FILES = [
+    resolvePublicAssetPath("beep 1.wav"),
+    resolvePublicAssetPath("beep 2.wav"),
+    resolvePublicAssetPath("beep 3.wav"),
+];
 const AUDIO_FILE_PATTERN = /\.(wav|mp3|ogg|m4a|aac)$/i;
 const FILE_POOL_PRESETS = {
-    menu: ["/beep 1.wav", "/beep 3.wav"],
-    battle: ["/beep 1.wav", "/beep 2.wav", "/beep 3.wav"],
+    menu: [
+        resolvePublicAssetPath("beep 1.wav"),
+        resolvePublicAssetPath("beep 3.wav"),
+    ],
+    battle: [
+        resolvePublicAssetPath("beep 1.wav"),
+        resolvePublicAssetPath("beep 2.wav"),
+        resolvePublicAssetPath("beep 3.wav"),
+    ],
     all: DEFAULT_PUBLIC_FILES,
 } as const;
 
@@ -37,7 +49,7 @@ function normalizePublicPath(value: string) {
         return "";
     }
 
-    return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+    return resolvePublicAssetPath(trimmed);
 }
 
 function mulberry32(seed: number) {

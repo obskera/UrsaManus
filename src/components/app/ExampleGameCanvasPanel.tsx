@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import { TopDownCanvas } from "@/components/gameModes";
+import GameOverPopover from "@/components/gameModes/GameOverPopover";
 import { GAME_VIEW_CONFIG } from "@/config/gameViewConfig";
 import { TOP_DOWN_PLAYER_TUNING } from "@/config/playerTuning";
 
@@ -11,8 +12,13 @@ type ExampleGameCanvasPanelProps = {
     playerStateLabel: string;
     playerPositionLabel: string;
     showDevTuningPill: boolean;
+    playerLives: number;
+    playerMaxLives: number;
+    playerScore: number;
+    isGameOver: boolean;
     gameScreenRef: RefObject<HTMLDivElement | null>;
     onStartGame: () => void;
+    onRestartGame: () => void;
 };
 
 const ExampleGameCanvasPanel = ({
@@ -23,8 +29,13 @@ const ExampleGameCanvasPanel = ({
     playerStateLabel,
     playerPositionLabel,
     showDevTuningPill,
+    playerLives,
+    playerMaxLives,
+    playerScore,
+    isGameOver,
     gameScreenRef,
     onStartGame,
+    onRestartGame,
 }: ExampleGameCanvasPanelProps) => {
     return (
         <div className="CanvasPanel">
@@ -68,6 +79,8 @@ const ExampleGameCanvasPanel = ({
                         containerRef={gameScreenRef}
                         showDebugOutlines={showDebugOutlines}
                         tapMarker={null}
+                        playerLives={playerLives}
+                        playerMaxLives={playerMaxLives}
                     />
                 ) : (
                     <div
@@ -77,10 +90,21 @@ const ExampleGameCanvasPanel = ({
                     />
                 )}
 
+                {hasStartedExampleGame && isGameOver ? (
+                    <div className="CanvasGameOverOverlay" role="status">
+                        <GameOverPopover
+                            finalScore={playerScore}
+                            onRestart={onRestartGame}
+                        />
+                    </div>
+                ) : null}
+
                 {!hasStartedExampleGame ? (
                     <div className="CanvasStartOverlay">
                         <aside className="DevControlsTab CanvasStartCard">
-                            <p className="DevControlsTitle">Example game</p>
+                            <p className="DevControlsTitle">
+                                Example Mini Game
+                            </p>
                             <div className="DevToolsGroup CanvasStartActions">
                                 <button
                                     type="button"
@@ -91,15 +115,6 @@ const ExampleGameCanvasPanel = ({
                                     }}
                                 >
                                     Start Game
-                                </button>
-                                <button
-                                    type="button"
-                                    className="game-mode-button"
-                                    disabled
-                                    aria-disabled="true"
-                                    title="Load Game coming soon"
-                                >
-                                    Load Game (Soon)
                                 </button>
                             </div>
                         </aside>

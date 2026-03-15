@@ -644,4 +644,103 @@ describe("Render coverage tests", () => {
         expect(cancelSpy).toHaveBeenCalled();
         cancelSpy.mockRestore();
     });
+
+    it("keeps drawing prior loaded sheet when item object is mutated to an unloaded sheet", async () => {
+        const idleSheet = "idle-mutation-regression.png";
+        const walkSheet = "walk-mutation-regression.png";
+
+        class MockImageMutationRace {
+            onload: (() => void) | null = null;
+            onerror: ((error?: unknown) => void) | null = null;
+            _src = "";
+
+            set src(val: string) {
+                this._src = val;
+
+                if (!this.onload) {
+                    return;
+                }
+
+                if (val.includes("walk-mutation-regression")) {
+                    setTimeout(() => this.onload && this.onload(), 25);
+                    return;
+                }
+
+                Promise.resolve().then(() => this.onload && this.onload());
+            }
+
+            get src() {
+                return this._src;
+            }
+        }
+
+        testGlobals.Image = MockImageMutationRace;
+
+        const mutableItem = {
+            spriteImageSheet: idleSheet,
+            spriteSize: 8,
+            spriteSheetTileWidth: 2,
+            spriteSheetTileHeight: 2,
+            characterSpriteTiles: [[0, 0]],
+            scaler: 1,
+            position: { x: 0, y: 0 },
+            fps: 30,
+        };
+
+        const { container, rerender, unmount } = render(
+            <Render items={[mutableItem]} width={64} height={64} />,
+        );
+
+        const canvas = container.querySelector("canvas") as HTMLCanvasElement;
+        expect(canvas).toBeTruthy();
+
+        await Promise.resolve();
+        await new Promise((r) => setTimeout(r, 0));
+
+        const ctx = getMockContext(canvas);
+        if (!ctx) throw new Error("Expected mocked canvas context");
+
+        await waitFor(() => expect(ctx.drawImage).toHaveBeenCalled());
+
+        const callsBeforeMutation = ctx.drawImage.mock.calls.length;
+
+        // Mutate the same object reference to mimic DataBus in-place updates.
+        mutableItem.spriteImageSheet = walkSheet;
+        mutableItem.characterSpriteTiles = [[1, 0]];
+
+        rerender(<Render items={[mutableItem]} width={64} height={64} />);
+
+        // Advance several frames before delayed walk image load completes.
+        await new Promise((r) => setTimeout(r, 0));
+        await new Promise((r) => setTimeout(r, 0));
+        await new Promise((r) => setTimeout(r, 0));
+
+        const callsAfterMutation = ctx.drawImage.mock.calls.length;
+        expect(callsAfterMutation).toBeGreaterThan(callsBeforeMutation);
+
+        const callsWhileWalkSheetPending = ctx.drawImage.mock.calls.slice(
+            callsBeforeMutation,
+            callsAfterMutation,
+        );
+
+        expect(callsWhileWalkSheetPending.length).toBeGreaterThan(0);
+
+        for (const call of callsWhileWalkSheetPending) {
+            const imageArg = call[0] as { _src?: string; src?: string };
+            const imageSrc = imageArg._src ?? imageArg.src ?? "";
+            expect(imageSrc).toContain(idleSheet);
+        }
+
+        // Once delayed walk image load completes, rendering should eventually switch.
+        await waitFor(() => {
+            const sawWalkSheet = ctx.drawImage.mock.calls.some((call) => {
+                const imageArg = call[0] as { _src?: string; src?: string };
+                const imageSrc = imageArg._src ?? imageArg.src ?? "";
+                return imageSrc.includes(walkSheet);
+            });
+            expect(sawWalkSheet).toBe(true);
+        });
+
+        unmount();
+    });
 });

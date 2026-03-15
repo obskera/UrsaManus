@@ -69,7 +69,16 @@ export default function App() {
     const playerPositionLabel = `${Math.round(player.position.x)}, ${Math.round(
         player.position.y,
     )}`;
+    const playerLives = dataBus.getPlayerLives();
+    const playerMaxLives = dataBus.getPlayerMaxLives();
+    const playerScore = dataBus.getPlayerScore();
+    const isGameOver = dataBus.isGameOver();
     const showDevTuningPill = import.meta.env.DEV;
+
+    const handleRestartGame = useCallback(() => {
+        dataBus.restartGame();
+        force((n) => n + 1);
+    }, []);
 
     return (
         <div className="GameContainer">
@@ -101,10 +110,15 @@ export default function App() {
                             playerStateLabel={playerStateLabel}
                             playerPositionLabel={playerPositionLabel}
                             showDevTuningPill={showDevTuningPill}
+                            playerLives={playerLives}
+                            playerMaxLives={playerMaxLives}
+                            playerScore={playerScore}
+                            isGameOver={isGameOver}
                             gameScreenRef={gameScreenRef}
                             onStartGame={() => {
                                 setHasStartedExampleGame(true);
                             }}
+                            onRestartGame={handleRestartGame}
                         />
 
                         <div className="ControlsPanel">
@@ -112,6 +126,26 @@ export default function App() {
                                 onMove={handleMove}
                                 allowDiagonal
                             />
+                        </div>
+
+                        <div
+                            className="ControlsHelpPanel"
+                            aria-label="Controls help"
+                        >
+                            <div className="CanvasControlsHelp">
+                                <span className="CanvasControlsHelp__title">
+                                    Controls:
+                                </span>
+                                <span className="CanvasControlsHelp__item">
+                                    Move: arrows or WASD
+                                </span>
+                                <span className="CanvasControlsHelp__item">
+                                    Attack: J
+                                </span>
+                                <span className="CanvasControlsHelp__item">
+                                    Special: K
+                                </span>
+                            </div>
                         </div>
                     </>
                 ) : null}

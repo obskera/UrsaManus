@@ -13,6 +13,8 @@ type SaveTarget = {
     setState: (updater: (prev: GameState) => GameState) => void;
 };
 
+const DEFAULT_PLAYER_LIVES = 3;
+
 function sanitizeCharacterSpriteTiles(
     frames: number[][],
     tileWidth: number,
@@ -226,6 +228,9 @@ const cloneSaveStateToGameState = (save: SaveGame): GameState => {
     return {
         entitiesById,
         playerId: save.state.playerId,
+        playerLives: DEFAULT_PLAYER_LIVES,
+        playerScore: 0,
+        isGameOver: false,
         worldSize: {
             width: save.state.worldSize.width,
             height: save.state.worldSize.height,

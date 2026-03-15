@@ -46,6 +46,10 @@
     flex: 0 0 auto;
 }
 
+.hjkl-group {
+    justify-self: end;
+}
+
 .dpad-group .screen-control-group-content {
     justify-content: flex-start;
 }
@@ -139,6 +143,22 @@
     gap: 0;
 }
 
+.hjkl-row-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.hjkl-button {
+    border-radius: 0.5rem;
+    width: 3.1rem;
+    height: 3.1rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
 @media (max-width: 700px) {
     .screen-controller.snes-layout {
         width: 100%;
@@ -152,5 +172,11 @@
     .compass-button {
         width: 3rem;
         height: 3rem;
+    }
+
+    .hjkl-button {
+        width: 2.7rem;
+        height: 2.7rem;
+        font-size: 0.95rem;
     }
 }

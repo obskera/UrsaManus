@@ -101,7 +101,7 @@ Suggested credit line:
 
 ## Manual GitHub Workflows (No Auto Runs)
 
-This repository is configured so GitHub Actions do not run automatically on push or pull request.
+This repository keeps CI and release workflows manual. A separate GitHub Pages deployment workflow runs automatically on pushes to `main` so the published demo stays current.
 
 Run workflows only when needed:
 
@@ -110,6 +110,26 @@ Run workflows only when needed:
     - `CI`
     - `Release Pipeline`
 3. Click `Run workflow` and choose the target branch.
+
+## GitHub Pages Demo
+
+The demo is published from the `main` branch to:
+
+- https://obskera.github.io/UrsaManus/
+
+Deployment details:
+
+- Workflow: `Deploy GitHub Pages`
+- Trigger: automatic on push to `main`, plus manual `workflow_dispatch`
+- Build command: `npm run build` with `VITE_BASE_PATH=/UrsaManus/`
+
+Local verification:
+
+```bash
+npm run build:pages
+```
+
+If GitHub Pages is not enabled yet in the repository settings, set the source to `GitHub Actions` once and future pushes to `main` will publish automatically.
 
 ### Manual CI
 

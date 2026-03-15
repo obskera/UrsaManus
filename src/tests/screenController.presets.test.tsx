@@ -106,6 +106,24 @@ vi.mock("@/components/screenController/topDownOnScreenControl", () => ({
     ),
 }));
 
+vi.mock("@/components/screenController/hjklKeyControl", () => ({
+    default: ({ keys }: { keys?: Array<"h" | "j" | "k" | "l"> }) => (
+        <div
+            data-testid="hjkl-key-control"
+            data-keys={(keys ?? []).join(",")}
+        />
+    ),
+}));
+
+vi.mock("@/components/screenController/hjklOnScreenControl", () => ({
+    default: ({ keys }: { keys?: Array<"h" | "j" | "k" | "l"> }) => (
+        <div
+            data-testid="hjkl-on-screen-control"
+            data-keys={(keys ?? []).join(",")}
+        />
+    ),
+}));
+
 describe("screen controller presets", () => {
     it("composes SideScrollerControls with expected groups and player-action mode", () => {
         const onMove = vi.fn();
@@ -168,16 +186,21 @@ describe("screen controller presets", () => {
             "data-speed",
             "190",
         );
-        expect(
-            screen.getByTestId("compass-direction-control"),
-        ).not.toHaveAttribute("data-interact-behavior");
+        expect(screen.getByTestId("hjkl-key-control")).toHaveAttribute(
+            "data-keys",
+            "j,k",
+        );
+        expect(screen.getByTestId("hjkl-on-screen-control")).toHaveAttribute(
+            "data-keys",
+            "j,k",
+        );
 
         rerender(
             <TopDownControls
                 onMove={onMove}
                 allowDiagonal={false}
                 speedPxPerSec={300}
-                interactBehavior="dodge"
+                hjklButtons={["h", "k", "l"]}
             />,
         );
 
@@ -197,9 +220,13 @@ describe("screen controller presets", () => {
             "data-speed",
             "300",
         );
-        expect(screen.getByTestId("compass-direction-control")).toHaveAttribute(
-            "data-interact-behavior",
-            "dodge",
+        expect(screen.getByTestId("hjkl-key-control")).toHaveAttribute(
+            "data-keys",
+            "h,k,l",
+        );
+        expect(screen.getByTestId("hjkl-on-screen-control")).toHaveAttribute(
+            "data-keys",
+            "h,k,l",
         );
     });
 });

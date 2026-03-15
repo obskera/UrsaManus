@@ -11,6 +11,7 @@ export type SpriteBatchItem = {
     characterSpriteTiles: number[][];
     scaler: number;
     position: { x: number; y: number; z?: number };
+    rotationDeg?: number;
     fps?: number;
     spriteEffects?: SpritePseudoShaderEffect[];
     collider?: {
@@ -210,17 +211,37 @@ export class SpriteBatch {
             const dx = worldX - cameraX;
             const dy = worldY - cameraY;
 
-            ctx.drawImage(
-                img,
-                tilePos.x,
-                tilePos.y,
-                it.spriteSize,
-                it.spriteSize,
-                dx,
-                dy,
-                drawWidth,
-                drawHeight,
-            );
+            const rotationDeg = it.rotationDeg ?? 0;
+            if (rotationDeg === 0) {
+                ctx.drawImage(
+                    img,
+                    tilePos.x,
+                    tilePos.y,
+                    it.spriteSize,
+                    it.spriteSize,
+                    dx,
+                    dy,
+                    drawWidth,
+                    drawHeight,
+                );
+            } else {
+                const rotationRad = (rotationDeg * Math.PI) / 180;
+                ctx.save();
+                ctx.translate(dx + drawWidth / 2, dy + drawHeight / 2);
+                ctx.rotate(rotationRad);
+                ctx.drawImage(
+                    img,
+                    tilePos.x,
+                    tilePos.y,
+                    it.spriteSize,
+                    it.spriteSize,
+                    -drawWidth / 2,
+                    -drawHeight / 2,
+                    drawWidth,
+                    drawHeight,
+                );
+                ctx.restore();
+            }
 
             if (it.spriteEffects && it.spriteEffects.length > 0) {
                 applySpritePseudoShaderEffects({
